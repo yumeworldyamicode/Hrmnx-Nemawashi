@@ -4522,6 +4522,31 @@ document.addEventListener(
             return;
         }
 
+        const editBannerButton =
+            event.target.closest("[data-edit-banner]");
+
+        if (editBannerButton) {
+
+             await openBannerEditor(
+                editBannerButton.dataset.editBanner
+            );
+
+            return;
+        }
+
+
+        const deleteBannerButton =
+            event.target.closest("[data-delete-banner]");
+
+        if (deleteBannerButton) {
+
+            await deleteBanner(
+                deleteBannerButton.dataset.deleteBanner
+            );
+
+            return;
+        }
+
     }
 );
 
