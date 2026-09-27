@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>根回し - Administration</title>
+    <link rel="icon" type="image/x-icon" href="images/nemawashi-favicon.ico">
+
+    <link
+        rel="stylesheet"
+        href="css/dashboard.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <aside class="sidebar">
+
+        <a
+            href="index.html"
+            class="sidebar-brand"
+        >
+
+            <img
+                src="images/nemawashi-logo.png"
+                alt="Nemawashi"
+            >
+
+        </a>
+
+
+        <div class="workspace-label">
+            HRMNX WORKSPACE
+        </div>
+
+
+        <nav>
+
+            <button
+                class="nav-item active"
+                data-section="overview"
+            >
+                <span>⌂</span>
+                Overview
+            </button>
+
+
+            <div class="nav-group">
+
+                <div class="nav-group-title">
+                    HRMNX
+                </div>
+
+                <button
+                    class="nav-item"
+                    data-section="people"
+                >
+                    <span>○</span>
+                    People
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="organization"
+                >
+                    <span>◇</span>
+                    Organization
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="permissions"
+                >
+                    <span>◆</span>
+                    Permissions
+                </button>
+
+            </div>
+
+
+            <div class="nav-group">
+
+                <div class="nav-group-title">
+                    SERASHIO
+                </div>
+
+                <button
+                    class="nav-item"
+                    data-section="notices"
+                >
+                    <span>▤</span>
+                    Notices
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="banners"
+                >
+                    <span>▱</span>
+                    Banners
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="serashio-artists"
+                >
+                    <span>✦</span>
+                    Artists
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="releases"
+                >
+                    <span>♫</span>
+                    Releases
+                </button>
+
+            </div>
+
+
+            <div class="nav-group">
+
+                <div class="nav-group-title">
+                    KIKI
+                </div>
+
+                <button
+                    class="nav-item"
+                    data-section="kiki-posts"
+                >
+                    <span>✎</span>
+                    Staff Posts
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="kiki-profiles"
+                >
+                    <span>◎</span>
+                    Profiles
+                </button>
+
+            </div>
+
+
+            <div class="nav-group">
+
+                <div class="nav-group-title">
+                    DIRECT MESSAGES
+                </div>
+
+                <button
+                    class="nav-item"
+                    data-section="dm-orders"
+                >
+                    <span>◇</span>
+                    Orders
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="dm-coupons"
+                >
+                    <span>％</span>
+                    Coupons
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="dm-entitlements"
+                >
+                    <span>♢</span>
+                    Entitlements
+                </button>
+
+            </div>
+
+
+            <div class="nav-group">
+
+                <div class="nav-group-title">
+                    HRMNX AUDITION
+                </div>
+
+                <button
+                    class="nav-item"
+                    data-section="auditions"
+                >
+                    <span>☆</span>
+                    Auditions
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="applications"
+                >
+                    <span>▣</span>
+                    Applications
+                </button>
+
+            </div>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button
+                id="sign-out-button"
+                class="sign-out"
+            >
+                Sign out
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <main class="dashboard">
+
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <div
+                    id="section-label"
+                    class="section-label"
+                >
+                    HRMNX ADMINISTRATION
+                </div>
+
+                <h1 id="section-title">
+                    Overview
+                </h1>
+
+            </div>
+
+
+            <div class="user-area">
+
+                <div class="user-avatar">
+                    <span id="user-avatar-letter">
+                        ?
+                    </span>
+                </div>
+
+                <div>
+
+                    <strong id="user-name">
+                        Loading...
+                    </strong>
+
+                    <span id="user-role">
+                        Checking permissions...
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <section
+            id="dashboard-content"
+            class="dashboard-content"
+        >
+
+            <!-- Loaded by dashboard.js -->
+
+        </section>
+
+
+    </main>
+
+
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
+
+    <script src="js/supabase.js"></script>
+
+    <script src="js/dashboard.js"></script>
+
+
+</body>
+
+</html>
