@@ -1832,3 +1832,175 @@ body {
     }
 
 }
+
+/* =========================================================
+   EMPLOYEE EDITING
+   ========================================================= */
+
+.person-detail-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.secondary-button,
+.danger-button {
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    padding: 10px 15px;
+    background: rgba(255,255,255,.75);
+    color: var(--text);
+    font-family: inherit;
+    font-weight: 800;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.secondary-button:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.secondary-button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.person-edit-form {
+    display: grid;
+    gap: 18px;
+}
+
+.person-edit-field {
+    display: grid;
+    gap: 7px;
+}
+
+.person-edit-field label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.person-edit-field input,
+.person-edit-field select {
+    width: 100%;
+    height: 46px;
+    padding: 0 13px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    outline: none;
+    background: rgba(255,255,255,.85);
+    color: var(--text);
+    font: inherit;
+}
+
+.person-edit-field input:focus,
+.person-edit-field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,107,216,.09);
+}
+
+.person-edit-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 0 13px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: rgba(255,255,255,.7);
+    cursor: pointer;
+}
+
+.person-edit-checkbox input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--accent);
+}
+
+.person-edit-checkbox span {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.person-edit-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.person-save-button {
+    border: 0;
+    border-radius: 13px;
+    padding: 11px 18px;
+    background: var(--accent);
+    color: white;
+    font-family: inherit;
+    font-weight: 800;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.person-save-button:hover {
+    transform: translateY(-1px);
+    opacity: .92;
+}
+
+.person-save-button:disabled {
+    opacity: .55;
+    cursor: wait;
+    transform: none;
+}
+
+.person-edit-message {
+    padding: 11px 13px;
+    border-radius: 12px;
+    background: rgba(99,107,216,.07);
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.person-edit-message.error {
+    background: rgba(210,70,70,.08);
+    color: #b43d3d;
+}
+
+.person-edit-message.success {
+    background: rgba(70,180,120,.10);
+    color: #27855a;
+}
+
+@media (max-width: 700px) {
+
+    .person-detail-header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .person-detail-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .person-detail-actions button {
+        flex: 1;
+    }
+
+    .person-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .person-edit-actions {
+        flex-direction: column-reverse;
+    }
+
+    .person-edit-actions button {
+        width: 100%;
+    }
+}
