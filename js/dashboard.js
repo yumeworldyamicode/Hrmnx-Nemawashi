@@ -276,6 +276,12 @@ async function openSection(section) {
         return;
     }
 
+    // Permissions
+    if (section === "permissions") {
+        await renderPermissions();
+        return;
+    }
+
     // Everything else for now
     renderPlaceholder(section);
 }
@@ -2866,6 +2872,1398 @@ async function loadCompanyEmployees(
     }
 }
 
+// ============================================================
+// PERMISSIONS
+// ============================================================
+
+let nemawashiRoles = [];
+
+
+// ------------------------------------------------------------
+// RENDER PERMISSIONS
+// ------------------------------------------------------------
+
+async function renderPermissions() {
+
+    sectionLabel.textContent = "HRMNX";
+    sectionTitle.textContent = "Permissions";
+
+    dashboardContent.innerHTML = `
+        <div class="permissions-header">
+
+            <div>
+                <span class="eyebrow">
+                    HRMNX
+                </span>
+
+                <h2>
+                    Permissions
+                </h2>
+
+                <p>
+                    Manage employee roles and access across Nemawashi.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="permissions-toolbar">
+
+            <input
+                type="search"
+                id="permissions-search"
+                class="permissions-search"
+                placeholder="Search roles..."
+                autocomplete="off"
+            />
+
+            <div
+                id="permissions-count"
+                class="permissions-count"
+            >
+                Loading...
+            </div>
+
+        </div>
+
+
+        <div
+            id="permissions-list"
+            class="permissions-list"
+        >
+            <div class="permissions-loading">
+                Loading roles...
+            </div>
+        </div>
+    `;
+
+
+    const searchInput =
+        document.getElementById(
+            "permissions-search"
+        );
+
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            "input",
+            function () {
+
+                filterRoles(
+                    this.value
+                );
+
+            }
+        );
+
+    }
+
+
+    await loadRoles();
+}
+
+
+// ------------------------------------------------------------
+// LOAD ROLES
+// ------------------------------------------------------------
+
+async function loadRoles() {
+
+    const list =
+        document.getElementById(
+            "permissions-list"
+        );
+
+
+    if (!list) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            data: roles,
+            error
+        } = await supabaseClient
+            .from("roles")
+            .select(`
+                id,
+                name,
+                slug,
+                description
+            `)
+            .order("name", {
+                ascending: true
+            });
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        const roleList =
+            roles || [];
+
+
+        const roleIds =
+            roleList.map(
+                role => role.id
+            );
+
+
+        let assignments = [];
+
+
+        if (roleIds.length > 0) {
+
+            const {
+                data,
+                error: assignmentError
+            } = await supabaseClient
+                .from("employee_roles")
+                .select(`
+                    role_id,
+                    employee_id
+                `)
+                .in(
+                    "role_id",
+                    roleIds
+                );
+
+
+            if (assignmentError) {
+                throw assignmentError;
+            }
+
+
+            assignments =
+                data || [];
+
+        }
+
+
+        const assignmentCounts = {};
+
+
+        roleIds.forEach(
+            roleId => {
+
+                assignmentCounts[
+                    roleId
+                ] = 0;
+
+            }
+        );
+
+
+        assignments.forEach(
+            assignment => {
+
+                if (
+                    assignmentCounts[
+                        assignment.role_id
+                    ] !== undefined
+                ) {
+
+                    assignmentCounts[
+                        assignment.role_id
+                    ]++;
+
+                }
+
+            }
+        );
+
+
+        nemawashiRoles =
+            roleList.map(
+                role => ({
+
+                    ...role,
+
+                    employee_count:
+                        assignmentCounts[
+                            role.id
+                        ] || 0
+
+                })
+            );
+
+
+        renderRoleList();
+
+        updateRoleCount();
+
+    } catch (error) {
+
+        console.error(
+            "Could not load roles:",
+            error
+        );
+
+
+        list.innerHTML = `
+            <div class="permissions-error">
+
+                <strong>
+                    Could not load roles
+                </strong>
+
+                <p>
+                    ${escapeHtml(
+                        error.message ||
+                        "An unknown error occurred."
+                    )}
+                </p>
+
+            </div>
+        `;
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// RENDER ROLE LIST
+// ------------------------------------------------------------
+
+function renderRoleList(
+    roles = nemawashiRoles
+) {
+
+    const list =
+        document.getElementById(
+            "permissions-list"
+        );
+
+
+    if (!list) {
+        return;
+    }
+
+
+    if (!roles.length) {
+
+        list.innerHTML = `
+            <div class="permissions-empty">
+
+                <div class="empty-icon">
+                    ✦
+                </div>
+
+                <h3>
+                    No roles found
+                </h3>
+
+                <p>
+                    No roles match your search.
+                </p>
+
+            </div>
+        `;
+
+        return;
+    }
+
+
+    list.innerHTML =
+        roles.map(
+            role => {
+
+                return `
+                    <button
+                        type="button"
+                        class="role-card"
+                        data-role-id="${escapeAttribute(
+                            role.id
+                        )}"
+                    >
+
+                        <div class="role-icon">
+                            #
+                        </div>
+
+
+                        <div class="role-info">
+
+                            <div class="role-name">
+                                ${escapeHtml(
+                                    role.name ||
+                                    role.slug ||
+                                    "Unnamed role"
+                                )}
+                            </div>
+
+                            <div class="role-slug">
+                                ${
+                                    role.slug
+                                        ? escapeHtml(
+                                            role.slug
+                                        )
+                                        : "No slug"
+                                }
+                            </div>
+
+                        </div>
+
+
+                        <div class="role-description">
+
+                            ${
+                                role.description
+                                    ? escapeHtml(
+                                        role.description
+                                    )
+                                    : "No description"
+                            }
+
+                        </div>
+
+
+                        <div class="role-members">
+
+                            <strong>
+                                ${role.employee_count}
+                            </strong>
+
+                            <span>
+                                ${
+                                    role.employee_count === 1
+                                        ? "employee"
+                                        : "employees"
+                                }
+                            </span>
+
+                        </div>
+
+
+                        <div class="role-arrow">
+                            →
+                        </div>
+
+                    </button>
+                `;
+
+            }
+        ).join("");
+}
+
+
+// ------------------------------------------------------------
+// FILTER ROLES
+// ------------------------------------------------------------
+
+function filterRoles(
+    searchTerm
+) {
+
+    const term =
+        String(searchTerm || "")
+            .trim()
+            .toLowerCase();
+
+
+    if (!term) {
+
+        renderRoleList(
+            nemawashiRoles
+        );
+
+        updateRoleCount();
+
+        return;
+    }
+
+
+    const filtered =
+        nemawashiRoles.filter(
+            role => {
+
+                return [
+
+                    role.name,
+                    role.slug,
+                    role.description
+
+                ].some(value =>
+
+                    String(value || "")
+                        .toLowerCase()
+                        .includes(term)
+
+                );
+
+            }
+        );
+
+
+    renderRoleList(
+        filtered
+    );
+
+
+    updateRoleCount(
+        filtered.length,
+        true
+    );
+}
+
+
+// ------------------------------------------------------------
+// ROLE COUNT
+// ------------------------------------------------------------
+
+function updateRoleCount(
+    count = nemawashiRoles.length,
+    filtered = false
+) {
+
+    const element =
+        document.getElementById(
+            "permissions-count"
+        );
+
+
+    if (!element) {
+        return;
+    }
+
+
+    if (filtered) {
+
+        element.textContent =
+            `${count} result${
+                count === 1
+                    ? ""
+                    : "s"
+            }`;
+
+        return;
+    }
+
+
+    element.textContent =
+        `${count} ${
+            count === 1
+                ? "role"
+                : "roles"
+        }`;
+}
+
+
+// ------------------------------------------------------------
+// OPEN ROLE
+// ------------------------------------------------------------
+
+async function openRole(
+    roleId
+) {
+
+    const role =
+        nemawashiRoles.find(
+            item =>
+                String(item.id) ===
+                String(roleId)
+        );
+
+
+    if (!role) {
+        return;
+    }
+
+    window.nemawashiCurrentRoleId = role.id;
+
+
+    sectionLabel.textContent =
+        "HRMNX";
+
+    sectionTitle.textContent =
+        role.name ||
+        "Role";
+
+
+    dashboardContent.innerHTML = `
+        <div class="role-detail">
+
+            <button
+                type="button"
+                class="back-button"
+                id="permissions-back-button"
+            >
+                ← Back to Permissions
+            </button>
+
+
+            <div class="role-detail-header">
+
+                <div class="role-detail-icon">
+                    #
+                </div>
+
+
+                <div>
+
+                    <span class="eyebrow">
+                        ROLE
+                    </span>
+
+                    <h2>
+                        ${escapeHtml(
+                            role.name ||
+                            "Unnamed role"
+                        )}
+                    </h2>
+
+                    ${
+                        role.slug
+                            ? `
+                                <p>
+                                    ${escapeHtml(
+                                        role.slug
+                                    )}
+                                </p>
+                            `
+                            : ""
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="role-detail-grid">
+
+                <div class="detail-card">
+
+                    <span>
+                        Employees
+                    </span>
+
+                    <strong>
+                        ${role.employee_count}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <span>
+                        Role slug
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            role.slug ||
+                            "—"
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            ${
+                role.description
+                    ? `
+                        <section class="detail-card">
+
+                            <div class="detail-card-title">
+                                Description
+                            </div>
+
+                            <p class="role-description-full">
+                                ${escapeHtml(
+                                    role.description
+                                )}
+                            </p>
+
+                        </section>
+                    `
+                    : ""
+            }
+
+
+            <section
+                id="role-employees-section"
+                class="person-detail-section"
+            >
+
+                <h3>
+                    Employees with this role
+                </h3>
+
+                <div>
+                    Loading employees...
+                </div>
+
+            </section>
+
+
+            <section
+                id="role-assign-section"
+                class="detail-card role-assign-card"
+            >
+
+                <div class="detail-card-title">
+                    Assign role
+                </div>
+
+                <div class="role-assign-form">
+
+                    <select
+                        id="role-employee-select"
+                        class="role-employee-select"
+                    >
+                        <option value="">
+                            Loading employees...
+                        </option>
+                    </select>
+
+                    <button
+                        type="button"
+                        id="assign-role-button"
+                        class="person-save-button"
+                        disabled
+                    >
+                        Assign role
+                    </button>
+
+                </div>
+
+                <div
+                    id="role-assign-message"
+                    class="person-edit-message"
+                    style="display:none;"
+                ></div>
+
+            </section>
+
+        </div>
+    `;
+
+
+    document
+        .getElementById(
+            "permissions-back-button"
+        )
+        ?.addEventListener(
+            "click",
+            function () {
+
+                renderPermissions();
+
+            }
+        );
+
+
+    await loadRoleEmployees(
+        role.id
+    );
+
+    await loadRoleEmployeeOptions(
+        role.id
+    );
+}
+
+
+// ------------------------------------------------------------
+// LOAD EMPLOYEES WITH ROLE
+// ------------------------------------------------------------
+
+async function loadRoleEmployees(
+    roleId
+) {
+
+    const container =
+        document.getElementById(
+            "role-employees-section"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            data: assignments,
+            error
+        } = await supabaseClient
+            .from("employee_roles")
+            .select(`
+                employee_id
+            `)
+            .eq(
+                "role_id",
+                roleId
+            );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        const employeeIds =
+            (assignments || [])
+                .map(
+                    item =>
+                        item.employee_id
+                );
+
+
+        if (!employeeIds.length) {
+
+            container.innerHTML = `
+                <h3>
+                    Employees with this role
+                </h3>
+
+                <p>
+                    No employees are assigned
+                    to this role.
+                </p>
+            `;
+
+            return;
+        }
+
+
+        const {
+            data: employees,
+            error: employeeError
+        } = await supabaseClient
+            .from("employees")
+            .select(`
+                id,
+                user_id,
+                job_title,
+                active
+            `)
+            .in(
+                "id",
+                employeeIds
+            );
+
+
+        if (employeeError) {
+            throw employeeError;
+        }
+
+
+        const userIds =
+            (employees || [])
+                .map(
+                    employee =>
+                        employee.user_id
+                )
+                .filter(Boolean);
+
+
+        let profiles = [];
+
+
+        if (userIds.length) {
+
+            const {
+                data,
+                error: profileError
+            } = await supabaseClient
+                .from("profiles")
+                .select(`
+                    id,
+                    username,
+                    display_name,
+                    avatar_url
+                `)
+                .in(
+                    "id",
+                    userIds
+                );
+
+
+            if (profileError) {
+                throw profileError;
+            }
+
+
+            profiles =
+                data || [];
+
+        }
+
+
+        const profileMap = {};
+
+
+        profiles.forEach(
+            profile => {
+
+                profileMap[
+                    profile.id
+                ] = profile;
+
+            }
+        );
+
+
+        container.innerHTML = `
+            <h3>
+                Employees with this role
+            </h3>
+
+            <div class="role-employee-list">
+
+                ${
+                    (employees || [])
+                        .map(
+                            employee => {
+
+                                const profile =
+                                    profileMap[
+                                        employee.user_id
+                                    ] || {};
+
+
+                                const name =
+                                    profile.display_name ||
+                                    profile.username ||
+                                    "Unnamed employee";
+
+
+                                const initial =
+                                    name
+                                        .trim()
+                                        .charAt(0)
+                                        .toUpperCase();
+
+
+                                return `
+                                    <div
+                                        class="role-employee-card"
+                                    >
+
+                                        <div
+                                            class="person-avatar"
+                                        >
+
+                                            ${
+                                                profile.avatar_url
+                                                    ? `
+                                                        <img
+                                                            src="${escapeAttribute(
+                                                                profile.avatar_url
+                                                            )}"
+                                                            alt=""
+                                                        >
+                                                    `
+                                                    : `
+                                                        <span>
+                                                            ${escapeHtml(
+                                                                initial
+                                                            )}
+                                                        </span>
+                                                    `
+                                            }
+
+                                        </div>
+
+
+                                        <div
+                                            class="role-employee-info"
+                                        >
+
+                                            <strong>
+                                                ${escapeHtml(
+                                                    name
+                                                )}
+                                            </strong>
+
+                                            ${
+                                                profile.username
+                                                    ? `
+                                                        <span>
+                                                            @${escapeHtml(
+                                                                profile.username
+                                                            )}
+                                                        </span>
+                                                    `
+                                                    : ""
+                                            }
+
+                                        </div>
+
+
+                                        <div
+                                            class="role-employee-job"
+                                        >
+                                            ${
+                                                employee.job_title
+                                                    ? escapeHtml(
+                                                        employee.job_title
+                                                    )
+                                                    : "No job title"
+                                            }
+                                        </div>
+
+
+                                        <span
+                                            class="
+                                                person-status
+                                                ${
+                                                    employee.active
+                                                        ? "active"
+                                                        : "inactive"
+                                                }
+                                            "
+                                        >
+                                            ${
+                                                employee.active
+                                                    ? "Active"
+                                                    : "Inactive"
+                                            }
+                                        </span>
+
+
+                                        <button
+                                            type="button"
+                                            class="role-remove-button"
+                                            data-remove-role="${escapeAttribute(
+                                                roleId
+                                            )}"
+                                            data-remove-employee="${escapeAttribute(
+                                                employee.id
+                                            )}"
+                                        >
+                                            Remove
+                                        </button>
+
+                                    </div>
+                                `;
+
+                            }
+                        )
+                        .join("")
+                }
+
+            </div>
+        `;
+
+    } catch (error) {
+
+        console.error(
+            "Could not load role employees:",
+            error
+        );
+
+
+        container.innerHTML = `
+            <h3>
+                Employees with this role
+            </h3>
+
+            <p>
+                Could not load employees.
+            </p>
+        `;
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// LOAD EMPLOYEE OPTIONS
+// ------------------------------------------------------------
+
+async function loadRoleEmployeeOptions(
+    roleId
+) {
+
+    const select =
+        document.getElementById(
+            "role-employee-select"
+        );
+
+    const button =
+        document.getElementById(
+            "assign-role-button"
+        );
+
+
+    if (!select) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            data: employees,
+            error
+        } = await supabaseClient
+            .from("employees")
+            .select(`
+                id,
+                user_id,
+                active
+            `)
+            .eq(
+                "active",
+                true
+            );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        const employeeList =
+            employees || [];
+
+
+        const {
+            data: assignments,
+            error: assignmentError
+        } = await supabaseClient
+            .from("employee_roles")
+            .select(`
+                employee_id
+            `)
+            .eq(
+                "role_id",
+                roleId
+            );
+
+
+        if (assignmentError) {
+            throw assignmentError;
+        }
+
+
+        const alreadyAssigned =
+            new Set(
+                (assignments || [])
+                    .map(
+                        item =>
+                            String(
+                                item.employee_id
+                            )
+                    )
+            );
+
+
+        const available =
+            employeeList.filter(
+                employee =>
+                    !alreadyAssigned.has(
+                        String(employee.id)
+                    )
+            );
+
+
+        const userIds =
+            available
+                .map(
+                    employee =>
+                        employee.user_id
+                )
+                .filter(Boolean);
+
+
+        let profiles = [];
+
+
+        if (userIds.length) {
+
+            const {
+                data,
+                error: profileError
+            } = await supabaseClient
+                .from("profiles")
+                .select(`
+                    id,
+                    username,
+                    display_name
+                `)
+                .in(
+                    "id",
+                    userIds
+                );
+
+
+            if (profileError) {
+                throw profileError;
+            }
+
+
+            profiles =
+                data || [];
+
+        }
+
+
+        const profileMap = {};
+
+
+        profiles.forEach(
+            profile => {
+
+                profileMap[
+                    profile.id
+                ] = profile;
+
+            }
+        );
+
+
+        select.innerHTML = `
+            <option value="">
+                Select an employee...
+            </option>
+
+            ${
+                available
+                    .map(
+                        employee => {
+
+                            const profile =
+                                profileMap[
+                                    employee.user_id
+                                ] || {};
+
+
+                            const name =
+                                profile.display_name ||
+                                profile.username ||
+                                "Unnamed employee";
+
+
+                            return `
+                                <option
+                                    value="${escapeAttribute(
+                                        employee.id
+                                    )}"
+                                >
+                                    ${escapeHtml(
+                                        name
+                                    )}
+                                </option>
+                            `;
+
+                        }
+                    )
+                    .join("")
+            }
+        `;
+
+
+        if (button) {
+
+            button.disabled =
+                available.length === 0;
+
+        }
+
+
+        select.addEventListener(
+            "change",
+            function () {
+
+                if (button) {
+
+                    button.disabled =
+                        !this.value;
+
+                }
+
+            }
+        );
+
+
+        if (!available.length) {
+
+            select.innerHTML = `
+                <option value="">
+                    All active employees already assigned
+                </option>
+            `;
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Could not load role employees:",
+            error
+        );
+
+
+        select.innerHTML = `
+            <option value="">
+                Could not load employees
+            </option>
+        `;
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// ASSIGN EMPLOYEE TO ROLE
+// ------------------------------------------------------------
+
+async function assignEmployeeToRole(
+    roleId,
+    employeeId
+) {
+
+    const button =
+        document.getElementById(
+            "assign-role-button"
+        );
+
+    const message =
+        document.getElementById(
+            "role-assign-message"
+        );
+
+
+    if (!employeeId) {
+        return;
+    }
+
+
+    button.disabled = true;
+
+
+    try {
+
+        const {
+            error
+        } = await supabaseClient
+            .from("employee_roles")
+            .insert({
+
+                employee_id:
+                    employeeId,
+
+                role_id:
+                    roleId
+
+            });
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        message.style.display =
+            "block";
+
+        message.className =
+            "person-edit-message success";
+
+        message.textContent =
+            "Role assigned successfully.";
+
+
+        await loadRoleEmployees(
+            roleId
+        );
+
+        await loadRoleEmployeeOptions(
+            roleId
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Could not assign role:",
+            error
+        );
+
+
+        message.style.display =
+            "block";
+
+        message.className =
+            "person-edit-message error";
+
+        message.textContent =
+            error.message ||
+            "Could not assign role.";
+
+
+        button.disabled = false;
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// REMOVE EMPLOYEE FROM ROLE
+// ------------------------------------------------------------
+
+async function removeEmployeeFromRole(
+    roleId,
+    employeeId
+) {
+
+    try {
+
+        const {
+            error
+        } = await supabaseClient
+            .from("employee_roles")
+            .delete()
+            .eq(
+                "role_id",
+                roleId
+            )
+            .eq(
+                "employee_id",
+                employeeId
+            );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        await loadRoleEmployees(
+            roleId
+        );
+
+        await loadRoleEmployeeOptions(
+            roleId
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Could not remove role:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "Could not remove role."
+        );
+
+    }
+}
+
 
 // ============================================================
 // GLOBAL NAVIGATION
@@ -2979,6 +4377,105 @@ document.addEventListener(
 
             openPerson(
                 companyEmployeeCard.dataset.personId
+            );
+
+            return;
+        }
+
+        // ----------------------------------------------------
+        // ROLE CARD
+        // ----------------------------------------------------
+
+        const roleCard =
+            event.target.closest(
+                "[data-role-id]"
+            );
+
+        if (
+            roleCard &&
+            roleCard.classList.contains(
+                "role-card"
+            )
+        ) {
+
+            openRole(
+                roleCard.dataset.roleId
+            );
+
+            return;
+        }
+
+
+        // ----------------------------------------------------
+        // ASSIGN ROLE
+        // ----------------------------------------------------
+
+        const assignRoleButton =
+            event.target.closest(
+                "#assign-role-button"
+            );
+
+        if (assignRoleButton) {
+
+            const roleDetail =
+                document.querySelector(
+                    ".role-detail"
+                );
+
+            const select =
+                document.getElementById(
+                    "role-employee-select"
+                );
+
+            if (
+                roleDetail &&
+                select &&
+                select.value
+            ) {
+
+                const role =
+                    nemawashiRoles.find(
+                        item =>
+                            String(item.id) ===
+                            String(
+                                document
+                                    .querySelector(
+                                        "[data-role-id]"
+                                    )
+                                    ?.dataset.roleId
+                            )
+                    );
+
+                // The role ID is stored directly
+                // on the current page instead.
+                const currentRoleId =
+                    window.nemawashiCurrentRoleId;
+
+                await assignEmployeeToRole(
+                    currentRoleId,
+                    select.value
+                );
+
+            }
+
+            return;
+        }
+
+
+        // ----------------------------------------------------
+        // REMOVE ROLE
+        // ----------------------------------------------------
+
+        const removeRoleButton =
+            event.target.closest(
+                "[data-remove-role]"
+            );
+
+        if (removeRoleButton) {
+
+            await removeEmployeeFromRole(
+                removeRoleButton.dataset.removeRole,
+                removeRoleButton.dataset.removeEmployee
             );
 
             return;
