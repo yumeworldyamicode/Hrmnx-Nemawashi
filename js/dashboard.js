@@ -2938,6 +2938,51 @@ document.addEventListener(
             return;
         }
 
+        // ----------------------------------------------------
+        // COMPANY CARD
+        // ----------------------------------------------------
+
+        const companyCard =
+            event.target.closest(
+                "[data-company-id]"
+            );
+
+        if (
+            companyCard &&
+            companyCard.classList.contains(
+                "company-card"
+            )
+        ) {
+
+            openCompany(
+                companyCard.dataset.companyId
+            );
+
+            return;
+        }
+
+        // ----------------------------------------------------
+        // COMPANY EMPLOYEE CARD
+        // ----------------------------------------------------
+
+        const companyEmployeeCard =
+            event.target.closest(
+                "[data-person-id]"
+            );
+
+        if (
+            companyEmployeeCard &&
+            companyEmployeeCard.classList.contains(
+                "company-employee-card"
+            )
+        ) {
+
+            openPerson(
+                companyEmployeeCard.dataset.personId
+            );
+
+            return;
+        }
 
         // ----------------------------------------------------
         // PERSON CARD
