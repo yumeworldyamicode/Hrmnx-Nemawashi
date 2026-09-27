@@ -1,382 +1,354 @@
-const dashboardContent =
-    document.getElementById("dashboard-content");
+// ============================================================
+// NEMAWASHI DASHBOARD
+// ============================================================
 
-const sectionTitle =
-    document.getElementById("section-title");
+// ------------------------------------------------------------
+// DOM ELEMENTS
+// ------------------------------------------------------------
 
-const sectionLabel =
-    document.getElementById("section-label");
+const dashboardContent = document.getElementById("dashboard-content");
+const sectionTitle = document.getElementById("section-title");
+const sectionLabel = document.getElementById("section-label");
 
-const userName =
-    document.getElementById("user-name");
+const userName = document.getElementById("user-name");
+const userRole = document.getElementById("user-role");
+const userAvatarLetter = document.getElementById("user-avatar-letter");
 
-const userRole =
-    document.getElementById("user-role");
+const signOutButton = document.getElementById("sign-out-button");
 
-const userAvatarLetter =
-    document.getElementById("user-avatar-letter");
 
-const signOutButton =
-    document.getElementById("sign-out-button");
-
+// ------------------------------------------------------------
+// SECTION NAMES
+// ------------------------------------------------------------
 
 const sectionNames = {
+    overview: {
+        label: "HRMNX",
+        title: "Overview"
+    },
 
-    overview: "Overview",
+    people: {
+        label: "HRMNX",
+        title: "People"
+    },
 
-    people: "People",
+    organization: {
+        label: "HRMNX",
+        title: "Organization"
+    },
 
-    organization: "Organization",
+    permissions: {
+        label: "HRMNX",
+        title: "Permissions"
+    },
 
-    permissions: "Permissions",
+    notices: {
+        label: "SERASHIO",
+        title: "Notices"
+    },
 
-    notices: "Serashio Notices",
+    banners: {
+        label: "SERASHIO",
+        title: "Banners"
+    },
 
-    banners: "Serashio Banners",
+    artists: {
+        label: "SERASHIO",
+        title: "Artists"
+    },
 
-    "serashio-artists":
-        "Serashio Artists",
+    releases: {
+        label: "SERASHIO",
+        title: "Releases"
+    },
 
-    releases: "Releases",
+    "staff-posts": {
+        label: "KIKI",
+        title: "Staff Posts"
+    },
 
-    "kiki-posts":
-        "KiKi Staff Posts",
+    profiles: {
+        label: "KIKI",
+        title: "Profiles"
+    },
 
-    "kiki-profiles":
-        "KiKi Profiles",
+    orders: {
+        label: "DIRECT MESSAGES",
+        title: "Orders"
+    },
 
-    "dm-orders":
-        "DM Orders",
+    coupons: {
+        label: "DIRECT MESSAGES",
+        title: "Coupons"
+    },
 
-    "dm-coupons":
-        "DM Coupons",
+    entitlements: {
+        label: "DIRECT MESSAGES",
+        title: "Entitlements"
+    },
 
-    "dm-entitlements":
-        "DM Entitlements",
+    auditions: {
+        label: "HRMNX AUDITION",
+        title: "Auditions"
+    },
 
-    auditions: "Auditions",
-
-    applications: "Applications"
-
+    applications: {
+        label: "HRMNX AUDITION",
+        title: "Applications"
+    }
 };
 
+
+// ------------------------------------------------------------
+// CURRENT USER
+// ------------------------------------------------------------
+
+window.nemawashiUser = null;
+
+
+// ------------------------------------------------------------
+// REQUIRE USER
+// ------------------------------------------------------------
 
 async function requireUser() {
 
     const {
-        data: {
-            user
-        },
+        data,
         error
-    } =
-        await supabaseClient.auth.getUser();
+    } = await supabaseClient.auth.getUser();
 
-
-    if (error || !user) {
-
-        window.location.href =
-            "index.html";
-
+    if (error) {
+        console.error("Authentication error:", error);
+        window.location.href = "index.html";
         return null;
-
     }
 
+    if (!data || !data.user) {
+        window.location.href = "index.html";
+        return null;
+    }
 
-    return user;
-
+    return data.user;
 }
 
 
+// ------------------------------------------------------------
+// OVERVIEW
+// ------------------------------------------------------------
+
 function renderOverview(user) {
 
-    sectionLabel.textContent =
-        "HRMNX ADMINISTRATION";
-
-    sectionTitle.textContent =
-        "Overview";
-
+    sectionLabel.textContent = "HRMNX";
+    sectionTitle.textContent = "Overview";
 
     dashboardContent.innerHTML = `
+        <div class="dashboard-welcome">
 
-        <div class="page-intro">
-
-            <h2>
-                Welcome to Nemawashi.
-            </h2>
-
-            <p>
-                Hrmnx Entertainment's
-                internal administration workspace.
-            </p>
-
-        </div>
-
-
-        <div class="stats-grid">
-
-            <div class="stat-card">
-                <span>
-                    YOUR ACCOUNT
+            <div class="welcome-text">
+                <span class="eyebrow">
+                    NEMAWASHI
                 </span>
 
-                <strong>
-                    Active
-                </strong>
-            </div>
+                <h2>
+                    Welcome back.
+                </h2>
 
-
-            <div class="stat-card">
-                <span>
-                    SERASHIO
-                </span>
-
-                <strong>
-                    —
-                </strong>
-            </div>
-
-
-            <div class="stat-card">
-                <span>
-                    KIKI
-                </span>
-
-                <strong>
-                    —
-                </strong>
-            </div>
-
-
-            <div class="stat-card">
-                <span>
-                    HRMNX
-                </span>
-
-                <strong>
-                    —
-                </strong>
+                <p>
+                    Manage the Hrmnx Entertainment ecosystem
+                    from one central workspace.
+                </p>
             </div>
 
         </div>
 
 
-        <div class="module-grid">
+        <div class="dashboard-grid">
 
             ${moduleCard(
-                "✦",
+                "People",
+                "Manage employees, profiles, roles and artist assignments.",
+                "people"
+            )}
+
+            ${moduleCard(
+                "Organization",
+                "Manage companies and subsidiaries within Hrmnx.",
+                "organization"
+            )}
+
+            ${moduleCard(
+                "Permissions",
+                "Manage roles and access across Nemawashi.",
+                "permissions"
+            )}
+
+            ${moduleCard(
                 "Serashio",
                 "Manage notices, banners, artists and releases.",
                 "notices"
             )}
 
             ${moduleCard(
-                "✎",
                 "KiKi",
-                "Manage staff posts, profiles and permissions.",
-                "kiki-posts"
+                "Manage official posts and community profiles.",
+                "staff-posts"
             )}
 
             ${moduleCard(
-                "％",
                 "Direct Messages",
-                "Manage orders, coupons and DM entitlements.",
-                "dm-orders"
+                "Manage orders, coupons and entitlements.",
+                "orders"
             )}
 
             ${moduleCard(
-                "○",
-                "People",
-                "Manage employee profiles and organization access.",
-                "people"
-            )}
-
-            ${moduleCard(
-                "☆",
-                "Auditions",
-                "Manage Hrmnx audition operations.",
+                "Hrmnx Audition",
+                "Manage auditions and applications.",
                 "auditions"
             )}
 
-            ${moduleCard(
-                "◆",
-                "Permissions",
-                "Control roles and access across Hrmnx.",
-                "permissions"
-            )}
-
         </div>
-
     `;
-
 }
 
 
-function moduleCard(
-    icon,
-    title,
-    description,
-    section
-) {
+// ------------------------------------------------------------
+// MODULE CARD
+// ------------------------------------------------------------
+
+function moduleCard(title, description, module) {
 
     return `
-
         <button
-            class="module-card"
-            data-module="${section}"
+            class="dashboard-module-card"
+            data-module="${escapeAttribute(module)}"
             type="button"
-            style="
-                text-align:left;
-                border:1px solid var(--border);
-                font-family:inherit;
-                cursor:pointer;
-            "
         >
 
-            <div class="module-icon">
-                ${icon}
+            <div class="module-card-arrow">
+                →
             </div>
 
             <h3>
-                ${title}
+                ${escapeHtml(title)}
             </h3>
 
             <p>
-                ${description}
+                ${escapeHtml(description)}
             </p>
 
         </button>
-
     `;
-
 }
 
 
-/* =========================================================
-   SECTION NAVIGATION
-   ========================================================= */
+// ------------------------------------------------------------
+// OPEN SECTION
+// ------------------------------------------------------------
 
 async function openSection(section) {
 
-    const title =
-        sectionNames[section] || "Nemawashi";
+    if (!section) {
+        return;
+    }
 
-    sectionTitle.textContent =
-        title;
+    const info = sectionNames[section];
 
+    if (info) {
+        sectionLabel.textContent = info.label;
+        sectionTitle.textContent = info.title;
+    }
 
+    // Overview
     if (section === "overview") {
-
-        sectionLabel.textContent =
-            "HRMNX ADMINISTRATION";
-
-        renderOverview(
-            window.nemawashiUser
-        );
-
+        renderOverview(window.nemawashiUser);
         return;
-
     }
 
-
+    // People
     if (section === "people") {
-
-        sectionLabel.textContent =
-            "HRMNX ADMINISTRATION";
-
-        sectionTitle.textContent =
-            "People";
-
         await renderPeople();
-
         return;
-
     }
 
-
-    sectionLabel.textContent =
-        "HRMNX ADMINISTRATION";
-
-    await renderPlaceholder(section);
-
+    // Everything else for now
+    renderPlaceholder(section);
 }
 
 
-/* =========================================================
-   PLACEHOLDER MODULES
-   ========================================================= */
+// ------------------------------------------------------------
+// PLACEHOLDER
+// ------------------------------------------------------------
 
-async function renderPlaceholder(section) {
+function renderPlaceholder(section) {
 
-    const content =
-        document.getElementById(
-            "dashboard-content"
-        );
+    const info =
+        sectionNames[section] || {
+            label: "NEMAWASHI",
+            title: section
+        };
 
+    sectionLabel.textContent = info.label;
+    sectionTitle.textContent = info.title;
 
-    content.innerHTML = `
-
-        <div class="module-placeholder">
+    dashboardContent.innerHTML = `
+        <div class="dashboard-placeholder">
 
             <div class="placeholder-icon">
                 ✦
             </div>
 
             <h2>
-                This management module is being connected
+                ${escapeHtml(info.title)}
             </h2>
 
             <p>
-                This section will be connected to the
-                Hrmnx Supabase database.
+                This Nemawashi module is currently being built.
             </p>
 
         </div>
-
     `;
-
 }
 
 
-/* =========================================================
-   PEOPLE
-   ========================================================= */
+// ============================================================
+// PEOPLE
+// ============================================================
+
+let nemawashiPeople = [];
+
+
+// ------------------------------------------------------------
+// RENDER PEOPLE
+// ------------------------------------------------------------
 
 async function renderPeople() {
 
-    const content =
-        document.getElementById(
-            "dashboard-content"
-        );
+    sectionLabel.textContent = "HRMNX";
+    sectionTitle.textContent = "People";
 
-
-    content.innerHTML = `
-
-        <div class="module-header">
+    dashboardContent.innerHTML = `
+        <div class="people-header">
 
             <div>
-
-                <div class="module-kicker">
+                <span class="eyebrow">
                     HRMNX
-                </div>
+                </span>
 
-                <h1>
+                <h2>
                     People
-                </h1>
+                </h2>
 
                 <p>
-                    Manage employees, staff accounts,
-                    roles and organization assignments.
+                    Manage Hrmnx employees and their organization access.
                 </p>
-
             </div>
-
 
             <button
                 class="primary-button"
-                id="refresh-people"
+                id="add-person-button"
                 type="button"
             >
-                Refresh
+                + Add person
             </button>
 
         </div>
@@ -384,25 +356,17 @@ async function renderPeople() {
 
         <div class="people-toolbar">
 
-            <div class="people-search">
-
-                <span>
-                    ⌕
-                </span>
-
-                <input
-                    type="text"
-                    id="people-search-input"
-                    placeholder="Search people..."
-                    autocomplete="off"
-                >
-
-            </div>
-
+            <input
+                type="search"
+                id="people-search"
+                class="people-search"
+                placeholder="Search people..."
+                autocomplete="off"
+            />
 
             <div
-                class="people-count"
                 id="people-count"
+                class="people-count"
             >
                 Loading...
             </div>
@@ -410,83 +374,115 @@ async function renderPeople() {
         </div>
 
 
-        <div id="people-list">
-
+        <div
+            id="people-list"
+            class="people-list"
+        >
             <div class="people-loading">
                 Loading people...
             </div>
-
         </div>
-
     `;
 
+    const searchInput =
+        document.getElementById("people-search");
 
-    document
-        .getElementById("refresh-people")
-        ?.addEventListener(
-            "click",
-            loadPeople
-        );
+    if (searchInput) {
 
-
-    document
-        .getElementById("people-search-input")
-        ?.addEventListener(
+        searchInput.addEventListener(
             "input",
-            filterPeople
+            function () {
+                filterPeople(this.value);
+            }
         );
-
+    }
 
     await loadPeople();
-
 }
 
 
-let nemawashiPeople = [];
-
+// ------------------------------------------------------------
+// LOAD PEOPLE
+// ------------------------------------------------------------
 
 async function loadPeople() {
 
     const list =
-        document.getElementById(
-            "people-list"
-        );
-
+        document.getElementById("people-list");
 
     if (!list) {
         return;
     }
 
-
     list.innerHTML = `
-
         <div class="people-loading">
             Loading people...
         </div>
-
     `;
 
+    try {
 
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
+        // ----------------------------------------------------
+        // LOAD EMPLOYEES
+        // ----------------------------------------------------
 
+        const {
+            data: employees,
+            error: employeesError
+        } = await supabaseClient
             .from("employees")
-
             .select(`
-
                 id,
                 user_id,
                 employee_number,
                 job_title,
                 active,
                 company_id,
-                created_at,
+                created_at
+            `)
+            .order("created_at", {
+                ascending: false
+            });
 
-                profiles:user_id (
+        if (employeesError) {
+            console.error(
+                "Employees error:",
+                employeesError
+            );
 
+            throw employeesError;
+        }
+
+
+        if (!employees || employees.length === 0) {
+
+            nemawashiPeople = [];
+
+            renderPeopleList();
+            updatePeopleCount();
+
+            return;
+        }
+
+
+        // ----------------------------------------------------
+        // LOAD PROFILES SEPARATELY
+        // ----------------------------------------------------
+
+        const userIds = employees
+            .map(employee => employee.user_id)
+            .filter(Boolean);
+
+        let profiles = [];
+
+        if (userIds.length > 0) {
+
+            const {
+                data: profileData,
+                error: profilesError
+            } = await supabaseClient
+                .from("profiles")
+                .select(`
                     id,
                     username,
                     display_name,
@@ -494,38 +490,123 @@ async function loadPeople() {
                     bio,
                     is_staff,
                     profile_type
+                `)
+                .in("id", userIds);
 
-                ),
+            if (profilesError) {
 
-                companies:company_id (
+                console.error(
+                    "Profiles error:",
+                    profilesError
+                );
 
+                throw profilesError;
+            }
+
+            profiles = profileData || [];
+        }
+
+
+        // ----------------------------------------------------
+        // PROFILE LOOKUP
+        // ----------------------------------------------------
+
+        const profileMap = {};
+
+        profiles.forEach(profile => {
+
+            profileMap[profile.id] = profile;
+
+        });
+
+
+        // ----------------------------------------------------
+        // LOAD COMPANIES SEPARATELY
+        // ----------------------------------------------------
+
+        const companyIds = employees
+            .map(employee => employee.company_id)
+            .filter(Boolean);
+
+        let companies = [];
+
+        if (companyIds.length > 0) {
+
+            const {
+                data: companyData,
+                error: companiesError
+            } = await supabaseClient
+                .from("companies")
+                .select(`
                     id,
                     name,
                     slug
+                `)
+                .in("id", companyIds);
 
-                )
+            if (companiesError) {
 
-            `)
+                console.error(
+                    "Companies error:",
+                    companiesError
+                );
 
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            );
+                throw companiesError;
+            }
+
+            companies = companyData || [];
+        }
 
 
-    if (error) {
+        // ----------------------------------------------------
+        // COMPANY LOOKUP
+        // ----------------------------------------------------
+
+        const companyMap = {};
+
+        companies.forEach(company => {
+
+            companyMap[company.id] = company;
+
+        });
+
+
+        // ----------------------------------------------------
+        // COMBINE DATA
+        // ----------------------------------------------------
+
+        nemawashiPeople =
+            employees.map(employee => {
+
+                return {
+                    ...employee,
+
+                    profiles:
+                        profileMap[employee.user_id] || null,
+
+                    companies:
+                        companyMap[employee.company_id] || null
+                };
+
+            });
+
+
+        // ----------------------------------------------------
+        // RENDER
+        // ----------------------------------------------------
+
+        renderPeopleList();
+        updatePeopleCount();
+
+    } catch (error) {
 
         console.error(
-            "Nemawashi people error:",
+            "Could not load people:",
             error
         );
 
-
         list.innerHTML = `
-
-            <div class="module-error">
+            <div class="people-error">
 
                 <strong>
                     Could not load people
@@ -533,294 +614,212 @@ async function loadPeople() {
 
                 <p>
                     ${escapeHtml(
-                        error.message
+                        error.message ||
+                        "An unknown error occurred."
                     )}
                 </p>
 
             </div>
-
         `;
-
-        return;
-
     }
-
-
-    nemawashiPeople =
-        data || [];
-
-
-    updatePeopleCount(
-        nemawashiPeople.length
-    );
-
-
-    renderPeopleList(
-        nemawashiPeople
-    );
-
 }
 
 
-function renderPeopleList(people) {
+// ------------------------------------------------------------
+// RENDER PEOPLE LIST
+// ------------------------------------------------------------
+
+function renderPeopleList(
+    people = nemawashiPeople
+) {
 
     const list =
-        document.getElementById(
-            "people-list"
-        );
-
+        document.getElementById("people-list");
 
     if (!list) {
         return;
     }
 
 
-    if (!people.length) {
+    if (!people || people.length === 0) {
 
         list.innerHTML = `
-
             <div class="people-empty">
 
-                <div class="people-empty-icon">
-                    ○
+                <div class="empty-icon">
+                    ♡
                 </div>
 
                 <h3>
-                    No employees found
+                    No people found
                 </h3>
 
                 <p>
-                    Employee accounts will appear here
-                    once they are added to Nemawashi.
+                    No employees match your search.
                 </p>
 
             </div>
-
         `;
 
         return;
-
     }
 
 
-    list.innerHTML = `
+    list.innerHTML = people
+        .map(person => {
 
-        <div class="people-table">
+            const profile =
+                person.profiles || {};
 
-            <div class="people-table-head">
+            const company =
+                person.companies || {};
 
-                <div>
-                    Person
-                </div>
+            const displayName =
+                profile.display_name ||
+                profile.username ||
+                "Unnamed person";
 
-                <div>
-                    Company
-                </div>
+            const username =
+                profile.username
+                    ? `@${profile.username}`
+                    : "";
 
-                <div>
-                    Job title
-                </div>
+            const jobTitle =
+                person.job_title ||
+                "No job title";
 
-                <div>
-                    Status
-                </div>
+            const companyName =
+                company.name ||
+                "No company assigned";
 
-            </div>
+            const employeeNumber =
+                person.employee_number ||
+                "No employee number";
 
+            const avatar =
+                profile.avatar_url;
 
-            ${people.map(
-                person => {
-
-                    const profile =
-                        person.profiles;
-
-                    const company =
-                        person.companies;
-
-
-                    const displayName =
-                        profile?.display_name ||
-                        profile?.username ||
-                        "Unnamed employee";
-
-
-                    const avatar =
-                        profile?.avatar_url;
+            const initial =
+                (
+                    displayName
+                        .trim()
+                        .charAt(0) ||
+                    "?"
+                ).toUpperCase();
 
 
-                    const avatarHTML =
-                        avatar
+            return `
+                <button
+                    class="person-card"
+                    type="button"
+                    data-person-id="${escapeAttribute(
+                        person.id
+                    )}"
+                >
 
-                        ?
+                    <div class="person-avatar">
 
-                        `
+                        ${
+                            avatar
+                                ? `
+                                    <img
+                                        src="${escapeAttribute(
+                                            avatar
+                                        )}"
+                                        alt=""
+                                    >
+                                `
+                                : `
+                                    <span>
+                                        ${escapeHtml(initial)}
+                                    </span>
+                                `
+                        }
 
-                            <img
-                                src="${escapeAttribute(
-                                    avatar
-                                )}"
-                                alt=""
-                                class="person-avatar"
-                            >
+                    </div>
 
-                        `
 
-                        :
+                    <div class="person-info">
 
-                        `
+                        <div class="person-name-row">
 
-                            <div
-                                class="
-                                    person-avatar
-                                    person-avatar-placeholder
-                                "
-                            >
-
+                            <h3>
                                 ${escapeHtml(
                                     displayName
-                                        .charAt(0)
-                                        .toUpperCase()
                                 )}
+                            </h3>
 
-                            </div>
+                            ${
+                                person.active
+                                    ? `
+                                        <span class="person-status active">
+                                            Active
+                                        </span>
+                                    `
+                                    : `
+                                        <span class="person-status inactive">
+                                            Inactive
+                                        </span>
+                                    `
+                            }
 
-                        `;
-
-
-                    return `
-
-                        <button
-                            class="person-row"
-                            data-person-id="${person.id}"
-                            type="button"
-                        >
-
-                            <div class="person-main">
-
-                                ${avatarHTML}
-
-
-                                <div>
-
-                                    <strong>
-                                        ${escapeHtml(
-                                            displayName
-                                        )}
-                                    </strong>
+                        </div>
 
 
-                                    <span>
-                                        @${escapeHtml(
-                                            profile?.username ||
-                                            "no-username"
-                                        )}
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-
-                            <div class="person-company">
-
-                                ${escapeHtml(
-                                    company?.name ||
-                                    "Unassigned"
-                                )}
-
-                            </div>
+                        ${
+                            username
+                                ? `
+                                    <div class="person-username">
+                                        ${escapeHtml(username)}
+                                    </div>
+                                `
+                                : ""
+                        }
 
 
-                            <div class="person-job">
+                        <div class="person-meta">
 
-                                ${escapeHtml(
-                                    person.job_title ||
-                                    "No job title"
-                                )}
+                            <span>
+                                ${escapeHtml(jobTitle)}
+                            </span>
 
-                            </div>
+                            <span>
+                                ${escapeHtml(companyName)}
+                            </span>
 
+                            <span>
+                                ${escapeHtml(employeeNumber)}
+                            </span>
 
-                            <div>
+                        </div>
 
-                                <span
-                                    class="
-                                        person-status
-                                        ${
-                                            person.active
-                                                ? "active"
-                                                : "inactive"
-                                        }
-                                    "
-                                >
-
-                                    ${
-                                        person.active
-                                            ? "Active"
-                                            : "Inactive"
-                                    }
-
-                                </span>
-
-                            </div>
-
-                        </button>
-
-                    `;
-
-                }
-            ).join("")}
-
-        </div>
-
-    `;
+                    </div>
 
 
-    document
-        .querySelectorAll(".person-row")
-        .forEach(
-            row => {
+                    <div class="person-arrow">
+                        →
+                    </div>
 
-                row.addEventListener(
-                    "click",
-                    () => {
+                </button>
+            `;
 
-                        const personId =
-                            row.dataset.personId;
-
-                        openPerson(
-                            personId
-                        );
-
-                    }
-                );
-
-            }
-        );
-
+        })
+        .join("");
 }
 
 
-function filterPeople() {
+// ------------------------------------------------------------
+// FILTER PEOPLE
+// ------------------------------------------------------------
 
-    const input =
-        document.getElementById(
-            "people-search-input"
-        );
+function filterPeople(searchTerm) {
 
-
-    if (!input) {
-        return;
-    }
-
-
-    const query =
-        input.value
+    const term =
+        String(searchTerm || "")
             .trim()
             .toLowerCase();
 
-
-    if (!query) {
+    if (!term) {
 
         renderPeopleList(
             nemawashiPeople
@@ -831,95 +830,93 @@ function filterPeople() {
         );
 
         return;
-
     }
 
 
     const filtered =
-        nemawashiPeople.filter(
-            person => {
+        nemawashiPeople.filter(person => {
 
-                const profile =
-                    person.profiles;
+            const profile =
+                person.profiles || {};
 
-                const company =
-                    person.companies;
+            const company =
+                person.companies || {};
+
+            const values = [
+
+                profile.display_name,
+
+                profile.username,
+
+                profile.bio,
+
+                person.employee_number,
+
+                person.job_title,
+
+                company.name,
+
+                company.slug
+
+            ];
 
 
-                return (
+            return values.some(value =>
 
-                    profile?.display_name
-                        ?.toLowerCase()
-                        .includes(query)
+                String(value || "")
+                    .toLowerCase()
+                    .includes(term)
 
-                    ||
+            );
 
-                    profile?.username
-                        ?.toLowerCase()
-                        .includes(query)
+        });
 
-                    ||
 
-                    company?.name
-                        ?.toLowerCase()
-                        .includes(query)
-
-                    ||
-
-                    person.job_title
-                        ?.toLowerCase()
-                        .includes(query)
-
-                    ||
-
-                    person.employee_number
-                        ?.toLowerCase()
-                        .includes(query)
-
-                );
-
-            }
-        );
-
+    renderPeopleList(filtered);
 
     updatePeopleCount(
-        filtered.length
+        filtered.length,
+        true
     );
-
-
-    renderPeopleList(
-        filtered
-    );
-
 }
 
 
-function updatePeopleCount(count) {
+// ------------------------------------------------------------
+// UPDATE PEOPLE COUNT
+// ------------------------------------------------------------
+
+function updatePeopleCount(
+    count = nemawashiPeople.length,
+    filtered = false
+) {
 
     const element =
         document.getElementById(
             "people-count"
         );
 
-
     if (!element) {
         return;
     }
 
 
-    element.textContent =
-        `${count} ${
-            count === 1
-                ? "person"
-                : "people"
-        }`;
+    if (filtered) {
 
+        element.textContent =
+            `${count} result${count === 1 ? "" : "s"}`;
+
+        return;
+    }
+
+
+    element.textContent =
+        `${count} ${count === 1 ? "person" : "people"}`;
 }
 
 
-/* =========================================================
-   PERSON DETAILS
-   ========================================================= */
+// ------------------------------------------------------------
+// OPEN PERSON
+// ------------------------------------------------------------
 
 async function openPerson(personId) {
 
@@ -930,33 +927,33 @@ async function openPerson(personId) {
                 String(personId)
         );
 
-
     if (!person) {
         return;
     }
 
 
     const profile =
-        person.profiles;
+        person.profiles || {};
 
     const company =
-        person.companies;
+        person.companies || {};
 
 
-    const content =
-        document.getElementById(
-            "dashboard-content"
-        );
+    sectionLabel.textContent =
+        "HRMNX";
+
+    sectionTitle.textContent =
+        profile.display_name ||
+        "Person";
 
 
-    content.innerHTML = `
-
+    dashboardContent.innerHTML = `
         <div class="person-detail">
 
             <button
-                class="back-button"
-                id="people-back"
                 type="button"
+                class="back-button"
+                id="people-back-button"
             >
                 ← Back to People
             </button>
@@ -967,35 +964,28 @@ async function openPerson(personId) {
                 <div class="person-detail-avatar">
 
                     ${
-                        profile?.avatar_url
-
-                        ?
-
-                        `
-
-                            <img
-                                src="${escapeAttribute(
-                                    profile.avatar_url
-                                )}"
-                                alt=""
-                            >
-
-                        `
-
-                        :
-
-                        `
-
-                            ${escapeHtml(
-                                (
-                                    profile?.display_name ||
-                                    "?"
-                                )
-                                    .charAt(0)
-                                    .toUpperCase()
-                            )}
-
-                        `
+                        profile.avatar_url
+                            ? `
+                                <img
+                                    src="${escapeAttribute(
+                                        profile.avatar_url
+                                    )}"
+                                    alt=""
+                                >
+                            `
+                            : `
+                                <span>
+                                    ${escapeHtml(
+                                        (
+                                            profile.display_name ||
+                                            "?"
+                                        )
+                                        .trim()
+                                        .charAt(0)
+                                        .toUpperCase()
+                                    )}
+                                </span>
+                            `
                     }
 
                 </div>
@@ -1003,29 +993,28 @@ async function openPerson(personId) {
 
                 <div>
 
-                    <div class="module-kicker">
+                    <span class="eyebrow">
                         EMPLOYEE
-                    </div>
+                    </span>
 
-
-                    <h1>
-
+                    <h2>
                         ${escapeHtml(
-                            profile?.display_name ||
-                            "Unnamed employee"
+                            profile.display_name ||
+                            "Unnamed person"
                         )}
+                    </h2>
 
-                    </h1>
-
-
-                    <p>
-
-                        @${escapeHtml(
-                            profile?.username ||
-                            "no-username"
-                        )}
-
-                    </p>
+                    ${
+                        profile.username
+                            ? `
+                                <p>
+                                    @${escapeHtml(
+                                        profile.username
+                                    )}
+                                </p>
+                            `
+                            : ""
+                    }
 
                 </div>
 
@@ -1034,221 +1023,130 @@ async function openPerson(personId) {
 
             <div class="person-detail-grid">
 
-                <section class="detail-card">
+                <div class="detail-card">
 
-                    <div class="detail-card-title">
-                        Profile
-                    </div>
+                    <span>
+                        Employee number
+                    </span>
 
+                    <strong>
+                        ${escapeHtml(
+                            person.employee_number ||
+                            "—"
+                        )}
+                    </strong>
 
-                    <div class="detail-item">
-
-                        <span>
-                            Display name
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                profile?.display_name ||
-                                "—"
-                            )}
-                        </strong>
-
-                    </div>
+                </div>
 
 
-                    <div class="detail-item">
+                <div class="detail-card">
 
-                        <span>
-                            Username
-                        </span>
+                    <span>
+                        Job title
+                    </span>
 
-                        <strong>
+                    <strong>
+                        ${escapeHtml(
+                            person.job_title ||
+                            "—"
+                        )}
+                    </strong>
 
-                            ${
-                                profile?.username
-
-                                ?
-
-                                "@" +
-                                escapeHtml(
-                                    profile.username
-                                )
-
-                                :
-
-                                "—"
-                            }
-
-                        </strong>
-
-                    </div>
+                </div>
 
 
-                    <div class="detail-item">
+                <div class="detail-card">
 
-                        <span>
-                            Profile type
-                        </span>
+                    <span>
+                        Company
+                    </span>
 
-                        <strong>
-                            ${escapeHtml(
-                                profile?.profile_type ||
-                                "user"
-                            )}
-                        </strong>
+                    <strong>
+                        ${escapeHtml(
+                            company.name ||
+                            "—"
+                        )}
+                    </strong>
 
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Staff account
-                        </span>
-
-                        <strong>
-                            ${
-                                profile?.is_staff
-                                    ? "Yes"
-                                    : "No"
-                            }
-                        </strong>
-
-                    </div>
-
-                </section>
+                </div>
 
 
-                <section class="detail-card">
+                <div class="detail-card">
 
-                    <div class="detail-card-title">
-                        Employment
-                    </div>
+                    <span>
+                        Status
+                    </span>
 
+                    <strong>
+                        ${
+                            person.active
+                                ? "Active"
+                                : "Inactive"
+                        }
+                    </strong>
 
-                    <div class="detail-item">
-
-                        <span>
-                            Company
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                company?.name ||
-                                "Unassigned"
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Employee number
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                person.employee_number ||
-                                "—"
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Job title
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                person.job_title ||
-                                "—"
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Status
-                        </span>
-
-                        <strong>
-                            ${
-                                person.active
-                                    ? "Active"
-                                    : "Inactive"
-                            }
-                        </strong>
-
-                    </div>
-
-                </section>
+                </div>
 
             </div>
 
 
-            <section class="detail-card">
-
-                <div class="detail-card-title">
+            <div
+                id="person-roles-section"
+                class="person-detail-section"
+            >
+                <h3>
                     Roles
-                </div>
+                </h3>
 
-
-                <div id="person-roles">
+                <div>
                     Loading roles...
                 </div>
+            </div>
 
-            </section>
 
-
-            <section class="detail-card">
-
-                <div class="detail-card-title">
+            <div
+                id="person-artists-section"
+                class="person-detail-section"
+            >
+                <h3>
                     Artist assignments
-                </div>
+                </h3>
 
-
-                <div id="person-artists">
+                <div>
                     Loading artist assignments...
                 </div>
-
-            </section>
+            </div>
 
         </div>
-
     `;
 
 
-    document
-        .getElementById("people-back")
-        ?.addEventListener(
+    const backButton =
+        document.getElementById(
+            "people-back-button"
+        );
+
+    if (backButton) {
+
+        backButton.addEventListener(
             "click",
-            () => {
+            function () {
                 renderPeople();
             }
         );
 
-
-    await loadPersonRoles(
-        person.id
-    );
+    }
 
 
-    await loadPersonArtists(
-        person.id
-    );
+    await loadPersonRoles(person.id);
 
+    await loadPersonArtists(person.id);
 }
 
+
+// ------------------------------------------------------------
+// LOAD PERSON ROLES
+// ------------------------------------------------------------
 
 async function loadPersonRoles(
     employeeId
@@ -1256,129 +1154,111 @@ async function loadPersonRoles(
 
     const container =
         document.getElementById(
-            "person-roles"
+            "person-roles-section"
         );
-
 
     if (!container) {
         return;
     }
 
 
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
+    try {
 
+        const {
+            data,
+            error
+        } = await supabaseClient
             .from("employee_roles")
-
             .select(`
-
-                id,
-
+                role_id,
                 roles (
-
                     id,
                     name,
                     slug,
                     description
-
                 )
-
             `)
-
             .eq(
                 "employee_id",
                 employeeId
             );
 
 
-    if (error) {
+        if (error) {
+            throw error;
+        }
+
+
+        const roles =
+            data || [];
+
+
+        if (roles.length === 0) {
+
+            container.innerHTML = `
+                <h3>
+                    Roles
+                </h3>
+
+                <p>
+                    No roles assigned.
+                </p>
+            `;
+
+            return;
+        }
+
+
+        container.innerHTML = `
+            <h3>
+                Roles
+            </h3>
+
+            <div class="person-tags">
+
+                ${roles.map(item => {
+
+                    const role =
+                        item.roles || {};
+
+                    return `
+                        <span class="person-tag">
+                            ${escapeHtml(
+                                role.name ||
+                                role.slug ||
+                                "Unknown role"
+                            )}
+                        </span>
+                    `;
+
+                }).join("")}
+
+            </div>
+        `;
+
+    } catch (error) {
 
         console.error(
-            "Nemawashi roles error:",
+            "Could not load person roles:",
             error
         );
 
-
         container.innerHTML = `
+            <h3>
+                Roles
+            </h3>
 
-            <div class="module-error">
-
-                ${escapeHtml(
-                    error.message
-                )}
-
-            </div>
-
+            <p>
+                Could not load roles.
+            </p>
         `;
-
-        return;
-
     }
-
-
-    if (!data?.length) {
-
-        container.innerHTML = `
-
-            <div class="detail-empty">
-                No roles assigned.
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    container.innerHTML = `
-
-        <div class="assignment-list">
-
-            ${data.map(
-                item => `
-
-                    <div
-                        class="assignment-item"
-                    >
-
-                        <div>
-
-                            <strong>
-
-                                ${escapeHtml(
-                                    item.roles?.name ||
-                                    "Unknown role"
-                                )}
-
-                            </strong>
-
-
-                            <span>
-
-                                ${escapeHtml(
-                                    item.roles?.description ||
-                                    ""
-                                )}
-
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                `
-            ).join("")}
-
-        </div>
-
-    `;
-
 }
 
+
+// ------------------------------------------------------------
+// LOAD PERSON ARTISTS
+// ------------------------------------------------------------
 
 async function loadPersonArtists(
     employeeId
@@ -1386,190 +1266,119 @@ async function loadPersonArtists(
 
     const container =
         document.getElementById(
-            "person-artists"
+            "person-artists-section"
         );
-
 
     if (!container) {
         return;
     }
 
 
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
+    try {
 
+        const {
+            data,
+            error
+        } = await supabaseClient
             .from("employee_artists")
-
             .select(`
-
-                id,
-
+                artist_id,
                 artists (
-
                     id,
                     name,
                     slug,
                     avatar_url
-
                 )
-
             `)
-
             .eq(
                 "employee_id",
                 employeeId
             );
 
 
-    if (error) {
+        if (error) {
+            throw error;
+        }
+
+
+        const artists =
+            data || [];
+
+
+        if (artists.length === 0) {
+
+            container.innerHTML = `
+                <h3>
+                    Artist assignments
+                </h3>
+
+                <p>
+                    No artists assigned.
+                </p>
+            `;
+
+            return;
+        }
+
+
+        container.innerHTML = `
+            <h3>
+                Artist assignments
+            </h3>
+
+            <div class="person-tags">
+
+                ${artists.map(item => {
+
+                    const artist =
+                        item.artists || {};
+
+                    return `
+                        <span class="person-tag">
+                            ${escapeHtml(
+                                artist.name ||
+                                artist.slug ||
+                                "Unknown artist"
+                            )}
+                        </span>
+                    `;
+
+                }).join("")}
+
+            </div>
+        `;
+
+    } catch (error) {
 
         console.error(
-            "Nemawashi artist assignment error:",
+            "Could not load person artists:",
             error
         );
 
-
         container.innerHTML = `
+            <h3>
+                Artist assignments
+            </h3>
 
-            <div class="module-error">
-
-                ${escapeHtml(
-                    error.message
-                )}
-
-            </div>
-
+            <p>
+                Could not load artist assignments.
+            </p>
         `;
-
-        return;
-
     }
-
-
-    if (!data?.length) {
-
-        container.innerHTML = `
-
-            <div class="detail-empty">
-                No artist assignments.
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    container.innerHTML = `
-
-        <div class="assignment-list">
-
-            ${data.map(
-                item => `
-
-                    <div
-                        class="assignment-item"
-                    >
-
-                        <div>
-
-                            <strong>
-
-                                ${escapeHtml(
-                                    item.artists?.name ||
-                                    "Unknown artist"
-                                )}
-
-                            </strong>
-
-
-                            <span>
-
-                                @${escapeHtml(
-                                    item.artists?.slug ||
-                                    ""
-                                )}
-
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                `
-            ).join("")}
-
-        </div>
-
-    `;
-
 }
 
 
-/* =========================================================
-   SAFETY HELPERS
-   ========================================================= */
-
-function escapeHtml(value) {
-
-    if (
-        value === null ||
-        value === undefined
-    ) {
-
-        return "";
-
-    }
-
-
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-function escapeAttribute(value) {
-
-    return escapeHtml(value);
-
-}
-
-
-/* =========================================================
-   GLOBAL NAVIGATION
-   ========================================================= */
+// ============================================================
+// GLOBAL NAVIGATION
+// ============================================================
 
 document.addEventListener(
     "click",
     function (event) {
+
+        // ----------------------------------------------------
+        // SIDEBAR NAVIGATION
+        // ----------------------------------------------------
 
         const navigation =
             event.target.closest(
@@ -1580,15 +1389,14 @@ document.addEventListener(
         if (navigation) {
 
             document
-                .querySelectorAll(
-                    ".nav-item"
-                )
-                .forEach(
-                    item =>
-                        item.classList.remove(
-                            "active"
-                        )
-                );
+                .querySelectorAll(".nav-item")
+                .forEach(item => {
+
+                    item.classList.remove(
+                        "active"
+                    );
+
+                });
 
 
             if (
@@ -1609,9 +1417,12 @@ document.addEventListener(
             );
 
             return;
-
         }
 
+
+        // ----------------------------------------------------
+        // DASHBOARD MODULE CARDS
+        // ----------------------------------------------------
 
         const module =
             event.target.closest(
@@ -1625,32 +1436,73 @@ document.addEventListener(
                 module.dataset.module
             );
 
+            return;
+        }
+
+
+        // ----------------------------------------------------
+        // PERSON CARD
+        // ----------------------------------------------------
+
+        const personCard =
+            event.target.closest(
+                "[data-person-id]"
+            );
+
+
+        if (
+            personCard &&
+            personCard.classList.contains(
+                "person-card"
+            )
+        ) {
+
+            openPerson(
+                personCard.dataset.personId
+            );
+
+            return;
         }
 
     }
 );
 
 
-/* =========================================================
-   SIGN OUT
-   ========================================================= */
+// ============================================================
+// SIGN OUT
+// ============================================================
 
-signOutButton.addEventListener(
-    "click",
-    async function () {
+if (signOutButton) {
 
-        await supabaseClient.auth.signOut();
+    signOutButton.addEventListener(
+        "click",
+        async function () {
 
-        window.location.href =
-            "index.html";
+            try {
 
-    }
-);
+                await supabaseClient.auth.signOut();
+
+                window.location.href =
+                    "index.html";
+
+            } catch (error) {
+
+                console.error(
+                    "Sign out error:",
+                    error
+                );
+
+            }
+
+        }
+    );
+
+}
 
 
-/* =========================================================
-   INITIALIZE DASHBOARD
-   ========================================================= */
+// ============================================================
+// INITIALIZE DASHBOARD
+// ============================================================
 
 async function initializeDashboard() {
 
@@ -1667,29 +1519,72 @@ async function initializeDashboard() {
         user;
 
 
-    userName.textContent =
-        user.email ||
-        "Hrmnx employee";
+    // --------------------------------------------------------
+    // ACCOUNT UI
+    // --------------------------------------------------------
 
+    if (userName) {
 
-    userAvatarLetter.textContent =
-        (
+        userName.textContent =
             user.email ||
-            "H"
-        )
+            "Nemawashi user";
+
+    }
+
+
+    if (userRole) {
+
+        userRole.textContent =
+            "Hrmnx account";
+
+    }
+
+
+    if (userAvatarLetter) {
+
+        userAvatarLetter.textContent =
+            (
+                user.email ||
+                "U"
+            )
             .charAt(0)
             .toUpperCase();
 
-
-    userRole.textContent =
-        "Authenticated account";
+    }
 
 
-    renderOverview(
-        user
-    );
+    // --------------------------------------------------------
+    // INITIAL SECTION
+    // --------------------------------------------------------
+
+    renderOverview(user);
 
 }
 
+
+// ============================================================
+// HTML ESCAPING
+// ============================================================
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+function escapeAttribute(value) {
+
+    return escapeHtml(value);
+}
+
+
+// ============================================================
+// START
+// ============================================================
 
 initializeDashboard();
