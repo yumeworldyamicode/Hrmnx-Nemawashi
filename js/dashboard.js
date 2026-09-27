@@ -299,6 +299,12 @@ async function openSection(section) {
         return;
     }
 
+    // Serashio Artists
+    if (section === "artists") {
+        await renderSerashioArtists();
+        return;
+    }
+
     // Everything else
     renderPlaceholder(section);
 }
@@ -4547,6 +4553,21 @@ document.addEventListener(
             return;
         }
 
+        const artistCard =
+            event.target.closest("[data-artist-id]");
+
+        if (
+            artistCard &&
+            artistCard.classList.contains("artist-admin-card")
+        ) {
+
+            await openArtist(
+                artistCard.dataset.artistId
+            );
+
+            return;
+        }
+
     }
 );
 
@@ -6593,6 +6614,1170 @@ function formatDateTimeLocal(value) {
         `${pad(date.getHours())}:` +
         `${pad(date.getMinutes())}`
     );
+}
+
+/* =========================================================
+   SERASHIO — ARTISTS
+========================================================= */
+
+let nemawashiArtists = [];
+
+
+async function renderSerashioArtists() {
+
+    const content =
+        document.getElementById("dashboard-content");
+
+    if (!content) return;
+
+    content.innerHTML = `
+        <section class="serashio-module">
+
+            <div class="module-header">
+
+                <div>
+                    <div class="eyebrow">SERASHIO</div>
+
+                    <h1>Artists</h1>
+
+                    <p>
+                        Manage Serashio artists and their public information.
+                    </p>
+                </div>
+
+                <button
+                    class="primary-button"
+                    id="create-artist-button"
+                >
+                    + Create artist
+                </button>
+
+            </div>
+
+
+            <div class="module-toolbar">
+
+                <input
+                    type="search"
+                    id="artist-search"
+                    class="module-search"
+                    placeholder="Search artists..."
+                >
+
+                <div
+                    id="artist-count"
+                    class="module-count"
+                >
+                    0 artists
+                </div>
+
+            </div>
+
+
+            <div
+                id="artists-list"
+                class="artists-admin-list"
+            >
+                <div class="organization-loading">
+                    Loading artists...
+                </div>
+            </div>
+
+        </section>
+    `;
+
+
+    document
+        .getElementById("create-artist-button")
+        ?.addEventListener("click", () => {
+
+            openArtistEditor();
+
+        });
+
+
+    document
+        .getElementById("artist-search")
+        ?.addEventListener(
+            "input",
+            filterSerashioArtists
+        );
+
+
+    await loadSerashioArtists();
+}
+
+
+async function loadSerashioArtists() {
+
+    const list =
+        document.getElementById("artists-list");
+
+    if (!list) return;
+
+
+    const { data, error } =
+        await supabaseClient
+            .from("artists")
+            .select(`
+                id,
+                name,
+                slug,
+                description,
+                avatar_url,
+                banner_url,
+                bio,
+                created_at
+            `)
+            .order("name", {
+                ascending: true
+            });
+
+
+    if (error) {
+
+        console.error(
+            "Failed to load artists:",
+            error
+        );
+
+        list.innerHTML = `
+            <div class="organization-error">
+                Failed to load artists.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    nemawashiArtists = data || [];
+
+    renderSerashioArtistList();
+}
+
+
+function renderSerashioArtistList() {
+
+    const list =
+        document.getElementById("artists-list");
+
+    if (!list) return;
+
+
+    const search =
+        document
+            .getElementById("artist-search")
+            ?.value
+            .trim()
+            .toLowerCase() || "";
+
+
+    const filtered =
+        nemawashiArtists.filter(artist => {
+
+            return (
+                (artist.name || "")
+                    .toLowerCase()
+                    .includes(search)
+
+                ||
+
+                (artist.slug || "")
+                    .toLowerCase()
+                    .includes(search)
+
+                ||
+
+                (artist.bio || "")
+                    .toLowerCase()
+                    .includes(search)
+
+                ||
+
+                (artist.description || "")
+                    .toLowerCase()
+                    .includes(search)
+            );
+
+        });
+
+
+    updateArtistCount(filtered.length);
+
+
+    if (!filtered.length) {
+
+        list.innerHTML = `
+            <div class="organization-empty">
+
+                <strong>No artists found</strong>
+
+                <span>
+                    Create an artist to get started.
+                </span>
+
+            </div>
+        `;
+
+        return;
+    }
+
+
+    list.innerHTML =
+        filtered.map(artist => {
+
+            const avatar =
+                artist.avatar_url
+                    ? `
+                        <img
+                            src="${escapeAttribute(
+                                artist.avatar_url
+                            )}"
+                            alt=""
+                            onerror="
+                                this.style.display='none';
+                                this.parentElement.classList.add('artist-avatar-fallback');
+                            "
+                        >
+                    `
+                    : "";
+
+
+            return `
+                <article
+                    class="artist-admin-card"
+                    data-artist-id="${escapeAttribute(
+                        artist.id
+                    )}"
+                >
+
+                    <div class="artist-admin-avatar">
+                        ${avatar}
+                        <span>
+                            ${escapeHtml(
+                                (artist.name || "?")
+                                    .charAt(0)
+                                    .toUpperCase()
+                            )}
+                        </span>
+                    </div>
+
+
+                    <div class="artist-admin-info">
+
+                        <div class="artist-admin-name">
+                            ${escapeHtml(
+                                artist.name
+                            )}
+                        </div>
+
+                        <div class="artist-admin-slug">
+                            ${escapeHtml(
+                                artist.slug
+                            )}
+                        </div>
+
+                        ${
+                            artist.bio ||
+                            artist.description
+                                ? `
+                                    <div class="artist-admin-description">
+                                        ${escapeHtml(
+                                            artist.bio ||
+                                            artist.description
+                                        )}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+
+                    <div class="artist-admin-arrow">
+                        →
+                    </div>
+
+                </article>
+            `;
+
+        }).join("");
+}
+
+
+function filterSerashioArtists() {
+
+    renderSerashioArtistList();
+
+}
+
+
+function updateArtistCount(count) {
+
+    const element =
+        document.getElementById("artist-count");
+
+    if (!element) return;
+
+
+    element.textContent =
+        `${count} ${
+            count === 1
+                ? "artist"
+                : "artists"
+        }`;
+}
+
+
+/* =========================================================
+   ARTIST DETAIL
+========================================================= */
+
+async function openArtist(artistId) {
+
+    const artist =
+        nemawashiArtists.find(
+            item =>
+                String(item.id) ===
+                String(artistId)
+        );
+
+
+    if (!artist) {
+
+        await loadSerashioArtists();
+
+        return;
+    }
+
+
+    const content =
+        document.getElementById("dashboard-content");
+
+    if (!content) return;
+
+
+    content.innerHTML = `
+
+        <section class="artist-detail">
+
+            <div class="artist-detail-header">
+
+                <button
+                    class="back-button"
+                    id="back-to-artists"
+                >
+                    ← Back
+                </button>
+
+
+                <div class="artist-detail-actions">
+
+                    <button
+                        class="secondary-button"
+                        id="edit-artist-button"
+                    >
+                        Edit artist
+                    </button>
+
+                    <button
+                        class="danger-button"
+                        id="delete-artist-button"
+                    >
+                        Delete
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="artist-profile-card">
+
+                <div
+                    class="artist-profile-banner"
+                    ${
+                        artist.banner_url
+                            ? `style="
+                                background-image:
+                                url('${escapeAttribute(
+                                    artist.banner_url
+                                )}');
+                            "`
+                            : ""
+                    }
+                >
+
+                    <div class="artist-profile-banner-overlay"></div>
+
+                </div>
+
+
+                <div class="artist-profile-main">
+
+                    <div class="artist-profile-avatar">
+
+                        ${
+                            artist.avatar_url
+                                ? `
+                                    <img
+                                        src="${escapeAttribute(
+                                            artist.avatar_url
+                                        )}"
+                                        alt=""
+                                        onerror="
+                                            this.style.display='none';
+                                            this.parentElement.classList.add('artist-avatar-fallback');
+                                        "
+                                    >
+                                `
+                                : ""
+                        }
+
+                        <span>
+                            ${escapeHtml(
+                                (artist.name || "?")
+                                    .charAt(0)
+                                    .toUpperCase()
+                            )}
+                        </span>
+
+                    </div>
+
+
+                    <div class="artist-profile-heading">
+
+                        <div class="eyebrow">
+                            SERASHIO ARTIST
+                        </div>
+
+                        <h1>
+                            ${escapeHtml(
+                                artist.name
+                            )}
+                        </h1>
+
+                        <div class="artist-profile-slug">
+                            @${escapeHtml(
+                                artist.slug
+                            )}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="artist-detail-content">
+
+                    <div class="artist-detail-grid">
+
+                        <div class="detail-card">
+
+                            <div class="detail-card-label">
+                                Bio
+                            </div>
+
+                            <div class="artist-detail-text">
+                                ${
+                                    artist.bio
+                                        ? escapeHtml(
+                                            artist.bio
+                                        )
+                                        : "No bio added."
+                                }
+                            </div>
+
+                        </div>
+
+
+                        <div class="detail-card">
+
+                            <div class="detail-card-label">
+                                Description
+                            </div>
+
+                            <div class="artist-detail-text">
+                                ${
+                                    artist.description
+                                        ? escapeHtml(
+                                            artist.description
+                                        )
+                                        : "No description added."
+                                }
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="artist-url-card">
+
+                        <div>
+                            <div class="detail-card-label">
+                                Public profile
+                            </div>
+
+                            <div class="artist-url-value">
+                                /artist/${escapeHtml(
+                                    artist.slug
+                                )}
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="artist-detail-section">
+
+                        <div class="artist-section-heading">
+
+                            <div>
+                                <div class="eyebrow">
+                                    CONTENT
+                                </div>
+
+                                <h2>
+                                    Artist content
+                                </h2>
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="artist-content-summary"
+                            class="artist-content-summary"
+                        >
+                            Loading content...
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+    `;
+
+
+    document
+        .getElementById("back-to-artists")
+        ?.addEventListener("click", () => {
+
+            renderSerashioArtists();
+
+        });
+
+
+    document
+        .getElementById("edit-artist-button")
+        ?.addEventListener("click", () => {
+
+            openArtistEditor(artist.id);
+
+        });
+
+
+    document
+        .getElementById("delete-artist-button")
+        ?.addEventListener("click", () => {
+
+            deleteArtist(artist.id);
+
+        });
+
+
+    await loadArtistContentSummary(
+        artist.id
+    );
+}
+
+
+/* =========================================================
+   ARTIST CONTENT SUMMARY
+========================================================= */
+
+async function loadArtistContentSummary(
+    artistId
+) {
+
+    const element =
+        document.getElementById(
+            "artist-content-summary"
+        );
+
+    if (!element) return;
+
+
+    const [
+        noticesResult,
+        bannersResult,
+        releasesResult
+    ] = await Promise.all([
+
+        supabaseClient
+            .from("notices")
+            .select("id", {
+                count: "exact",
+                head: true
+            })
+            .eq("artist_id", artistId),
+
+        supabaseClient
+            .from("notice_banners")
+            .select("id", {
+                count: "exact",
+                head: true
+            })
+            .eq("artist_id", artistId),
+
+        supabaseClient
+            .from("releases")
+            .select("id", {
+                count: "exact",
+                head: true
+            })
+            .eq("artist_id", artistId)
+
+    ]);
+
+
+    element.innerHTML = `
+
+        <div class="artist-content-stat">
+
+            <strong>
+                ${noticesResult.count ?? 0}
+            </strong>
+
+            <span>
+                Notices
+            </span>
+
+        </div>
+
+
+        <div class="artist-content-stat">
+
+            <strong>
+                ${bannersResult.count ?? 0}
+            </strong>
+
+            <span>
+                Banners
+            </span>
+
+        </div>
+
+
+        <div class="artist-content-stat">
+
+            <strong>
+                ${releasesResult.count ?? 0}
+            </strong>
+
+            <span>
+                Releases
+            </span>
+
+        </div>
+    `;
+}
+
+
+/* =========================================================
+   ARTIST EDITOR
+========================================================= */
+
+function openArtistEditor(
+    artistId = null
+) {
+
+    const existing =
+        artistId
+            ? nemawashiArtists.find(
+                artist =>
+                    String(artist.id) ===
+                    String(artistId)
+            )
+            : null;
+
+
+    const content =
+        document.getElementById(
+            "dashboard-content"
+        );
+
+    if (!content) return;
+
+
+    content.innerHTML = `
+
+        <section class="notice-editor">
+
+            <div class="notice-editor-card">
+
+                <div class="notice-editor-header">
+
+                    <button
+                        class="back-button"
+                        id="back-from-artist-editor"
+                    >
+                        ← Back
+                    </button>
+
+                    <div>
+
+                        <div class="eyebrow">
+                            SERASHIO
+                        </div>
+
+                        <h1>
+                            ${
+                                existing
+                                    ? "Edit artist"
+                                    : "Create artist"
+                            }
+                        </h1>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    id="artist-form"
+                    class="notice-form"
+                >
+
+                    <div class="notice-form-field">
+
+                        <label for="artist-name">
+                            Name
+                        </label>
+
+                        <input
+                            id="artist-name"
+                            type="text"
+                            required
+                            maxlength="200"
+                            value="${escapeAttribute(
+                                existing?.name || ""
+                            )}"
+                            placeholder="Artist name"
+                        >
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="artist-slug">
+                            Slug
+                        </label>
+
+                        <input
+                            id="artist-slug"
+                            type="text"
+                            required
+                            maxlength="200"
+                            value="${escapeAttribute(
+                                existing?.slug || ""
+                            )}"
+                            placeholder="artist-slug"
+                        >
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="artist-avatar">
+                            Avatar URL
+                        </label>
+
+                        <input
+                            id="artist-avatar"
+                            type="url"
+                            value="${escapeAttribute(
+                                existing?.avatar_url || ""
+                            )}"
+                            placeholder="https://..."
+                        >
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="artist-banner">
+                            Banner URL
+                        </label>
+
+                        <input
+                            id="artist-banner"
+                            type="url"
+                            value="${escapeAttribute(
+                                existing?.banner_url || ""
+                            )}"
+                            placeholder="https://..."
+                        >
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="artist-bio">
+                            Bio
+                        </label>
+
+                        <textarea
+                            id="artist-bio"
+                            rows="4"
+                            placeholder="Short artist biography..."
+                        >${escapeHtml(
+                            existing?.bio || ""
+                        )}</textarea>
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="artist-description">
+                            Description
+                        </label>
+
+                        <textarea
+                            id="artist-description"
+                            rows="6"
+                            placeholder="Longer artist description..."
+                        >${escapeHtml(
+                            existing?.description || ""
+                        )}</textarea>
+
+                    </div>
+
+
+                    <div
+                        id="artist-editor-message"
+                        class="notice-editor-message"
+                        style="display:none;"
+                    ></div>
+
+
+                    <div class="notice-form-actions">
+
+                        <button
+                            type="button"
+                            class="secondary-button"
+                            id="cancel-artist-button"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="person-save-button"
+                            id="save-artist-button"
+                        >
+                            ${
+                                existing
+                                    ? "Save changes"
+                                    : "Create artist"
+                            }
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+    `;
+
+
+    document
+        .getElementById(
+            "back-from-artist-editor"
+        )
+        ?.addEventListener("click", () => {
+
+            if (existing) {
+
+                openArtist(existing.id);
+
+            } else {
+
+                renderSerashioArtists();
+
+            }
+
+        });
+
+
+    document
+        .getElementById("cancel-artist-button")
+        ?.addEventListener("click", () => {
+
+            if (existing) {
+
+                openArtist(existing.id);
+
+            } else {
+
+                renderSerashioArtists();
+
+            }
+
+        });
+
+
+    document
+        .getElementById("artist-form")
+        ?.addEventListener(
+            "submit",
+            async event => {
+
+                event.preventDefault();
+
+                await saveArtist(artistId);
+
+            }
+        );
+}
+
+
+async function saveArtist(
+    artistId = null
+) {
+
+    const button =
+        document.getElementById(
+            "save-artist-button"
+        );
+
+
+    const name =
+        document.getElementById(
+            "artist-name"
+        )?.value.trim();
+
+
+    const slug =
+        document.getElementById(
+            "artist-slug"
+        )?.value.trim();
+
+
+    const avatarUrl =
+        document.getElementById(
+            "artist-avatar"
+        )?.value.trim();
+
+
+    const bannerUrl =
+        document.getElementById(
+            "artist-banner"
+        )?.value.trim();
+
+
+    const bio =
+        document.getElementById(
+            "artist-bio"
+        )?.value.trim();
+
+
+    const description =
+        document.getElementById(
+            "artist-description"
+        )?.value.trim();
+
+
+    if (!name) {
+
+        showArtistEditorMessage(
+            "Artist name is required.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (!slug) {
+
+        showArtistEditorMessage(
+            "Artist slug is required.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (button) {
+
+        button.disabled = true;
+        button.textContent = "Saving...";
+
+    }
+
+
+    const payload = {
+
+        name,
+
+        slug,
+
+        avatar_url:
+            avatarUrl || null,
+
+        banner_url:
+            bannerUrl || null,
+
+        bio:
+            bio || null,
+
+        description:
+            description || null
+
+    };
+
+
+    let result;
+
+
+    if (artistId) {
+
+        result =
+            await supabaseClient
+                .from("artists")
+                .update(payload)
+                .eq("id", artistId);
+
+    } else {
+
+        result =
+            await supabaseClient
+                .from("artists")
+                .insert(payload);
+
+    }
+
+
+    if (result.error) {
+
+        console.error(
+            "Failed to save artist:",
+            result.error
+        );
+
+
+        showArtistEditorMessage(
+            result.error.message ||
+            "Failed to save artist.",
+            "error"
+        );
+
+
+        if (button) {
+
+            button.disabled = false;
+
+            button.textContent =
+                artistId
+                    ? "Save changes"
+                    : "Create artist";
+
+        }
+
+        return;
+    }
+
+
+    await renderSerashioArtists();
+}
+
+
+async function deleteArtist(
+    artistId
+) {
+
+    const artist =
+        nemawashiArtists.find(
+            item =>
+                String(item.id) ===
+                String(artistId)
+        );
+
+
+    if (!artist) return;
+
+
+    const confirmed =
+        window.confirm(
+            `Delete "${artist.name}"?`
+        );
+
+
+    if (!confirmed) return;
+
+
+    const { error } =
+        await supabaseClient
+            .from("artists")
+            .delete()
+            .eq("id", artistId);
+
+
+    if (error) {
+
+        console.error(
+            "Failed to delete artist:",
+            error
+        );
+
+
+        window.alert(
+            error.message ||
+            "Failed to delete artist."
+        );
+
+        return;
+    }
+
+
+    await renderSerashioArtists();
+}
+
+
+function showArtistEditorMessage(
+    message,
+    type = ""
+) {
+
+    const element =
+        document.getElementById(
+            "artist-editor-message"
+        );
+
+    if (!element) return;
+
+
+    element.textContent = message;
+
+    element.className =
+        `notice-editor-message ${type}`;
+
+    element.style.display =
+        "block";
 }
 
 
