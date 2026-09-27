@@ -270,6 +270,12 @@ async function openSection(section) {
         return;
     }
 
+    // Organization
+    if (section === "organization") {
+        await renderOrganization();
+        return;
+    }
+
     // Everything else for now
     renderPlaceholder(section);
 }
@@ -1918,6 +1924,945 @@ async function loadPersonArtists(
                 Could not load artist assignments.
             </p>
         `;
+    }
+}
+
+// ============================================================
+// ORGANIZATION
+// ============================================================
+
+let nemawashiCompanies = [];
+
+
+// ------------------------------------------------------------
+// RENDER ORGANIZATION
+// ------------------------------------------------------------
+
+async function renderOrganization() {
+
+    sectionLabel.textContent = "HRMNX";
+    sectionTitle.textContent = "Organization";
+
+    dashboardContent.innerHTML = `
+        <div class="organization-header">
+
+            <div>
+                <span class="eyebrow">
+                    HRMNX
+                </span>
+
+                <h2>
+                    Organization
+                </h2>
+
+                <p>
+                    Manage companies and subsidiaries
+                    within Hrmnx Entertainment.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="organization-toolbar">
+
+            <input
+                type="search"
+                id="organization-search"
+                class="organization-search"
+                placeholder="Search companies..."
+                autocomplete="off"
+            />
+
+            <div
+                id="organization-count"
+                class="organization-count"
+            >
+                Loading...
+            </div>
+
+        </div>
+
+
+        <div
+            id="organization-list"
+            class="organization-list"
+        >
+            <div class="organization-loading">
+                Loading companies...
+            </div>
+        </div>
+    `;
+
+
+    const searchInput =
+        document.getElementById(
+            "organization-search"
+        );
+
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            "input",
+            function () {
+
+                filterCompanies(
+                    this.value
+                );
+
+            }
+        );
+
+    }
+
+
+    await loadCompanies();
+}
+
+
+// ------------------------------------------------------------
+// LOAD COMPANIES
+// ------------------------------------------------------------
+
+async function loadCompanies() {
+
+    const list =
+        document.getElementById(
+            "organization-list"
+        );
+
+
+    if (!list) {
+        return;
+    }
+
+
+    list.innerHTML = `
+        <div class="organization-loading">
+            Loading companies...
+        </div>
+    `;
+
+
+    try {
+
+        const {
+            data: companies,
+            error
+        } = await supabaseClient
+            .from("companies")
+            .select(`
+                id,
+                name,
+                slug
+            `)
+            .order("name", {
+                ascending: true
+            });
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        const companyList =
+            companies || [];
+
+
+        // ----------------------------------------------------
+        // LOAD EMPLOYEES
+        // ----------------------------------------------------
+
+        const companyIds =
+            companyList
+                .map(company => company.id);
+
+
+        let employees = [];
+
+
+        if (companyIds.length > 0) {
+
+            const {
+                data: employeeData,
+                error: employeeError
+            } = await supabaseClient
+                .from("employees")
+                .select(`
+                    id,
+                    company_id,
+                    user_id,
+                    job_title,
+                    active
+                `)
+                .in(
+                    "company_id",
+                    companyIds
+                );
+
+
+            if (employeeError) {
+                throw employeeError;
+            }
+
+
+            employees =
+                employeeData || [];
+
+        }
+
+
+        // ----------------------------------------------------
+        // EMPLOYEE COUNTS
+        // ----------------------------------------------------
+
+        const employeeCounts = {};
+
+
+        companyIds.forEach(
+            companyId => {
+
+                employeeCounts[
+                    companyId
+                ] = 0;
+
+            }
+        );
+
+
+        employees.forEach(
+            employee => {
+
+                if (
+                    employee.company_id &&
+                    employeeCounts[
+                        employee.company_id
+                    ] !== undefined
+                ) {
+
+                    employeeCounts[
+                        employee.company_id
+                    ]++;
+
+                }
+
+            }
+        );
+
+
+        nemawashiCompanies =
+            companyList.map(
+                company => ({
+
+                    ...company,
+
+                    employee_count:
+                        employeeCounts[
+                            company.id
+                        ] || 0
+
+                })
+            );
+
+
+        renderCompanyList();
+
+        updateCompanyCount();
+
+    } catch (error) {
+
+        console.error(
+            "Could not load companies:",
+            error
+        );
+
+
+        list.innerHTML = `
+            <div class="organization-error">
+
+                <strong>
+                    Could not load organization
+                </strong>
+
+                <p>
+                    ${escapeHtml(
+                        error.message ||
+                        "An unknown error occurred."
+                    )}
+                </p>
+
+            </div>
+        `;
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// RENDER COMPANY LIST
+// ------------------------------------------------------------
+
+function renderCompanyList(
+    companies = nemawashiCompanies
+) {
+
+    const list =
+        document.getElementById(
+            "organization-list"
+        );
+
+
+    if (!list) {
+        return;
+    }
+
+
+    if (
+        !companies ||
+        companies.length === 0
+    ) {
+
+        list.innerHTML = `
+            <div class="organization-empty">
+
+                <div class="empty-icon">
+                    ✦
+                </div>
+
+                <h3>
+                    No companies found
+                </h3>
+
+                <p>
+                    No companies match your search.
+                </p>
+
+            </div>
+        `;
+
+        return;
+    }
+
+
+    list.innerHTML =
+        companies.map(
+            company => {
+
+                return `
+                    <button
+                        type="button"
+                        class="company-card"
+                        data-company-id="${escapeAttribute(
+                            company.id
+                        )}"
+                    >
+
+                        <div class="company-icon">
+                            ${escapeHtml(
+                                (
+                                    company.name ||
+                                    "?"
+                                )
+                                .trim()
+                                .charAt(0)
+                                .toUpperCase()
+                            )}
+                        </div>
+
+
+                        <div class="company-info">
+
+                            <div class="company-name">
+                                ${escapeHtml(
+                                    company.name ||
+                                    "Unnamed company"
+                                )}
+                            </div>
+
+                            <div class="company-slug">
+                                ${company.slug
+                                    ? escapeHtml(
+                                        company.slug
+                                    )
+                                    : "No slug"
+                                }
+                            </div>
+
+                        </div>
+
+
+                        <div class="company-members">
+
+                            <strong>
+                                ${company.employee_count}
+                            </strong>
+
+                            <span>
+                                ${
+                                    company.employee_count === 1
+                                        ? "employee"
+                                        : "employees"
+                                }
+                            </span>
+
+                        </div>
+
+
+                        <div class="company-arrow">
+                            →
+                        </div>
+
+                    </button>
+                `;
+
+            }
+        ).join("");
+}
+
+
+// ------------------------------------------------------------
+// FILTER COMPANIES
+// ------------------------------------------------------------
+
+function filterCompanies(
+    searchTerm
+) {
+
+    const term =
+        String(searchTerm || "")
+            .trim()
+            .toLowerCase();
+
+
+    if (!term) {
+
+        renderCompanyList(
+            nemawashiCompanies
+        );
+
+        updateCompanyCount(
+            nemawashiCompanies.length
+        );
+
+        return;
+    }
+
+
+    const filtered =
+        nemawashiCompanies.filter(
+            company => {
+
+                return [
+
+                    company.name,
+
+                    company.slug
+
+                ].some(value =>
+
+                    String(value || "")
+                        .toLowerCase()
+                        .includes(term)
+
+                );
+
+            }
+        );
+
+
+    renderCompanyList(
+        filtered
+    );
+
+
+    updateCompanyCount(
+        filtered.length,
+        true
+    );
+}
+
+
+// ------------------------------------------------------------
+// UPDATE COMPANY COUNT
+// ------------------------------------------------------------
+
+function updateCompanyCount(
+    count = nemawashiCompanies.length,
+    filtered = false
+) {
+
+    const element =
+        document.getElementById(
+            "organization-count"
+        );
+
+
+    if (!element) {
+        return;
+    }
+
+
+    if (filtered) {
+
+        element.textContent =
+            `${count} result${
+                count === 1
+                    ? ""
+                    : "s"
+            }`;
+
+        return;
+    }
+
+
+    element.textContent =
+        `${count} ${
+            count === 1
+                ? "company"
+                : "companies"
+        }`;
+}
+
+
+// ------------------------------------------------------------
+// OPEN COMPANY
+// ------------------------------------------------------------
+
+async function openCompany(
+    companyId
+) {
+
+    const company =
+        nemawashiCompanies.find(
+            item =>
+                String(item.id) ===
+                String(companyId)
+        );
+
+
+    if (!company) {
+        return;
+    }
+
+
+    sectionLabel.textContent =
+        "HRMNX";
+
+    sectionTitle.textContent =
+        company.name ||
+        "Company";
+
+
+    dashboardContent.innerHTML = `
+        <div class="company-detail">
+
+            <button
+                type="button"
+                class="back-button"
+                id="organization-back-button"
+            >
+                ← Back to Organization
+            </button>
+
+
+            <div class="company-detail-header">
+
+                <div class="company-detail-icon">
+                    ${escapeHtml(
+                        (
+                            company.name ||
+                            "?"
+                        )
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase()
+                    )}
+                </div>
+
+
+                <div>
+
+                    <span class="eyebrow">
+                        COMPANY
+                    </span>
+
+                    <h2>
+                        ${escapeHtml(
+                            company.name ||
+                            "Unnamed company"
+                        )}
+                    </h2>
+
+                    ${
+                        company.slug
+                            ? `
+                                <p>
+                                    ${escapeHtml(
+                                        company.slug
+                                    )}
+                                </p>
+                            `
+                            : ""
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="company-detail-grid">
+
+                <div class="detail-card">
+
+                    <span>
+                        Employees
+                    </span>
+
+                    <strong>
+                        ${company.employee_count}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-card">
+
+                    <span>
+                        Company slug
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            company.slug ||
+                            "—"
+                        )}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="company-employees-section"
+                class="person-detail-section"
+            >
+
+                <h3>
+                    Employees
+                </h3>
+
+                <div>
+                    Loading employees...
+                </div>
+
+            </div>
+
+        </div>
+    `;
+
+
+    const backButton =
+        document.getElementById(
+            "organization-back-button"
+        );
+
+
+    if (backButton) {
+
+        backButton.addEventListener(
+            "click",
+            function () {
+
+                renderOrganization();
+
+            }
+        );
+
+    }
+
+
+    await loadCompanyEmployees(
+        company.id
+    );
+}
+
+
+// ------------------------------------------------------------
+// LOAD COMPANY EMPLOYEES
+// ------------------------------------------------------------
+
+async function loadCompanyEmployees(
+    companyId
+) {
+
+    const container =
+        document.getElementById(
+            "company-employees-section"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            data: employees,
+            error
+        } = await supabaseClient
+            .from("employees")
+            .select(`
+                id,
+                user_id,
+                employee_number,
+                job_title,
+                active
+            `)
+            .eq(
+                "company_id",
+                companyId
+            )
+            .order("created_at", {
+                ascending: false
+            });
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        const employeeList =
+            employees || [];
+
+
+        if (
+            employeeList.length === 0
+        ) {
+
+            container.innerHTML = `
+                <h3>
+                    Employees
+                </h3>
+
+                <p>
+                    No employees are assigned
+                    to this company.
+                </p>
+            `;
+
+            return;
+        }
+
+
+        // ----------------------------------------------------
+        // LOAD PROFILES
+        // ----------------------------------------------------
+
+        const userIds =
+            employeeList
+                .map(employee =>
+                    employee.user_id
+                )
+                .filter(Boolean);
+
+
+        let profiles = [];
+
+
+        if (userIds.length > 0) {
+
+            const {
+                data: profileData,
+                error: profileError
+            } = await supabaseClient
+                .from("profiles")
+                .select(`
+                    id,
+                    username,
+                    display_name,
+                    avatar_url
+                `)
+                .in(
+                    "id",
+                    userIds
+                );
+
+
+            if (profileError) {
+                throw profileError;
+            }
+
+
+            profiles =
+                profileData || [];
+
+        }
+
+
+        const profileMap = {};
+
+
+        profiles.forEach(
+            profile => {
+
+                profileMap[
+                    profile.id
+                ] = profile;
+
+            }
+        );
+
+
+        container.innerHTML = `
+            <h3>
+                Employees
+            </h3>
+
+            <div class="company-employee-list">
+
+                ${
+                    employeeList.map(
+                        employee => {
+
+                            const profile =
+                                profileMap[
+                                    employee.user_id
+                                ] || {};
+
+                            const name =
+                                profile.display_name ||
+                                profile.username ||
+                                "Unnamed person";
+
+                            const initial =
+                                name
+                                    .trim()
+                                    .charAt(0)
+                                    .toUpperCase();
+
+
+                            return `
+                                <button
+                                    type="button"
+                                    class="company-employee-card"
+                                    data-person-id="${escapeAttribute(
+                                        employee.id
+                                    )}"
+                                >
+
+                                    <div class="person-avatar">
+
+                                        ${
+                                            profile.avatar_url
+                                                ? `
+                                                    <img
+                                                        src="${escapeAttribute(
+                                                            profile.avatar_url
+                                                        )}"
+                                                        alt=""
+                                                    >
+                                                `
+                                                : `
+                                                    <span>
+                                                        ${escapeHtml(
+                                                            initial
+                                                        )}
+                                                    </span>
+                                                `
+                                        }
+
+                                    </div>
+
+
+                                    <div class="company-employee-info">
+
+                                        <strong>
+                                            ${escapeHtml(
+                                                name
+                                            )}
+                                        </strong>
+
+                                        ${
+                                            profile.username
+                                                ? `
+                                                    <span>
+                                                        @${escapeHtml(
+                                                            profile.username
+                                                        )}
+                                                    </span>
+                                                `
+                                                : ""
+                                        }
+
+                                    </div>
+
+
+                                    <div class="company-employee-job">
+
+                                        ${
+                                            employee.job_title
+                                                ? escapeHtml(
+                                                    employee.job_title
+                                                )
+                                                : "No job title"
+                                        }
+
+                                    </div>
+
+
+                                    <span
+                                        class="person-status ${
+                                            employee.active
+                                                ? "active"
+                                                : "inactive"
+                                        }"
+                                    >
+                                        ${
+                                            employee.active
+                                                ? "Active"
+                                                : "Inactive"
+                                        }
+                                    </span>
+
+
+                                    <div class="person-arrow">
+                                        →
+                                    </div>
+
+                                </button>
+                            `;
+
+                        }
+                    ).join("")
+                }
+
+            </div>
+        `;
+
+    } catch (error) {
+
+        console.error(
+            "Could not load company employees:",
+            error
+        );
+
+
+        container.innerHTML = `
+            <h3>
+                Employees
+            </h3>
+
+            <p>
+                Could not load employees.
+            </p>
+        `;
+
     }
 }
 
