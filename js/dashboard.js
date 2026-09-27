@@ -293,6 +293,11 @@ async function openSection(section) {
         return;
     }
 
+    // Serashio Banners
+    if (section === "banners") {
+        await renderSerashioBanners();
+        return;
+    }
 
     // Everything else
     renderPlaceholder(section);
@@ -5719,6 +5724,849 @@ function formatNoticeDate(
             month: "short",
             day: "numeric"
         }
+    );
+}
+
+/* =========================================================
+   SERASHIO — NOTICE BANNERS
+========================================================= */
+
+let nemawashiBanners = [];
+let nemawashiBannerArtists = [];
+
+
+async function renderSerashioBanners() {
+
+    const content = document.getElementById("dashboard-content");
+
+    if (!content) return;
+
+    content.innerHTML = `
+        <section class="serashio-module">
+
+            <div class="module-header">
+                <div>
+                    <div class="eyebrow">SERASHIO</div>
+                    <h1>Notice Banners</h1>
+                    <p>Manage the banners displayed across Serashio.</p>
+                </div>
+
+                <button
+                    class="primary-button"
+                    id="create-banner-button"
+                >
+                    + Create banner
+                </button>
+            </div>
+
+            <div class="module-toolbar">
+
+                <input
+                    type="search"
+                    id="banner-search"
+                    class="module-search"
+                    placeholder="Search banners..."
+                >
+
+                <div
+                    id="banner-count"
+                    class="module-count"
+                >
+                    0 banners
+                </div>
+
+            </div>
+
+            <div
+                id="banners-list"
+                class="notices-admin-list"
+            >
+                <div class="organization-loading">
+                    Loading banners...
+                </div>
+            </div>
+
+        </section>
+    `;
+
+    document
+        .getElementById("create-banner-button")
+        ?.addEventListener("click", () => {
+            openBannerEditor();
+        });
+
+    document
+        .getElementById("banner-search")
+        ?.addEventListener("input", filterSerashioBanners);
+
+    await loadSerashioBanners();
+}
+
+
+async function loadSerashioBanners() {
+
+    const list = document.getElementById("banners-list");
+
+    if (!list) return;
+
+    const { data, error } = await supabaseClient
+        .from("notice_banners")
+        .select(`
+            id,
+            artist_id,
+            title,
+            image_url,
+            link_url,
+            sort_order,
+            active,
+            starts_at,
+            ends_at,
+            created_at,
+            artists (
+                id,
+                name
+            )
+        `)
+        .order("sort_order", {
+            ascending: true
+        })
+        .order("created_at", {
+            ascending: false
+        });
+
+    if (error) {
+
+        console.error("Failed to load banners:", error);
+
+        list.innerHTML = `
+            <div class="organization-error">
+                Failed to load banners.
+            </div>
+        `;
+
+        return;
+    }
+
+    nemawashiBanners = data || [];
+
+    renderSerashioBannerList();
+}
+
+
+function renderSerashioBannerList() {
+
+    const list = document.getElementById("banners-list");
+
+    if (!list) return;
+
+    const search =
+        document
+            .getElementById("banner-search")
+            ?.value
+            .trim()
+            .toLowerCase() || "";
+
+    const filtered = nemawashiBanners.filter(banner => {
+
+        const title =
+            banner.title || "";
+
+        const artist =
+            banner.artists?.name || "";
+
+        return (
+            title.toLowerCase().includes(search) ||
+            artist.toLowerCase().includes(search)
+        );
+    });
+
+    updateBannerCount(filtered.length);
+
+    if (!filtered.length) {
+
+        list.innerHTML = `
+            <div class="organization-empty">
+                <strong>No banners found</strong>
+                <span>Create a banner to get started.</span>
+            </div>
+        `;
+
+        return;
+    }
+
+    list.innerHTML = filtered.map(banner => {
+
+        const artistName =
+            banner.artists?.name || "All Serashio";
+
+        const statusClass =
+            banner.active
+                ? "banner-status-active"
+                : "banner-status-inactive";
+
+        const statusText =
+            banner.active
+                ? "Active"
+                : "Inactive";
+
+        return `
+            <article
+                class="notice-admin-card banner-admin-card"
+                data-banner-id="${escapeAttribute(banner.id)}"
+            >
+
+                <div class="notice-admin-image">
+
+                    <img
+                        src="${escapeAttribute(banner.image_url)}"
+                        alt=""
+                        onerror="this.style.display='none'"
+                    >
+
+                </div>
+
+                <div class="notice-admin-info">
+
+                    <div class="notice-admin-top">
+
+                        <div>
+
+                            <div class="notice-admin-title">
+                                ${escapeHtml(
+                                    banner.title || "Untitled banner"
+                                )}
+                            </div>
+
+                            <div class="notice-admin-meta">
+                                ${escapeHtml(artistName)}
+                                · Order ${banner.sort_order}
+                            </div>
+
+                        </div>
+
+                        <span class="${statusClass}">
+                            ${statusText}
+                        </span>
+
+                    </div>
+
+                    <div class="notice-admin-meta">
+
+                        ${banner.link_url
+                            ? "Linked banner"
+                            : "No link"
+                        }
+
+                        ${banner.starts_at
+                            ? ` · Starts ${formatBannerDate(banner.starts_at)}`
+                            : ""
+                        }
+
+                        ${banner.ends_at
+                            ? ` · Ends ${formatBannerDate(banner.ends_at)}`
+                            : ""
+                        }
+
+                    </div>
+
+                    <div class="notice-admin-actions">
+
+                        <button
+                            class="secondary-button"
+                            data-edit-banner="${escapeAttribute(banner.id)}"
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            class="danger-button"
+                            data-delete-banner="${escapeAttribute(banner.id)}"
+                        >
+                            Delete
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </article>
+        `;
+
+    }).join("");
+}
+
+
+function filterSerashioBanners() {
+
+    renderSerashioBannerList();
+
+}
+
+
+function updateBannerCount(count) {
+
+    const element =
+        document.getElementById("banner-count");
+
+    if (!element) return;
+
+    element.textContent =
+        `${count} ${count === 1 ? "banner" : "banners"}`;
+}
+
+
+async function openBannerEditor(bannerId = null) {
+
+    const existing =
+        bannerId
+            ? nemawashiBanners.find(
+                banner => String(banner.id) === String(bannerId)
+            )
+            : null;
+
+    await loadBannerArtists(
+        existing?.artist_id || null
+    );
+
+    const content =
+        document.getElementById("dashboard-content");
+
+    if (!content) return;
+
+    content.innerHTML = `
+
+        <section class="notice-editor">
+
+            <div class="notice-editor-card">
+
+                <div class="notice-editor-header">
+
+                    <button
+                        class="back-button"
+                        id="back-to-banners"
+                    >
+                        ← Back
+                    </button>
+
+                    <div>
+
+                        <div class="eyebrow">
+                            SERASHIO
+                        </div>
+
+                        <h1>
+                            ${existing
+                                ? "Edit banner"
+                                : "Create banner"
+                            }
+                        </h1>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    id="banner-form"
+                    class="notice-form"
+                >
+
+                    <div class="notice-form-field">
+
+                        <label for="banner-title">
+                            Title
+                        </label>
+
+                        <input
+                            id="banner-title"
+                            type="text"
+                            maxlength="200"
+                            value="${escapeAttribute(
+                                existing?.title || ""
+                            )}"
+                            placeholder="Banner title"
+                        >
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="banner-artist">
+                            Artist
+                        </label>
+
+                        <select id="banner-artist">
+
+                            <option value="">
+                                All Serashio
+                            </option>
+
+                            ${nemawashiBannerArtists.map(artist => `
+                                <option
+                                    value="${escapeAttribute(artist.id)}"
+                                    ${String(existing?.artist_id) === String(artist.id)
+                                        ? "selected"
+                                        : ""
+                                    }
+                                >
+                                    ${escapeHtml(artist.name)}
+                                </option>
+                            `).join("")}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="banner-image">
+                            Image URL
+                        </label>
+
+                        <input
+                            id="banner-image"
+                            type="url"
+                            required
+                            value="${escapeAttribute(
+                                existing?.image_url || ""
+                            )}"
+                            placeholder="https://..."
+                        >
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="banner-link">
+                            Link URL
+                        </label>
+
+                        <input
+                            id="banner-link"
+                            type="url"
+                            value="${escapeAttribute(
+                                existing?.link_url || ""
+                            )}"
+                            placeholder="https://..."
+                        >
+
+                    </div>
+
+
+                    <div class="notice-form-row">
+
+                        <div class="notice-form-field">
+
+                            <label for="banner-order">
+                                Sort order
+                            </label>
+
+                            <input
+                                id="banner-order"
+                                type="number"
+                                min="0"
+                                value="${existing?.sort_order ?? 0}"
+                            >
+
+                        </div>
+
+
+                        <div class="notice-form-field">
+
+                            <label for="banner-starts">
+                                Starts at
+                            </label>
+
+                            <input
+                                id="banner-starts"
+                                type="datetime-local"
+                                value="${formatDateTimeLocal(
+                                    existing?.starts_at
+                                )}"
+                            >
+
+                        </div>
+
+
+                        <div class="notice-form-field">
+
+                            <label for="banner-ends">
+                                Ends at
+                            </label>
+
+                            <input
+                                id="banner-ends"
+                                type="datetime-local"
+                                value="${formatDateTimeLocal(
+                                    existing?.ends_at
+                                )}"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <label class="notice-edit-checkbox">
+
+                        <input
+                            id="banner-active"
+                            type="checkbox"
+                            ${existing?.active !== false
+                                ? "checked"
+                                : ""
+                            }
+                        >
+
+                        <span>
+                            Banner is active
+                        </span>
+
+                    </label>
+
+
+                    <div
+                        id="banner-editor-message"
+                        class="notice-editor-message"
+                        style="display:none;"
+                    ></div>
+
+
+                    <div class="notice-form-actions">
+
+                        <button
+                            type="button"
+                            class="secondary-button"
+                            id="cancel-banner-button"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="person-save-button"
+                            id="save-banner-button"
+                        >
+                            ${existing
+                                ? "Save changes"
+                                : "Create banner"
+                            }
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+    `;
+
+
+    document
+        .getElementById("back-to-banners")
+        ?.addEventListener("click", () => {
+            renderSerashioBanners();
+        });
+
+
+    document
+        .getElementById("cancel-banner-button")
+        ?.addEventListener("click", () => {
+            renderSerashioBanners();
+        });
+
+
+    document
+        .getElementById("banner-form")
+        ?.addEventListener("submit", async event => {
+
+            event.preventDefault();
+
+            await saveBanner(bannerId);
+
+        });
+}
+
+
+async function loadBannerArtists(selectedArtistId = null) {
+
+    const { data, error } = await supabaseClient
+        .from("artists")
+        .select("id, name")
+        .order("name", {
+            ascending: true
+        });
+
+    if (error) {
+
+        console.error(
+            "Failed to load banner artists:",
+            error
+        );
+
+        nemawashiBannerArtists = [];
+
+        return;
+    }
+
+    nemawashiBannerArtists = data || [];
+}
+
+
+async function saveBanner(bannerId = null) {
+
+    const saveButton =
+        document.getElementById("save-banner-button");
+
+    const title =
+        document.getElementById("banner-title")
+            ?.value
+            .trim();
+
+    const artistValue =
+        document.getElementById("banner-artist")
+            ?.value;
+
+    const imageUrl =
+        document.getElementById("banner-image")
+            ?.value
+            .trim();
+
+    const linkUrl =
+        document.getElementById("banner-link")
+            ?.value
+            .trim();
+
+    const sortOrder =
+        Number(
+            document.getElementById("banner-order")
+                ?.value || 0
+        );
+
+    const active =
+        document.getElementById("banner-active")
+            ?.checked ?? true;
+
+    const startsAt =
+        document.getElementById("banner-starts")
+            ?.value || null;
+
+    const endsAt =
+        document.getElementById("banner-ends")
+            ?.value || null;
+
+
+    if (!imageUrl) {
+
+        showBannerEditorMessage(
+            "Image URL is required.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (saveButton) {
+
+        saveButton.disabled = true;
+        saveButton.textContent = "Saving...";
+
+    }
+
+
+    const payload = {
+
+        artist_id:
+            artistValue
+                ? Number(artistValue)
+                : null,
+
+        title:
+            title || null,
+
+        image_url:
+            imageUrl,
+
+        link_url:
+            linkUrl || null,
+
+        sort_order:
+            sortOrder,
+
+        active:
+            active,
+
+        starts_at:
+            startsAt
+                ? new Date(startsAt).toISOString()
+                : null,
+
+        ends_at:
+            endsAt
+                ? new Date(endsAt).toISOString()
+                : null
+
+    };
+
+
+    let result;
+
+
+    if (bannerId) {
+
+        result =
+            await supabaseClient
+                .from("notice_banners")
+                .update(payload)
+                .eq("id", bannerId);
+
+    } else {
+
+        result =
+            await supabaseClient
+                .from("notice_banners")
+                .insert(payload);
+
+    }
+
+
+    if (result.error) {
+
+        console.error(
+            "Failed to save banner:",
+            result.error
+        );
+
+        showBannerEditorMessage(
+            result.error.message ||
+            "Failed to save banner.",
+            "error"
+        );
+
+        if (saveButton) {
+
+            saveButton.disabled = false;
+
+            saveButton.textContent =
+                bannerId
+                    ? "Save changes"
+                    : "Create banner";
+
+        }
+
+        return;
+    }
+
+
+    await renderSerashioBanners();
+}
+
+
+async function deleteBanner(bannerId) {
+
+    const banner =
+        nemawashiBanners.find(
+            item =>
+                String(item.id) === String(bannerId)
+        );
+
+    if (!banner) return;
+
+
+    const confirmed =
+        window.confirm(
+            `Delete "${banner.title || "this banner"}"?`
+        );
+
+    if (!confirmed) return;
+
+
+    const { error } =
+        await supabaseClient
+            .from("notice_banners")
+            .delete()
+            .eq("id", bannerId);
+
+
+    if (error) {
+
+        console.error(
+            "Failed to delete banner:",
+            error
+        );
+
+        window.alert(
+            error.message ||
+            "Failed to delete banner."
+        );
+
+        return;
+    }
+
+
+    await loadSerashioBanners();
+}
+
+
+function showBannerEditorMessage(
+    message,
+    type = ""
+) {
+
+    const element =
+        document.getElementById(
+            "banner-editor-message"
+        );
+
+    if (!element) return;
+
+    element.textContent = message;
+
+    element.className =
+        `notice-editor-message ${type}`;
+
+    element.style.display = "block";
+}
+
+
+function formatBannerDate(value) {
+
+    if (!value) return "";
+
+    return new Date(value).toLocaleString(
+        undefined,
+        {
+            dateStyle: "medium",
+            timeStyle: "short"
+        }
+    );
+}
+
+
+function formatDateTimeLocal(value) {
+
+    if (!value) return "";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return "";
+    }
+
+    const pad = number =>
+        String(number).padStart(2, "0");
+
+    return (
+        `${date.getFullYear()}-` +
+        `${pad(date.getMonth() + 1)}-` +
+        `${pad(date.getDate())}T` +
+        `${pad(date.getHours())}:` +
+        `${pad(date.getMinutes())}`
     );
 }
 
