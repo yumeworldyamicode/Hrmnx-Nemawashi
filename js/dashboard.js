@@ -4271,7 +4271,7 @@ async function removeEmployeeFromRole(
 
 document.addEventListener(
     "click",
-    function (event) {
+    async function (event) {
 
         // ----------------------------------------------------
         // SIDEBAR NAVIGATION
