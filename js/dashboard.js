@@ -1018,6 +1018,19 @@ async function openPerson(personId) {
 
                 </div>
 
+
+                <div class="person-detail-actions">
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        id="edit-person-button"
+                    >
+                        Edit employee
+                    </button>
+
+                </div>
+
             </div>
 
 
@@ -1091,6 +1104,13 @@ async function openPerson(personId) {
 
 
             <div
+                id="person-edit-section"
+                class="person-detail-section"
+                style="display:none;"
+            ></div>
+
+
+            <div
                 id="person-roles-section"
                 class="person-detail-section"
             >
@@ -1138,9 +1158,543 @@ async function openPerson(personId) {
     }
 
 
+    const editButton =
+        document.getElementById(
+            "edit-person-button"
+        );
+
+    if (editButton) {
+
+        editButton.addEventListener(
+            "click",
+            function () {
+                openPersonEditor(person);
+            }
+        );
+
+    }
+
+
     await loadPersonRoles(person.id);
 
     await loadPersonArtists(person.id);
+}
+
+// ------------------------------------------------------------
+// OPEN PERSON EDITOR
+// ------------------------------------------------------------
+
+async function openPersonEditor(person) {
+
+    const container =
+        document.getElementById(
+            "person-edit-section"
+        );
+
+    if (!container) {
+        return;
+    }
+
+
+    container.style.display = "block";
+
+    container.innerHTML = `
+        <h3>
+            Edit employee
+        </h3>
+
+        <form
+            id="person-edit-form"
+            class="person-edit-form"
+        >
+
+            <div class="person-edit-field">
+
+                <label for="edit-employee-number">
+                    Employee number
+                </label>
+
+                <input
+                    id="edit-employee-number"
+                    type="text"
+                    value="${escapeAttribute(
+                        person.employee_number || ""
+                    )}"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="person-edit-field">
+
+                <label for="edit-job-title">
+                    Job title
+                </label>
+
+                <input
+                    id="edit-job-title"
+                    type="text"
+                    value="${escapeAttribute(
+                        person.job_title || ""
+                    )}"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="person-edit-field">
+
+                <label for="edit-company">
+                    Company
+                </label>
+
+                <select
+                    id="edit-company"
+                >
+
+                    <option value="">
+                        No company assigned
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <label class="person-edit-checkbox">
+
+                <input
+                    id="edit-active"
+                    type="checkbox"
+                    ${
+                        person.active
+                            ? "checked"
+                            : ""
+                    }
+                >
+
+                <span>
+                    Employee is active
+                </span>
+
+            </label>
+
+
+            <div
+                id="person-edit-message"
+                class="person-edit-message"
+                style="display:none;"
+            ></div>
+
+
+            <div class="person-edit-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancel-person-edit"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="person-save-button"
+                    id="save-person-button"
+                >
+                    Save changes
+                </button>
+
+            </div>
+
+        </form>
+    `;
+
+
+    await loadEditCompanies(
+        person.company_id
+    );
+
+
+    const form =
+        document.getElementById(
+            "person-edit-form"
+        );
+
+    if (!form) {
+        return;
+    }
+
+
+    form.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+            await savePersonChanges(
+                person.id
+            );
+
+        }
+    );
+
+
+    const cancelButton =
+        document.getElementById(
+            "cancel-person-edit"
+        );
+
+    if (cancelButton) {
+
+        cancelButton.addEventListener(
+            "click",
+            function () {
+
+                container.style.display =
+                    "none";
+
+                container.innerHTML = "";
+
+            }
+        );
+
+    }
+}
+
+// ------------------------------------------------------------
+// LOAD COMPANIES FOR EDITOR
+// ------------------------------------------------------------
+
+async function loadEditCompanies(
+    selectedCompanyId
+) {
+
+    const select =
+        document.getElementById(
+            "edit-company"
+        );
+
+    if (!select) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            data: companies,
+            error
+        } = await supabaseClient
+            .from("companies")
+            .select(`
+                id,
+                name,
+                slug
+            `)
+            .order("name", {
+                ascending: true
+            });
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        const companyList =
+            companies || [];
+
+
+        select.innerHTML = `
+            <option value="">
+                No company assigned
+            </option>
+
+            ${
+                companyList.map(company => `
+                    <option
+                        value="${escapeAttribute(
+                            company.id
+                        )}"
+                        ${
+                            String(company.id) ===
+                            String(selectedCompanyId)
+                                ? "selected"
+                                : ""
+                        }
+                    >
+                        ${escapeHtml(
+                            company.name ||
+                            company.slug ||
+                            "Unnamed company"
+                        )}
+                    </option>
+                `).join("")
+            }
+        `;
+
+    } catch (error) {
+
+        console.error(
+            "Could not load companies:",
+            error
+        );
+
+        select.innerHTML = `
+            <option value="">
+                Could not load companies
+            </option>
+        `;
+
+    }
+}
+
+// ------------------------------------------------------------
+// SAVE PERSON CHANGES
+// ------------------------------------------------------------
+
+async function savePersonChanges(
+    employeeId
+) {
+
+    const employeeNumberInput =
+        document.getElementById(
+            "edit-employee-number"
+        );
+
+    const jobTitleInput =
+        document.getElementById(
+            "edit-job-title"
+        );
+
+    const companySelect =
+        document.getElementById(
+            "edit-company"
+        );
+
+    const activeInput =
+        document.getElementById(
+            "edit-active"
+        );
+
+    const saveButton =
+        document.getElementById(
+            "save-person-button"
+        );
+
+    const message =
+        document.getElementById(
+            "person-edit-message"
+        );
+
+
+    if (
+        !employeeNumberInput ||
+        !jobTitleInput ||
+        !companySelect ||
+        !activeInput ||
+        !saveButton
+    ) {
+        return;
+    }
+
+
+    saveButton.disabled = true;
+
+    saveButton.textContent =
+        "Saving...";
+
+
+    if (message) {
+
+        message.style.display =
+            "none";
+
+        message.className =
+            "person-edit-message";
+
+    }
+
+
+    try {
+
+        const employeeNumber =
+            employeeNumberInput.value.trim();
+
+        const jobTitle =
+            jobTitleInput.value.trim();
+
+        const companyValue =
+            companySelect.value;
+
+        const active =
+            activeInput.checked;
+
+
+        const updates = {
+
+            employee_number:
+                employeeNumber || null,
+
+            job_title:
+                jobTitle || null,
+
+            company_id:
+                companyValue
+                    ? companyValue
+                    : null,
+
+            active
+
+        };
+
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("employees")
+            .update(updates)
+            .eq("id", employeeId)
+            .select(`
+                id,
+                user_id,
+                employee_number,
+                job_title,
+                active,
+                company_id,
+                created_at
+            `)
+            .single();
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        // ----------------------------------------------------
+        // UPDATE LOCAL DATA
+        // ----------------------------------------------------
+
+        const personIndex =
+            nemawashiPeople.findIndex(
+                person =>
+                    String(person.id) ===
+                    String(employeeId)
+            );
+
+
+        if (personIndex !== -1) {
+
+            const updatedPerson =
+                nemawashiPeople[
+                    personIndex
+                ];
+
+
+            updatedPerson.employee_number =
+                data.employee_number;
+
+            updatedPerson.job_title =
+                data.job_title;
+
+            updatedPerson.active =
+                data.active;
+
+            updatedPerson.company_id =
+                data.company_id;
+
+
+            const selectedCompany =
+                (
+                    await supabaseClient
+                        .from("companies")
+                        .select(`
+                            id,
+                            name,
+                            slug
+                        `)
+                        .eq(
+                            "id",
+                            data.company_id
+                        )
+                        .maybeSingle()
+                ).data;
+
+
+            updatedPerson.companies =
+                selectedCompany || null;
+
+        }
+
+
+        if (message) {
+
+            message.style.display =
+                "block";
+
+            message.className =
+                "person-edit-message success";
+
+            message.textContent =
+                "Changes saved.";
+
+        }
+
+
+        saveButton.textContent =
+            "Saved";
+
+
+        // ----------------------------------------------------
+        // REFRESH DETAIL VIEW
+        // ----------------------------------------------------
+
+        setTimeout(
+            function () {
+
+                openPerson(
+                    employeeId
+                );
+
+            },
+            500
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Could not save employee:",
+            error
+        );
+
+
+        if (message) {
+
+            message.style.display =
+                "block";
+
+            message.className =
+                "person-edit-message error";
+
+            message.textContent =
+                error.message ||
+                "Could not save changes.";
+
+        }
+
+
+        saveButton.disabled =
+            false;
+
+        saveButton.textContent =
+            "Save changes";
+
+    }
 }
 
 
