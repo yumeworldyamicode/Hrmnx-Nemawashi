@@ -258,11 +258,13 @@ async function openSection(section) {
         sectionTitle.textContent = info.title;
     }
 
+
     // Overview
     if (section === "overview") {
         renderOverview(window.nemawashiUser);
         return;
     }
+
 
     // People
     if (section === "people") {
@@ -270,11 +272,13 @@ async function openSection(section) {
         return;
     }
 
+
     // Organization
     if (section === "organization") {
         await renderOrganization();
         return;
     }
+
 
     // Permissions
     if (section === "permissions") {
@@ -282,7 +286,15 @@ async function openSection(section) {
         return;
     }
 
-    // Everything else for now
+
+    // Serashio Notices
+    if (section === "notices") {
+        await renderSerashioNotices();
+        return;
+    }
+
+
+    // Everything else
     renderPlaceholder(section);
 }
 
@@ -4507,6 +4519,1208 @@ document.addEventListener(
 
     }
 );
+
+// ============================================================
+// SERASHIO — NOTICES
+// ============================================================
+
+let nemawashiNotices = [];
+let nemawashiNoticeArtists = [];
+
+
+// ------------------------------------------------------------
+// RENDER NOTICES
+// ------------------------------------------------------------
+
+async function renderSerashioNotices() {
+
+    sectionLabel.textContent = "SERASHIO";
+    sectionTitle.textContent = "Notices";
+
+    dashboardContent.innerHTML = `
+        <div class="serashio-module">
+
+            <div class="module-header">
+
+                <div>
+                    <span class="eyebrow">
+                        SERASHIO
+                    </span>
+
+                    <h2>
+                        Notices
+                    </h2>
+
+                    <p>
+                        Manage artist notices published through Serashio.
+                    </p>
+                </div>
+
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="create-notice-button"
+                >
+                    + Create notice
+                </button>
+
+            </div>
+
+
+            <div class="module-toolbar">
+
+                <input
+                    type="search"
+                    id="notice-search"
+                    class="module-search"
+                    placeholder="Search notices..."
+                    autocomplete="off"
+                >
+
+
+                <div
+                    id="notice-count"
+                    class="module-count"
+                >
+                    Loading...
+                </div>
+
+            </div>
+
+
+            <div
+                id="notices-list"
+                class="notices-admin-list"
+            >
+                <div class="module-loading">
+                    Loading notices...
+                </div>
+            </div>
+
+        </div>
+    `;
+
+
+    const searchInput =
+        document.getElementById("notice-search");
+
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            "input",
+            function () {
+                filterSerashioNotices(
+                    this.value
+                );
+            }
+        );
+
+    }
+
+
+    const createButton =
+        document.getElementById(
+            "create-notice-button"
+        );
+
+
+    if (createButton) {
+
+        createButton.addEventListener(
+            "click",
+            function () {
+                openNoticeEditor();
+            }
+        );
+
+    }
+
+
+    await loadSerashioNotices();
+}
+
+
+// ------------------------------------------------------------
+// LOAD NOTICES
+// ------------------------------------------------------------
+
+async function loadSerashioNotices() {
+
+    const list =
+        document.getElementById(
+            "notices-list"
+        );
+
+    if (!list) {
+        return;
+    }
+
+
+    list.innerHTML = `
+        <div class="module-loading">
+            Loading notices...
+        </div>
+    `;
+
+
+    try {
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("notices")
+            .select(`
+                id,
+                artist_id,
+                title,
+                content,
+                image_url,
+                created_at,
+                artists (
+                    id,
+                    name,
+                    slug
+                )
+            `)
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        nemawashiNotices =
+            data || [];
+
+
+        renderSerashioNoticeList();
+
+        updateNoticeCount();
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not load Serashio notices:",
+            error
+        );
+
+
+        list.innerHTML = `
+            <div class="module-error">
+
+                <strong>
+                    Could not load notices
+                </strong>
+
+                <p>
+                    ${escapeHtml(
+                        error.message ||
+                        "An unknown error occurred."
+                    )}
+                </p>
+
+            </div>
+        `;
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// RENDER NOTICE LIST
+// ------------------------------------------------------------
+
+function renderSerashioNoticeList(
+    notices = nemawashiNotices
+) {
+
+    const list =
+        document.getElementById(
+            "notices-list"
+        );
+
+    if (!list) {
+        return;
+    }
+
+
+    if (!notices.length) {
+
+        list.innerHTML = `
+            <div class="module-empty">
+
+                <div class="empty-icon">
+                    ✦
+                </div>
+
+                <h3>
+                    No notices found
+                </h3>
+
+                <p>
+                    Create a notice to publish information
+                    for a Serashio artist.
+                </p>
+
+            </div>
+        `;
+
+        return;
+    }
+
+
+    list.innerHTML = notices
+        .map(notice => {
+
+            const artist =
+                notice.artists || {};
+
+            const excerpt =
+                String(
+                    notice.content || ""
+                )
+                .replace(/\s+/g, " ")
+                .trim();
+
+
+            return `
+                <button
+                    type="button"
+                    class="notice-admin-card"
+                    data-notice-id="${escapeAttribute(
+                        notice.id
+                    )}"
+                >
+
+                    <div class="notice-admin-image">
+
+                        ${
+                            notice.image_url
+                                ? `
+                                    <img
+                                        src="${escapeAttribute(
+                                            notice.image_url
+                                        )}"
+                                        alt=""
+                                    >
+                                `
+                                : `
+                                    <span>
+                                        ✦
+                                    </span>
+                                `
+                        }
+
+                    </div>
+
+
+                    <div class="notice-admin-info">
+
+                        <div class="notice-admin-top">
+
+                            <span class="notice-admin-artist">
+                                ${escapeHtml(
+                                    artist.name ||
+                                    "Unknown artist"
+                                )}
+                            </span>
+
+                            <span class="notice-admin-date">
+                                ${escapeHtml(
+                                    formatNoticeDate(
+                                        notice.created_at
+                                    )
+                                )}
+                            </span>
+
+                        </div>
+
+
+                        <h3>
+                            ${escapeHtml(
+                                notice.title
+                            )}
+                        </h3>
+
+
+                        <p>
+                            ${escapeHtml(
+                                excerpt ||
+                                "No content."
+                            )}
+                        </p>
+
+                    </div>
+
+
+                    <div class="notice-admin-arrow">
+                        →
+                    </div>
+
+                </button>
+            `;
+
+        })
+        .join("");
+
+
+    document
+        .querySelectorAll(
+            ".notice-admin-card"
+        )
+        .forEach(card => {
+
+            card.addEventListener(
+                "click",
+                function () {
+
+                    openNoticeEditor(
+                        this.dataset.noticeId
+                    );
+
+                }
+            );
+
+        });
+}
+
+
+// ------------------------------------------------------------
+// FILTER
+// ------------------------------------------------------------
+
+function filterSerashioNotices(
+    searchTerm
+) {
+
+    const term =
+        String(searchTerm || "")
+            .trim()
+            .toLowerCase();
+
+
+    if (!term) {
+
+        renderSerashioNoticeList(
+            nemawashiNotices
+        );
+
+        updateNoticeCount(
+            nemawashiNotices.length
+        );
+
+        return;
+    }
+
+
+    const filtered =
+        nemawashiNotices.filter(
+            notice => {
+
+                const artist =
+                    notice.artists || {};
+
+
+                const values = [
+
+                    notice.title,
+
+                    notice.content,
+
+                    notice.image_url,
+
+                    artist.name,
+
+                    artist.slug
+
+                ];
+
+
+                return values.some(
+                    value =>
+                        String(value || "")
+                            .toLowerCase()
+                            .includes(term)
+                );
+
+            }
+        );
+
+
+    renderSerashioNoticeList(
+        filtered
+    );
+
+
+    updateNoticeCount(
+        filtered.length,
+        true
+    );
+}
+
+
+// ------------------------------------------------------------
+// COUNT
+// ------------------------------------------------------------
+
+function updateNoticeCount(
+    count = nemawashiNotices.length,
+    filtered = false
+) {
+
+    const element =
+        document.getElementById(
+            "notice-count"
+        );
+
+    if (!element) {
+        return;
+    }
+
+
+    if (filtered) {
+
+        element.textContent =
+            `${count} result${
+                count === 1
+                    ? ""
+                    : "s"
+            }`;
+
+        return;
+    }
+
+
+    element.textContent =
+        `${count} notice${
+            count === 1
+                ? ""
+                : "s"
+        }`;
+}
+
+
+// ------------------------------------------------------------
+// NOTICE EDITOR
+// ------------------------------------------------------------
+
+async function openNoticeEditor(
+    noticeId = null
+) {
+
+    const existingNotice =
+        noticeId
+            ? nemawashiNotices.find(
+                notice =>
+                    String(notice.id) ===
+                    String(noticeId)
+            )
+            : null;
+
+
+    sectionLabel.textContent =
+        "SERASHIO";
+
+    sectionTitle.textContent =
+        existingNotice
+            ? "Edit Notice"
+            : "Create Notice";
+
+
+    dashboardContent.innerHTML = `
+        <div class="notice-editor">
+
+            <button
+                type="button"
+                class="back-button"
+                id="notice-editor-back"
+            >
+                ← Back to Notices
+            </button>
+
+
+            <div class="notice-editor-header">
+
+                <div>
+
+                    <span class="eyebrow">
+                        SERASHIO
+                    </span>
+
+                    <h2>
+                        ${
+                            existingNotice
+                                ? "Edit notice"
+                                : "Create notice"
+                        }
+                    </h2>
+
+                    <p>
+                        ${
+                            existingNotice
+                                ? "Update this Serashio notice."
+                                : "Create a new notice for a Serashio artist."
+                        }
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="notice-editor-card">
+
+                <div
+                    id="notice-editor-message"
+                    class="notice-editor-message"
+                    style="display:none;"
+                ></div>
+
+
+                <form
+                    id="notice-form"
+                    class="notice-form"
+                >
+
+                    <div class="notice-form-field">
+
+                        <label for="notice-artist">
+                            Artist
+                        </label>
+
+                        <select
+                            id="notice-artist"
+                            required
+                        >
+                            <option value="">
+                                Loading artists...
+                            </option>
+                        </select>
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="notice-title-input">
+                            Title
+                        </label>
+
+                        <input
+                            type="text"
+                            id="notice-title-input"
+                            maxlength="255"
+                            placeholder="Notice title"
+                            value="${escapeAttribute(
+                                existingNotice?.title || ""
+                            )}"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="notice-content-input">
+                            Content
+                        </label>
+
+                        <textarea
+                            id="notice-content-input"
+                            rows="12"
+                            placeholder="Write the notice content..."
+                            required
+                        >${escapeHtml(
+                            existingNotice?.content || ""
+                        )}</textarea>
+
+                    </div>
+
+
+                    <div class="notice-form-field">
+
+                        <label for="notice-image-input">
+                            Image URL
+                            <span>Optional</span>
+                        </label>
+
+                        <input
+                            type="url"
+                            id="notice-image-input"
+                            placeholder="https://..."
+                            value="${escapeAttribute(
+                                existingNotice?.image_url || ""
+                            )}"
+                        >
+
+                    </div>
+
+
+                    <div class="notice-form-actions">
+
+                        ${
+                            existingNotice
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="danger-button"
+                                        id="delete-notice-button"
+                                    >
+                                        Delete notice
+                                    </button>
+                                `
+                                : ""
+                        }
+
+                        <div class="notice-form-actions-right">
+
+                            <button
+                                type="button"
+                                class="secondary-button"
+                                id="cancel-notice-button"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="person-save-button"
+                                id="save-notice-button"
+                            >
+                                ${
+                                    existingNotice
+                                        ? "Save changes"
+                                        : "Create notice"
+                                }
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+    `;
+
+
+    const backButton =
+        document.getElementById(
+            "notice-editor-back"
+        );
+
+
+    if (backButton) {
+
+        backButton.addEventListener(
+            "click",
+            function () {
+                renderSerashioNotices();
+            }
+        );
+
+    }
+
+
+    const cancelButton =
+        document.getElementById(
+            "cancel-notice-button"
+        );
+
+
+    if (cancelButton) {
+
+        cancelButton.addEventListener(
+            "click",
+            function () {
+                renderSerashioNotices();
+            }
+        );
+
+    }
+
+
+    await loadNoticeArtists(
+        existingNotice?.artist_id
+    );
+
+
+    const form =
+        document.getElementById(
+            "notice-form"
+        );
+
+
+    if (form) {
+
+        form.addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+                await saveNotice(
+                    noticeId
+                );
+
+            }
+        );
+
+    }
+
+
+    if (existingNotice) {
+
+        const deleteButton =
+            document.getElementById(
+                "delete-notice-button"
+            );
+
+
+        if (deleteButton) {
+
+            deleteButton.addEventListener(
+                "click",
+                async function () {
+
+                    await deleteNotice(
+                        existingNotice.id
+                    );
+
+                }
+            );
+
+        }
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// LOAD ARTISTS FOR SELECT
+// ------------------------------------------------------------
+
+async function loadNoticeArtists(
+    selectedArtistId = null
+) {
+
+    const select =
+        document.getElementById(
+            "notice-artist"
+        );
+
+    if (!select) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("artists")
+            .select(`
+                id,
+                name,
+                slug
+            `)
+            .order(
+                "name",
+                {
+                    ascending: true
+                }
+            );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        nemawashiNoticeArtists =
+            data || [];
+
+
+        select.innerHTML = `
+            <option value="">
+                Select an artist
+            </option>
+
+            ${
+                nemawashiNoticeArtists
+                    .map(artist => `
+                        <option
+                            value="${escapeAttribute(
+                                artist.id
+                            )}"
+                            ${
+                                String(
+                                    selectedArtistId
+                                ) ===
+                                String(
+                                    artist.id
+                                )
+                                    ? "selected"
+                                    : ""
+                            }
+                        >
+                            ${escapeHtml(
+                                artist.name
+                            )}
+                        </option>
+                    `)
+                    .join("")
+            }
+        `;
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not load Serashio artists:",
+            error
+        );
+
+
+        select.innerHTML = `
+            <option value="">
+                Could not load artists
+            </option>
+        `;
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// SAVE NOTICE
+// ------------------------------------------------------------
+
+async function saveNotice(
+    noticeId = null
+) {
+
+    const artistId =
+        document.getElementById(
+            "notice-artist"
+        )?.value;
+
+
+    const title =
+        document.getElementById(
+            "notice-title-input"
+        )?.value.trim();
+
+
+    const content =
+        document.getElementById(
+            "notice-content-input"
+        )?.value.trim();
+
+
+    const imageUrl =
+        document.getElementById(
+            "notice-image-input"
+        )?.value.trim();
+
+
+    const message =
+        document.getElementById(
+            "notice-editor-message"
+        );
+
+
+    const saveButton =
+        document.getElementById(
+            "save-notice-button"
+        );
+
+
+    if (!artistId || !title || !content) {
+
+        showNoticeEditorMessage(
+            "Please fill in the artist, title and content.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.textContent =
+            noticeId
+                ? "Saving..."
+                : "Creating...";
+    }
+
+
+    try {
+
+        const payload = {
+
+            artist_id: artistId,
+
+            title: title,
+
+            content: content,
+
+            image_url:
+                imageUrl || null
+
+        };
+
+
+        let error;
+
+
+        if (noticeId) {
+
+            const result =
+                await supabaseClient
+                    .from("notices")
+                    .update(payload)
+                    .eq(
+                        "id",
+                        noticeId
+                    );
+
+
+            error =
+                result.error;
+
+        } else {
+
+            const result =
+                await supabaseClient
+                    .from("notices")
+                    .insert(
+                        payload
+                    );
+
+
+            error =
+                result.error;
+
+        }
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        showNoticeEditorMessage(
+            noticeId
+                ? "Notice updated successfully."
+                : "Notice created successfully.",
+            "success"
+        );
+
+
+        setTimeout(
+            function () {
+                renderSerashioNotices();
+            },
+            700
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not save notice:",
+            error
+        );
+
+
+        showNoticeEditorMessage(
+            error.message ||
+                "Could not save notice.",
+            "error"
+        );
+
+
+        if (saveButton) {
+
+            saveButton.disabled = false;
+
+            saveButton.textContent =
+                noticeId
+                    ? "Save changes"
+                    : "Create notice";
+
+        }
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// DELETE NOTICE
+// ------------------------------------------------------------
+
+async function deleteNotice(
+    noticeId
+) {
+
+    const confirmed =
+        window.confirm(
+            "Delete this notice? This action cannot be undone."
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const deleteButton =
+        document.getElementById(
+            "delete-notice-button"
+        );
+
+
+    if (deleteButton) {
+
+        deleteButton.disabled = true;
+
+        deleteButton.textContent =
+            "Deleting...";
+
+    }
+
+
+    try {
+
+        const {
+            error
+        } = await supabaseClient
+            .from("notices")
+            .delete()
+            .eq(
+                "id",
+                noticeId
+            );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        renderSerashioNotices();
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not delete notice:",
+            error
+        );
+
+
+        showNoticeEditorMessage(
+            error.message ||
+                "Could not delete notice.",
+            "error"
+        );
+
+
+        if (deleteButton) {
+
+            deleteButton.disabled = false;
+
+            deleteButton.textContent =
+                "Delete notice";
+
+        }
+
+    }
+}
+
+
+// ------------------------------------------------------------
+// EDITOR MESSAGE
+// ------------------------------------------------------------
+
+function showNoticeEditorMessage(
+    message,
+    type = ""
+) {
+
+    const element =
+        document.getElementById(
+            "notice-editor-message"
+        );
+
+    if (!element) {
+        return;
+    }
+
+
+    element.textContent =
+        message;
+
+
+    element.className =
+        `notice-editor-message ${type}`;
+
+
+    element.style.display =
+        "block";
+}
+
+
+// ------------------------------------------------------------
+// DATE
+// ------------------------------------------------------------
+
+function formatNoticeDate(
+    value
+) {
+
+    if (!value) {
+        return "—";
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if (Number.isNaN(
+        date.getTime()
+    )) {
+        return "—";
+    }
+
+
+    return date.toLocaleDateString(
+        undefined,
+        {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        }
+    );
+}
 
 
 // ============================================================
