@@ -9283,7 +9283,22 @@ function addSongDemoStudioNavigation() {
     `;
 
 
+const serashioGroup =
+    [...sidebar.querySelectorAll(".nav-group")]
+        .find(group =>
+            group.querySelector(
+                '.nav-item[data-section="notices"]'
+            )
+        );
+
+if (serashioGroup) {
+    sidebar.insertBefore(
+        group,
+        serashioGroup
+    );
+} else {
     sidebar.appendChild(group);
+}
 }
 
 
