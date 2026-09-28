@@ -10834,20 +10834,33 @@ function renderSongDemoReviews() {
 let nemawashiSongDemoAccess = false;
 let nemawashiSongDemos = [];
 
-// ============================================================
-// SONG DEMO STUDIO ACCESS + NAVIGATION
-// ============================================================
+// ------------------------------------------------------------
+// CHECK SONG DEMO STUDIO ACCESS
+// ------------------------------------------------------------
 
 async function checkSongDemoStudioAccess() {
 
-    const {
-        data,
-        error
-    } = await supabaseClient.rpc(
-        "nemawashi_can_manage_song_demos"
-    );
+    try {
 
-    if (error) {
+        const {
+            data,
+            error
+        } = await supabaseClient.rpc(
+            "nemawashi_can_manage_song_demos"
+        );
+
+        if (error) {
+            console.error(
+                "Song Demo Studio access error:",
+                error
+            );
+
+            return false;
+        }
+
+        return data === true;
+
+    } catch (error) {
 
         console.error(
             "Song Demo Studio access error:",
@@ -10856,114 +10869,86 @@ async function checkSongDemoStudioAccess() {
 
         return false;
     }
-
-    return data === true;
 }
 
 
+// ------------------------------------------------------------
+// ADD SIDEBAR SECTION
+// ------------------------------------------------------------
+
 function addSongDemoStudioNavigation() {
 
-    const sidebar =
-        document.querySelector(".sidebar");
+    const sidebar = document.querySelector(".sidebar");
 
     if (!sidebar) {
         return;
     }
 
     if (
-        sidebar.querySelector(
-            '[data-song-demo-navigation="true"]'
+        document.getElementById(
+            "song-demo-studio-nav"
         )
     ) {
         return;
     }
 
+
     const group =
         document.createElement("div");
 
-    group.className = "nav-group";
+    group.className =
+        "nav-group song-demo-studio-group";
 
-    group.dataset.songDemoNavigation =
-        "true";
+    group.id =
+        "song-demo-studio-nav";
+
 
     group.innerHTML = `
-        <div class="nav-group-title">
-            SONG DEMO STUDIO
+
+        <div class="nav-group-title song-demo-nav-title">
+            ✦ SONG DEMO STUDIO
         </div>
 
         <button
-            class="nav-item"
-            type="button"
+            class="nav-item song-demo-nav-item"
             data-section="song-demos"
+            type="button"
         >
-            <span>✦</span>
+            <span>♫</span>
             Demo Library
         </button>
 
         <button
-            class="nav-item"
-            type="button"
+            class="nav-item song-demo-nav-item"
             data-section="song-demo-create"
+            type="button"
         >
             <span>＋</span>
             Create Demo
         </button>
 
         <button
-            class="nav-item"
-            type="button"
+            class="nav-item song-demo-nav-item"
             data-section="song-demo-polls"
+            type="button"
         >
             <span>◉</span>
             Demo Polls
         </button>
 
         <button
-            class="nav-item"
-            type="button"
+            class="nav-item song-demo-nav-item"
             data-section="song-demo-reviews"
+            type="button"
         >
             <span>✓</span>
             Poll Reviews
         </button>
+
     `;
 
-    const serashioGroup =
-        [
-            ...sidebar.querySelectorAll(
-                ".nav-group"
-            )
-        ].find(group =>
-            group.querySelector(
-                '[data-section="notices"]'
-            )
-        );
 
-    if (serashioGroup) {
-
-        sidebar.insertBefore(
-            group,
-            serashioGroup
-        );
-
-    } else {
-
-        sidebar.appendChild(group);
-
-    }
-}
-
-
-async function initializeSongDemoStudio() {
-
-    const allowed =
-        await checkSongDemoStudioAccess();
-
-    if (!allowed) {
-        return;
-    }
-
-    addSongDemoStudioNavigation();
+    sidebar.appendChild(group);
 }
 
 // ------------------------------------------------------------
