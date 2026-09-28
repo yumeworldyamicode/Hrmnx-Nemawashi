@@ -95,6 +95,26 @@ const sectionNames = {
     applications: {
         label: "HRMNX AUDITION",
         title: "Applications"
+    },
+
+    "song-demos": {
+        label: "SONG DEMO STUDIO",
+        title: "Demo Library"
+    },
+
+    "song-demo-create": {
+        label: "SONG DEMO STUDIO",
+        title: "Create Demo"
+    },
+
+    "song-demo-polls": {
+        label: "SONG DEMO STUDIO",
+        title: "Demo Polls"
+    },
+
+    "song-demo-reviews": {
+        label: "SONG DEMO STUDIO",
+        title: "Poll Reviews"
     }
 };
 
@@ -269,6 +289,54 @@ async function openSection(section) {
     // People
     if (section === "people") {
         await renderPeople();
+        return;
+    }
+
+        // Song Demo Studio
+    if (section === "song-demos") {
+
+        if (!nemawashiSongDemoAccess) {
+            renderPlaceholder(section);
+            return;
+        }
+
+        await renderSongDemoLibrary();
+        return;
+    }
+
+
+    if (section === "song-demo-create") {
+
+        if (!nemawashiSongDemoAccess) {
+            renderPlaceholder(section);
+            return;
+        }
+
+        renderSongDemoCreate();
+        return;
+    }
+
+
+    if (section === "song-demo-polls") {
+
+        if (!nemawashiSongDemoAccess) {
+            renderPlaceholder(section);
+            return;
+        }
+
+        renderSongDemoPolls();
+        return;
+    }
+
+
+    if (section === "song-demo-reviews") {
+
+        if (!nemawashiSongDemoAccess) {
+            renderPlaceholder(section);
+            return;
+        }
+
+        renderSongDemoReviews();
         return;
     }
 
@@ -7893,6 +7961,1349 @@ function escapeHtml(value) {
 function escapeAttribute(value) {
 
     return escapeHtml(value);
+}
+
+// ============================================================
+// SONG DEMO LIBRARY
+// ============================================================
+
+async function renderSongDemoLibrary() {
+
+    sectionLabel.textContent =
+        "SONG DEMO STUDIO";
+
+    sectionTitle.textContent =
+        "Demo Library";
+
+
+    dashboardContent.innerHTML = `
+
+        <div class="song-demo-header">
+
+            <div>
+
+                <span class="eyebrow">
+                    SONG DEMO STUDIO
+                </span>
+
+                <h2>
+                    Demo Library
+                </h2>
+
+                <p>
+                    Create, organize and review Hrmnx song demos.
+                </p>
+
+            </div>
+
+
+            <button
+                class="primary-button"
+                id="create-song-demo-button"
+                type="button"
+            >
+                + Add demo
+            </button>
+
+        </div>
+
+
+        <div class="song-demo-toolbar">
+
+            <input
+                type="search"
+                id="song-demo-search"
+                class="song-demo-search"
+                placeholder="Search demos..."
+            >
+
+            <select
+                id="song-demo-status-filter"
+                class="song-demo-filter"
+            >
+                <option value="all">
+                    All statuses
+                </option>
+
+                <option value="draft">
+                    Draft
+                </option>
+
+                <option value="published">
+                    Published
+                </option>
+
+                <option value="poll_active">
+                    Poll active
+                </option>
+
+                <option value="poll_ended">
+                    Poll ended
+                </option>
+
+                <option value="released">
+                    Released
+                </option>
+            </select>
+
+
+            <select
+                id="song-demo-visibility-filter"
+                class="song-demo-filter"
+            >
+                <option value="all">
+                    All visibility
+                </option>
+
+                <option value="personal">
+                    Personal
+                </option>
+
+                <option value="shared">
+                    Shared
+                </option>
+
+                <option value="public">
+                    Public
+                </option>
+            </select>
+
+        </div>
+
+
+        <div
+            id="song-demo-count"
+            class="song-demo-count"
+        >
+            Loading demos...
+        </div>
+
+
+        <div
+            id="song-demo-list"
+            class="song-demo-list"
+        >
+            <div class="song-demo-loading">
+                Loading Song Demo Studio...
+            </div>
+        </div>
+
+    `;
+
+
+    const createButton =
+        document.getElementById(
+            "create-song-demo-button"
+        );
+
+    if (createButton) {
+
+        createButton.addEventListener(
+            "click",
+            function () {
+
+                openSection(
+                    "song-demo-create"
+                );
+
+            }
+        );
+
+    }
+
+
+    const search =
+        document.getElementById(
+            "song-demo-search"
+        );
+
+    const statusFilter =
+        document.getElementById(
+            "song-demo-status-filter"
+        );
+
+    const visibilityFilter =
+        document.getElementById(
+            "song-demo-visibility-filter"
+        );
+
+
+    if (search) {
+
+        search.addEventListener(
+            "input",
+            filterSongDemos
+        );
+
+    }
+
+
+    if (statusFilter) {
+
+        statusFilter.addEventListener(
+            "change",
+            filterSongDemos
+        );
+
+    }
+
+
+    if (visibilityFilter) {
+
+        visibilityFilter.addEventListener(
+            "change",
+            filterSongDemos
+        );
+
+    }
+
+
+    await loadSongDemos();
+}
+
+
+// ------------------------------------------------------------
+// LOAD DEMOS
+// ------------------------------------------------------------
+
+async function loadSongDemos() {
+
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from("song_demos")
+        .select(`
+            id,
+            created_by_employee_id,
+            title,
+            demo_type,
+            visibility,
+            status,
+            package_filename,
+            producer_employee_id,
+            cover_url,
+            linked_release_id,
+            release_assignment_status,
+            is_competition,
+            poll_enabled,
+            poll_ends_at,
+            publication_date,
+            created_at,
+            updated_at
+        `)
+        .order(
+            "created_at",
+            {
+                ascending: false
+            }
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Song demo loading error:",
+            error
+        );
+
+
+        const list =
+            document.getElementById(
+                "song-demo-list"
+            );
+
+        if (list) {
+
+            list.innerHTML = `
+                <div class="song-demo-error">
+                    Unable to load song demos.
+                    <br>
+                    ${escapeHtml(
+                        error.message
+                    )}
+                </div>
+            `;
+
+        }
+
+        return;
+    }
+
+
+    nemawashiSongDemos =
+        data || [];
+
+
+    await attachSongDemoPeople();
+
+
+    renderSongDemoList(
+        nemawashiSongDemos
+    );
+}
+
+
+// ------------------------------------------------------------
+// LOAD EMPLOYEE / PROFILE NAMES
+// ------------------------------------------------------------
+
+async function attachSongDemoPeople() {
+
+    const employeeIds =
+        [
+            ...new Set(
+                nemawashiSongDemos
+                    .flatMap(demo => [
+                        demo.created_by_employee_id,
+                        demo.producer_employee_id
+                    ])
+                    .filter(Boolean)
+            )
+        ];
+
+
+    if (
+        employeeIds.length === 0
+    ) {
+        return;
+    }
+
+
+    const {
+        data: employees,
+        error
+    } = await supabaseClient
+        .from("employees")
+        .select(`
+            id,
+            user_id,
+            employee_number
+        `)
+        .in(
+            "id",
+            employeeIds
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Song demo employee loading error:",
+            error
+        );
+
+        return;
+    }
+
+
+    const userIds =
+        (employees || [])
+            .map(
+                employee =>
+                    employee.user_id
+            )
+            .filter(Boolean);
+
+
+    let profiles = [];
+
+
+    if (
+        userIds.length > 0
+    ) {
+
+        const {
+            data
+        } = await supabaseClient
+            .from("profiles")
+            .select(`
+                id,
+                username,
+                display_name,
+                avatar_url
+            `)
+            .in(
+                "id",
+                userIds
+            );
+
+        profiles =
+            data || [];
+
+    }
+
+
+    const employeeMap =
+        new Map(
+            (employees || [])
+                .map(
+                    employee =>
+                        [
+                            employee.id,
+                            employee
+                        ]
+                )
+        );
+
+
+    const profileMap =
+        new Map(
+            profiles.map(
+                profile =>
+                    [
+                        profile.id,
+                        profile
+                    ]
+            )
+        );
+
+
+    nemawashiSongDemos =
+        nemawashiSongDemos.map(
+            demo => {
+
+                const creator =
+                    employeeMap.get(
+                        demo.created_by_employee_id
+                    );
+
+                const producer =
+                    employeeMap.get(
+                        demo.producer_employee_id
+                    );
+
+
+                return {
+                    ...demo,
+
+                    creator_profile:
+                        creator
+                            ? profileMap.get(
+                                creator.user_id
+                            )
+                            : null,
+
+                    producer_profile:
+                        producer
+                            ? profileMap.get(
+                                producer.user_id
+                            )
+                            : null
+                };
+
+            }
+        );
+}
+
+
+// ------------------------------------------------------------
+// RENDER LIST
+// ------------------------------------------------------------
+
+function renderSongDemoList(
+    demos
+) {
+
+    const list =
+        document.getElementById(
+            "song-demo-list"
+        );
+
+    const count =
+        document.getElementById(
+            "song-demo-count"
+        );
+
+
+    if (!list) {
+        return;
+    }
+
+
+    if (count) {
+
+        count.textContent =
+            `${demos.length} demo${
+                demos.length === 1
+                    ? ""
+                    : "s"
+            }`;
+
+    }
+
+
+    if (
+        demos.length === 0
+    ) {
+
+        list.innerHTML = `
+
+            <div class="song-demo-empty">
+
+                <div class="song-demo-empty-icon">
+                    ♫
+                </div>
+
+                <h3>
+                    No demos yet
+                </h3>
+
+                <p>
+                    Start by creating your first song demo.
+                </p>
+
+                <button
+                    class="primary-button"
+                    type="button"
+                    onclick="openSection('song-demo-create')"
+                >
+                    + Create demo
+                </button>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    list.innerHTML =
+        demos.map(
+            renderSongDemoCard
+        ).join("");
+}
+
+
+// ------------------------------------------------------------
+// DEMO CARD
+// ------------------------------------------------------------
+
+function renderSongDemoCard(
+    demo
+) {
+
+    const producer =
+        demo.producer_profile
+            ? (
+                demo.producer_profile.display_name ||
+                demo.producer_profile.username ||
+                "Unknown producer"
+            )
+            : "Unknown producer";
+
+
+    const creator =
+        demo.creator_profile
+            ? (
+                demo.creator_profile.display_name ||
+                demo.creator_profile.username ||
+                "Unknown employee"
+            )
+            : "Unknown employee";
+
+
+    const releaseStatus =
+        demo.release_assignment_status ||
+        "not_assigned";
+
+
+    const releaseLabel = {
+
+        assigned:
+            "Assigned to release",
+
+        resolved:
+            "Release linked",
+
+        missing:
+            "Release track missing",
+
+        not_assigned:
+            "Not assigned"
+
+    }[releaseStatus] ||
+        "Not assigned";
+
+
+    const statusLabel = {
+
+        draft:
+            "Draft",
+
+        published:
+            "Published",
+
+        poll_active:
+            "Poll active",
+
+        poll_ended:
+            "Poll ended",
+
+        under_review:
+            "Under review",
+
+        approved:
+            "Approved",
+
+        rejected:
+            "Rejected",
+
+        released:
+            "Released"
+
+    }[demo.status] ||
+        demo.status ||
+        "Draft";
+
+
+    const typeLabel = {
+
+        lyrics:
+            "Lyrics demo",
+
+        song:
+            "Song demo",
+
+        competition:
+            "Competition"
+
+    }[demo.demo_type] ||
+        "Demo";
+
+
+    const visibilityLabel = {
+
+        personal:
+            "Personal",
+
+        shared:
+            "Shared",
+
+        public:
+            "Public"
+
+    }[demo.visibility] ||
+        "Personal";
+
+
+    const releaseClass =
+        releaseStatus === "assigned" ||
+        releaseStatus === "resolved"
+            ? "release-ok"
+            : "release-warning";
+
+
+    return `
+
+        <article
+            class="song-demo-card"
+            data-song-demo-id="${escapeAttribute(
+                demo.id
+            )}"
+        >
+
+            <div class="song-demo-cover">
+
+                ${
+                    demo.cover_url
+                        ? `
+                            <img
+                                src="${escapeAttribute(
+                                    demo.cover_url
+                                )}"
+                                alt=""
+                            >
+                          `
+                        : `
+                            <div
+                                class="song-demo-cover-placeholder"
+                            >
+                                ♫
+                            </div>
+                          `
+                }
+
+            </div>
+
+
+            <div class="song-demo-info">
+
+                <div class="song-demo-top">
+
+                    <div>
+
+                        <div
+                            class="song-demo-type"
+                        >
+                            ${escapeHtml(
+                                typeLabel
+                            )}
+                        </div>
+
+                        <h3>
+                            ${escapeHtml(
+                                demo.title ||
+                                "Untitled Demo"
+                            )}
+                        </h3>
+
+                    </div>
+
+
+                    <span
+                        class="song-demo-status"
+                    >
+                        ${escapeHtml(
+                            statusLabel
+                        )}
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="song-demo-meta"
+                >
+
+                    <span>
+                        Producer:
+                        ${escapeHtml(
+                            producer
+                        )}
+                    </span>
+
+                    <span>
+                        Created by:
+                        ${escapeHtml(
+                            creator
+                        )}
+                    </span>
+
+                    <span>
+                        Visibility:
+                        ${escapeHtml(
+                            visibilityLabel
+                        )}
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="song-demo-bottom"
+                >
+
+                    <span
+                        class="song-demo-release
+                        ${releaseClass}"
+                    >
+                        ${escapeHtml(
+                            releaseLabel
+                        )}
+                    </span>
+
+
+                    ${
+                        demo.is_competition
+                            ? `
+                                <span
+                                    class="song-demo-competition"
+                                >
+                                    ✦ Competition
+                                </span>
+                              `
+                            : ""
+                    }
+
+                </div>
+
+            </div>
+
+        </article>
+
+    `;
+}
+
+
+// ------------------------------------------------------------
+// FILTER
+// ------------------------------------------------------------
+
+function filterSongDemos() {
+
+    const search =
+        (
+            document.getElementById(
+                "song-demo-search"
+            )?.value || ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    const status =
+        document.getElementById(
+            "song-demo-status-filter"
+        )?.value ||
+        "all";
+
+
+    const visibility =
+        document.getElementById(
+            "song-demo-visibility-filter"
+        )?.value ||
+        "all";
+
+
+    const filtered =
+        nemawashiSongDemos.filter(
+            demo => {
+
+                const title =
+                    (
+                        demo.title ||
+                        ""
+                    ).toLowerCase();
+
+
+                const producer =
+                    (
+                        demo.producer_profile
+                            ?.display_name ||
+                        demo.producer_profile
+                            ?.username ||
+                        ""
+                    ).toLowerCase();
+
+
+                const matchesSearch =
+                    !search ||
+                    title.includes(search) ||
+                    producer.includes(search);
+
+
+                const matchesStatus =
+                    status === "all" ||
+                    demo.status === status;
+
+
+                const matchesVisibility =
+                    visibility === "all" ||
+                    demo.visibility === visibility;
+
+
+                return (
+                    matchesSearch &&
+                    matchesStatus &&
+                    matchesVisibility
+                );
+
+            }
+        );
+
+
+    renderSongDemoList(
+        filtered
+    );
+}
+
+// ============================================================
+// CREATE DEMO — START
+// ============================================================
+
+function renderSongDemoCreate() {
+
+    sectionLabel.textContent =
+        "SONG DEMO STUDIO";
+
+    sectionTitle.textContent =
+        "Create Demo";
+
+
+    dashboardContent.innerHTML = `
+
+        <div class="song-demo-create-page">
+
+            <div class="song-demo-create-intro">
+
+                <span class="eyebrow">
+                    SONG DEMO STUDIO
+                </span>
+
+                <h2>
+                    How do you want to begin?
+                </h2>
+
+                <p>
+                    Choose the starting point for your song demo.
+                    You can build the lyrics first or begin with
+                    the song base.
+                </p>
+
+            </div>
+
+
+            <div class="song-demo-start-grid">
+
+
+                <button
+                    class="song-demo-start-card"
+                    type="button"
+                    onclick="startLyricsDemo()"
+                >
+
+                    <div
+                        class="song-demo-start-icon"
+                    >
+                        ✎
+                    </div>
+
+                    <div>
+
+                        <span>
+                            OPTION 01
+                        </span>
+
+                        <h3>
+                            Add lyrics first
+                        </h3>
+
+                        <p>
+                            Build the song structure, write lyrics,
+                            assign sections to members and prepare
+                            the demo before adding the song base.
+                        </p>
+
+                    </div>
+
+                    <strong>
+                        →
+                    </strong>
+
+                </button>
+
+
+                <button
+                    class="song-demo-start-card"
+                    type="button"
+                    onclick="startSongBaseDemo()"
+                >
+
+                    <div
+                        class="song-demo-start-icon"
+                    >
+                        ♫
+                    </div>
+
+                    <div>
+
+                        <span>
+                            OPTION 02
+                        </span>
+
+                        <h3>
+                            Add song base first
+                        </h3>
+
+                        <p>
+                            Upload a short WAV or MP3 demo and,
+                            if needed, attach the DAW project used
+                            to create the song.
+                        </p>
+
+                    </div>
+
+                    <strong>
+                        →
+                    </strong>
+
+                </button>
+
+
+            </div>
+
+
+            <div class="song-demo-create-note">
+
+                <span>
+                    ✦
+                </span>
+
+                <div>
+
+                    <strong>
+                        You can change the setup later.
+                    </strong>
+
+                    <p>
+                        The Studio will keep your work as a draft
+                        until you choose to share or publish it.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+}
+
+
+// Temporary entry points for the next wizard step.
+
+function startLyricsDemo() {
+
+    renderSongDemoWizard(
+        "lyrics"
+    );
+}
+
+
+function startSongBaseDemo() {
+
+    renderSongDemoWizard(
+        "song"
+    );
+}
+
+
+// ------------------------------------------------------------
+// FIRST WIZARD SCREEN
+// ------------------------------------------------------------
+
+function renderSongDemoWizard(
+    type
+) {
+
+    const lyrics =
+        type === "lyrics";
+
+
+    sectionLabel.textContent =
+        "SONG DEMO STUDIO";
+
+    sectionTitle.textContent =
+        lyrics
+            ? "Lyrics Demo"
+            : "Song Base Demo";
+
+
+    dashboardContent.innerHTML = `
+
+        <div class="song-demo-wizard">
+
+            <button
+                class="back-button"
+                type="button"
+                onclick="renderSongDemoCreate()"
+            >
+                ← Back
+            </button>
+
+
+            <div class="song-demo-wizard-heading">
+
+                <span class="eyebrow">
+                    STEP 01
+                </span>
+
+                <h2>
+                    ${
+                        lyrics
+                            ? "Build your lyrics"
+                            : "Add your song base"
+                    }
+                </h2>
+
+                <p>
+                    ${
+                        lyrics
+                            ? "We'll set up the song structure first."
+                            : "We'll set up the audio and project files first."
+                    }
+                </p>
+
+            </div>
+
+
+            ${
+                lyrics
+                    ? `
+                        <div class="song-demo-placeholder-panel">
+
+                            <div class="song-demo-start-icon">
+                                ✎
+                            </div>
+
+                            <h3>
+                                Song structure
+                            </h3>
+
+                            <p>
+                                The section builder will be added
+                                in the next step.
+                            </p>
+
+                            <div class="song-demo-coming-list">
+
+                                <span>Verse 1</span>
+                                <span>Pre-Chorus</span>
+                                <span>Chorus</span>
+                                <span>Verse 2</span>
+                                <span>Bridge</span>
+                                <span>Ending</span>
+
+                            </div>
+
+                            <button
+                                class="primary-button"
+                                type="button"
+                                disabled
+                            >
+                                Continue
+                            </button>
+
+                        </div>
+                      `
+                    : `
+                        <div class="song-demo-placeholder-panel">
+
+                            <div class="song-demo-start-icon">
+                                ♫
+                            </div>
+
+                            <h3>
+                                Audio & project files
+                            </h3>
+
+                            <p>
+                                WAV/MP3 upload, the one-minute limit,
+                                and DAW project uploads will be
+                                connected in the next step.
+                            </p>
+
+                            <div class="song-demo-upload-hints">
+
+                                <span>
+                                    WAV
+                                </span>
+
+                                <span>
+                                    MP3
+                                </span>
+
+                                <span>
+                                    Ableton
+                                </span>
+
+                                <span>
+                                    FL Studio
+                                </span>
+
+                                <span>
+                                    Logic
+                                </span>
+
+                            </div>
+
+                            <button
+                                class="primary-button"
+                                type="button"
+                                disabled
+                            >
+                                Continue
+                            </button>
+
+                        </div>
+                      `
+            }
+
+        </div>
+
+    `;
+}
+
+
+// ------------------------------------------------------------
+// TEMPORARY POLLS / REVIEWS
+// ------------------------------------------------------------
+
+function renderSongDemoPolls() {
+
+    sectionLabel.textContent =
+        "SONG DEMO STUDIO";
+
+    sectionTitle.textContent =
+        "Demo Polls";
+
+
+    renderPlaceholder(
+        "song-demo-polls"
+    );
+}
+
+
+function renderSongDemoReviews() {
+
+    sectionLabel.textContent =
+        "SONG DEMO STUDIO";
+
+    sectionTitle.textContent =
+        "Poll Reviews";
+
+
+    renderPlaceholder(
+        "song-demo-reviews"
+    );
+}
+
+// ============================================================
+// SONG DEMO STUDIO
+// ============================================================
+
+let nemawashiSongDemoAccess = false;
+let nemawashiSongDemos = [];
+
+
+// ------------------------------------------------------------
+// CHECK SONG DEMO STUDIO ACCESS
+// ------------------------------------------------------------
+
+async function checkSongDemoStudioAccess() {
+
+    try {
+
+        const {
+            data,
+            error
+        } = await supabaseClient.rpc(
+            "nemawashi_can_manage_song_demos"
+        );
+
+        if (error) {
+            console.error(
+                "Song Demo Studio access error:",
+                error
+            );
+
+            return false;
+        }
+
+        return data === true;
+
+    } catch (error) {
+
+        console.error(
+            "Song Demo Studio access error:",
+            error
+        );
+
+        return false;
+    }
+}
+
+
+// ------------------------------------------------------------
+// ADD SIDEBAR SECTION
+// ------------------------------------------------------------
+
+function addSongDemoStudioNavigation() {
+
+    const sidebar = document.querySelector(".sidebar");
+
+    if (!sidebar) {
+        return;
+    }
+
+    if (
+        document.getElementById(
+            "song-demo-studio-nav"
+        )
+    ) {
+        return;
+    }
+
+
+    const group =
+        document.createElement("div");
+
+    group.className =
+        "nav-group song-demo-studio-group";
+
+    group.id =
+        "song-demo-studio-nav";
+
+
+    group.innerHTML = `
+
+        <div class="nav-group-title song-demo-nav-title">
+            ✦ SONG DEMO STUDIO
+        </div>
+
+        <button
+            class="nav-item song-demo-nav-item"
+            data-section="song-demos"
+            type="button"
+        >
+            <span>♫</span>
+            Demo Library
+        </button>
+
+        <button
+            class="nav-item song-demo-nav-item"
+            data-section="song-demo-create"
+            type="button"
+        >
+            <span>＋</span>
+            Create Demo
+        </button>
+
+        <button
+            class="nav-item song-demo-nav-item"
+            data-section="song-demo-polls"
+            type="button"
+        >
+            <span>◉</span>
+            Demo Polls
+        </button>
+
+        <button
+            class="nav-item song-demo-nav-item"
+            data-section="song-demo-reviews"
+            type="button"
+        >
+            <span>✓</span>
+            Poll Reviews
+        </button>
+
+    `;
+
+
+    sidebar.appendChild(group);
+}
+
+
+// ------------------------------------------------------------
+// INITIALIZE SONG DEMO STUDIO
+// ------------------------------------------------------------
+
+async function initializeSongDemoStudio() {
+
+    nemawashiSongDemoAccess =
+        await checkSongDemoStudioAccess();
+
+
+    if (
+        !nemawashiSongDemoAccess
+    ) {
+        return;
+    }
+
+
+    addSongDemoStudioNavigation();
 }
 
 
