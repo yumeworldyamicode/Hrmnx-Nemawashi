@@ -7938,10 +7938,11 @@ async function initializeDashboard() {
     // INITIAL SECTION
     // --------------------------------------------------------
 
+    await initializeSongDemoStudio();
+
     renderOverview(user);
 
 }
-
 
 // ============================================================
 // HTML ESCAPING
