@@ -5190,6 +5190,15 @@ async function buildLyricsDemoPackage(
     enabledSections
 ) {
 
+    console.log(
+        "📦 buildLyricsDemoPackage() started",
+        {
+            demoId: demo.id,
+            employeeId: employeeId,
+            sections: enabledSections.length
+        }
+    );
+
     const {
         data: employee,
         error: employeeError
@@ -5342,6 +5351,11 @@ async function buildLyricsDemoPackage(
             }
         );
 
+    console.log(
+        "📤 Uploading package to Storage:",
+         storagePath
+    );
+
     const storagePath =
         `song-demos/${demo.id}/package/${packageFilename}`;
 
@@ -5368,6 +5382,18 @@ async function buildLyricsDemoPackage(
     if (uploadError) {
         throw uploadError;
     }
+
+    console.log(
+        "🗂️ Registering package in song_demo_assets..."
+    );
+
+    console.log(
+        "✅ Package process completely finished:",
+        {
+            packageFilename,
+            storagePath
+        }
+    );
 
     const {
         error: assetError
@@ -5425,7 +5451,14 @@ async function buildLyricsDemoPackage(
 
 async function saveSongDemoLyrics() {
 
+    console.log("🎵 SAVE LYRICS DEMO: function started");
+
     syncSongDemoSectionInputs();
+
+    console.log(
+        "🎵 Sections:",
+        nemawashiSongDemoSections
+    );
 
 
     const title =
@@ -5439,11 +5472,21 @@ async function saveSongDemoLyrics() {
 
     try {
 
+        console.log(
+            "🎵 Getting current employee ID..."
+        );
+        
         const {
             data: employeeId,
             error: employeeError
         } = await supabaseClient.rpc(
             "nemawashi_current_employee_id"
+        );
+
+        console.log(
+            "🎵 Employee ID result:",
+            employeeId,
+            employeeError
         );
 
         if (employeeError) {
@@ -5493,12 +5536,22 @@ async function saveSongDemoLyrics() {
             throw demoError;
         }
 
+        console.log(
+            "🎵 Demo created successfully:",
+            demo
+        );
+
 
         const enabledSections =
             nemawashiSongDemoSections
                 .filter(section =>
                     section.enabled
                 );
+
+        console.log(
+            "🎵 Enabled sections:",
+            enabledSections
+        );
 
 
         for (
@@ -5595,12 +5648,19 @@ async function saveSongDemoLyrics() {
         }
 
 
+        console.log(
+            "📦 Starting .lyrdem package creation..."
+        );
+
         await buildLyricsDemoPackage(
             demo,
             employeeId,
             enabledSections
         );
 
+        console.log(
+            "📦 .lyrdem package created successfully"
+        );
 
         alert(
             "Lyrics demo saved as a personal draft."
