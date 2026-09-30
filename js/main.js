@@ -32,7 +32,10 @@ async function checkNemawashiSession() {
         accountStatus.textContent =
             "Not signed in";
 
-        return;
+        signInButton.textContent =
+            "Sign in";
+
+        return false;
 
     }
 
@@ -42,7 +45,10 @@ async function checkNemawashiSession() {
         accountStatus.textContent =
             "Not signed in";
 
-        return;
+        signInButton.textContent =
+            "Sign in";
+
+        return false;
 
     }
 
@@ -53,15 +59,52 @@ async function checkNemawashiSession() {
     signInButton.textContent =
         "Open Nemawashi";
 
+    return true;
+
 }
 
 
-function openNemawashi() {
+
+async function openNemawashi() {
+
+    const {
+        data: {
+            user
+        },
+        error
+    } = await supabaseClient.auth.getUser();
+
+
+    if (error) {
+
+        console.error(
+            "Could not check account:",
+            error
+        );
+
+        window.location.href =
+            "login.html";
+
+        return;
+
+    }
+
+
+    if (!user) {
+
+        window.location.href =
+            "login.html";
+
+        return;
+
+    }
+
 
     window.location.href =
         "dashboard.html";
 
 }
+
 
 
 signInButton.addEventListener(
@@ -80,6 +123,7 @@ finalLoginButton.addEventListener(
     "click",
     openNemawashi
 );
+
 
 
 supabaseClient.auth.onAuthStateChange(
