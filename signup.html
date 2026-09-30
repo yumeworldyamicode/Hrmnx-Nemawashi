@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nemawashi — Sign up</title>
+<title>根回し - Sign up</title>
 <style>
 *{box-sizing:border-box}
 :root{--accent:#636BD8;--text:#17182a;--muted:#77798d;--border:rgba(99,107,216,.14)}
@@ -37,7 +37,6 @@ body{margin:0;min-height:100vh;font-family:"Noto Sans JP","Segoe UI",sans-serif;
 <button id="signup-button" class="button" type="submit">Create account</button>
 </form>
 <p class="login-link">Already have an account? <a href="index.html">Sign in</a></p>
-<div class="note">If email confirmation is enabled in Supabase, check your email before signing in.</div>
 </section>
 </main>
 
@@ -69,7 +68,7 @@ const {data,error}=await supabaseClient.auth.signUp({
 email,
 password,
 options:{
-emailRedirectTo:window.location.origin+"/index.html",
+emailRedirectTo: "https://yumeworldyamicode.github.io/Hrmnx-Nemawashi/index.html",
 data:{display_name:displayName,username:username}
 }
 });
