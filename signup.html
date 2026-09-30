@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nemawashi — Sign up</title>
+<style>
+*{box-sizing:border-box}
+:root{--accent:#636BD8;--text:#17182a;--muted:#77798d;--border:rgba(99,107,216,.14)}
+body{margin:0;min-height:100vh;font-family:"Noto Sans JP","Segoe UI",sans-serif;color:var(--text);background:radial-gradient(circle at 15% 15%,rgba(99,107,216,.13),transparent 32%),radial-gradient(circle at 85% 85%,rgba(99,107,216,.10),transparent 30%),linear-gradient(135deg,#fff,#f7f7ff);display:flex;align-items:center;justify-content:center;padding:30px 18px}
+.signup-shell{width:100%;max-width:480px}.brand{text-align:center;margin-bottom:24px}.brand img{width:82px;height:auto;margin-bottom:12px}.brand h1{margin:0;font-size:28px;font-weight:800;letter-spacing:-.04em}.brand p{margin:6px 0 0;color:var(--muted);font-size:13px}
+.card{background:rgba(255,255,255,.88);border:1px solid var(--border);border-radius:24px;padding:30px;box-shadow:0 20px 60px rgba(45,48,100,.10);backdrop-filter:blur(18px)}.card h2{margin:0 0 6px;font-size:21px}.card-intro{margin:0 0 24px;color:var(--muted);font-size:13px;line-height:1.6}
+.field{margin-bottom:16px}label{display:block;margin-bottom:7px;font-size:12px;font-weight:700}input{width:100%;border:1px solid var(--border);border-radius:13px;padding:12px 14px;outline:none;background:#fff;color:var(--text);font:inherit;font-size:14px}input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(99,107,216,.10)}
+.button{width:100%;border:0;border-radius:13px;padding:13px 16px;margin-top:5px;background:var(--accent);color:#fff;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.button:disabled{opacity:.55;cursor:wait}
+.message{display:none;margin:0 0 18px;padding:11px 13px;border-radius:12px;font-size:13px;line-height:1.5}.message.show{display:block}.message.error{background:#fff0f1;color:#a52d3a}.message.success{background:#eefbf3;color:#247044}
+.login-link{margin:20px 0 0;text-align:center;color:var(--muted);font-size:13px}.login-link a{color:var(--accent);font-weight:700;text-decoration:none}.note{margin-top:18px;padding:12px 14px;border-radius:13px;background:rgba(99,107,216,.09);color:var(--muted);font-size:11px;line-height:1.55}
+@media(max-width:520px){.card{padding:24px 20px;border-radius:20px}}
+</style>
+</head>
+<body>
+<main class="signup-shell">
+<div class="brand">
+<img src="images/nemawashi-logo.png" alt="Nemawashi">
+<h1>Nemawashi</h1>
+<p>Hrmnx Entertainment internal workspace</p>
+</div>
+<section class="card">
+<h2>Create your account</h2>
+<p class="card-intro">Create a Nemawashi account using your Hrmnx account email.</p>
+<div id="message" class="message"></div>
+<form id="signup-form">
+<div class="field"><label for="display-name">Display name</label><input id="display-name" type="text" autocomplete="name" placeholder="Your name" required></div>
+<div class="field"><label for="username">Username</label><input id="username" type="text" autocomplete="username" placeholder="yourusername" required></div>
+<div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+<div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required></div>
+<div class="field"><label for="confirm-password">Confirm password</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="8" placeholder="Enter your password again" required></div>
+<button id="signup-button" class="button" type="submit">Create account</button>
+</form>
+<p class="login-link">Already have an account? <a href="index.html">Sign in</a></p>
+<div class="note">If email confirmation is enabled in Supabase, check your email before signing in.</div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script>
+const form=document.getElementById("signup-form");
+const button=document.getElementById("signup-button");
+const message=document.getElementById("message");
+
+function showMessage(text,type){message.textContent=text;message.className="message show "+type;}
+
+form.addEventListener("submit",async function(event){
+event.preventDefault();
+const displayName=document.getElementById("display-name").value.trim();
+const username=document.getElementById("username").value.trim().toLowerCase();
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+const confirmPassword=document.getElementById("confirm-password").value;
+
+if(password!==confirmPassword){showMessage("The passwords do not match.","error");return;}
+if(password.length<8){showMessage("Your password must be at least 8 characters long.","error");return;}
+if(!/^[a-z0-9._-]+$/.test(username)){showMessage("Username may only contain lowercase letters, numbers, dots, underscores and hyphens.","error");return;}
+
+button.disabled=true;button.textContent="Creating account...";message.className="message";
+
+try{
+const {data,error}=await supabaseClient.auth.signUp({
+email,
+password,
+options:{
+emailRedirectTo:window.location.origin+"/index.html",
+data:{display_name:displayName,username:username}
+}
+});
+if(error) throw error;
+
+if(data.session){
+showMessage("Account created successfully. Redirecting...","success");
+setTimeout(()=>window.location.href="index.html",700);
+}else{
+showMessage("Account created. Please check your email to confirm your account, then sign in.","success");
+button.disabled=false;button.textContent="Create account";
+}
+}catch(error){
+console.error("Nemawashi sign-up error:",error);
+showMessage(error.message||"Could not create the account.","error");
+button.disabled=false;button.textContent="Create account";
+}
+});
+</script>
+</body>
+</html>
