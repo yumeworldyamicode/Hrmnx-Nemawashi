@@ -190,64 +190,26 @@ async function loadApps() {
 
 function renderAppsSidebar() {
 
+    /*
+     * The Apps already exist in messages.html.
+     * Do not replace them with database-generated HTML.
+     *
+     * The database is used for App data/pages,
+     * while the existing sidebar keeps its structure.
+     */
+
     if (!appsList) {
-
         return;
-
     }
 
+    /*
+     * Keep the existing HTML buttons exactly as they are.
+     * Only make sure their click targets remain available.
+     */
 
-    appsList.innerHTML =
-        nemawashiApps
-            .map(
-                app => `
-
-                    <button
-                        type="button"
-                        class="app-navigation-item"
-                        data-app="${escapeHtml(app.slug)}"
-                    >
-
-                        ${
-                            app.favicon_url
-
-                            ?
-
-                            `
-                                <img
-                                    class="app-navigation-icon"
-                                    src="${escapeHtml(app.favicon_url)}"
-                                    alt=""
-                                >
-                            `
-
-                            :
-
-                            `
-                                <span
-                                    class="app-navigation-icon fallback"
-                                >
-                                    ${
-                                        appIcons[app.slug]
-                                        || "A"
-                                    }
-                                </span>
-                            `
-                        }
-
-
-                        <span>
-                            ${escapeHtml(app.name)}
-                        </span>
-
-                    </button>
-
-                `
-            )
-            .join("");
+    appsList.style.display = "";
 
 }
-
 
 /* ============================================================
    NAVIGATION
@@ -333,10 +295,14 @@ function setupNavigation() {
             "click",
             function() {
 
-                const open =
-                    appsList.classList.toggle(
-                        "open"
-                    );
+if (!appsList) {
+    return;
+}
+
+const open =
+    appsList.classList.toggle(
+        "open"
+    );
 
 
                 appsToggle.classList.toggle(
