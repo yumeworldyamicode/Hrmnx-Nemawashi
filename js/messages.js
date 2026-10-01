@@ -1447,156 +1447,289 @@ async function loadAppSpaces(
    SELECT SPACE
 ============================================================ */
 
-async function selectSpace(
-    spaceId
-) {
+async function selectSpace(spaceId) {
+    try {
+        const { data: space, error } = await supabaseClient
+            .from("nemawashi_spaces")
+            .select(`
+                id,
+                app_id,
+                project_id,
+                slug,
+                name,
+                space_type,
+                description
+            `)
+            .eq("id", spaceId)
+            .single();
 
-    if (!currentApp) {
+        if (error) {
+            console.error("Failed to load Space:", error);
+            return;
+        }
 
-        return;
+        currentSpace = space;
 
+        document.querySelectorAll(".space-item").forEach(button => {
+            button.classList.toggle(
+                "active",
+                String(button.dataset.space) === String(spaceId)
+            );
+        });
+
+        const spaceHeader = document.querySelector(".space-header");
+        const spacePlaceholder = document.querySelector(".space-placeholder");
+
+        if (spaceHeader) {
+            spaceHeader.innerHTML = `
+                <div class="space-header-icon">
+                    ${getSpaceIcon(space.space_type)}
+                </div>
+
+                <div>
+                    <h2>${escapeHtml(space.name)}</h2>
+                    <p>${escapeHtml(
+                        space.description || "Communication for this Space."
+                    )}</p>
+                </div>
+            `;
+        }
+
+        if (spacePlaceholder) {
+            spacePlaceholder.outerHTML = `
+                <div class="space-chat" id="space-chat">
+
+                    <div class="messages-list" id="messages-list">
+                        <div class="messages-loading">
+                            Loading messages...
+                        </div>
+                    </div>
+
+                    <form class="message-composer" id="message-composer">
+                        <textarea
+                            id="message-input"
+                            placeholder="Message ${escapeHtml(space.name)}..."
+                            rows="1"
+                            maxlength="5000"
+                        ></textarea>
+
+                        <button type="submit" class="message-send-button">
+                            Send
+                        </button>
+                    </form>
+
+                </div>
+            `;
+
+            loadMessages(space.id);
+            setupMessageComposer();
+        }
+
+    } catch (error) {
+        console.error("Space selection error:", error);
     }
-
-
-    document
-        .querySelectorAll(
-            ".space-item"
-        )
-        .forEach(
-            item =>
-                item.classList.remove(
-                    "active"
-                )
-        );
-
-
-    const selectedButton =
-        document.querySelector(
-            `[data-space="${CSS.escape(spaceId)}"]`
-        );
-
-
-    if (selectedButton) {
-
-        selectedButton.classList.add(
-            "active"
-        );
-
-    }
-
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-
-        .from("nemawashi_spaces")
-
-        .select(`
-            id,
-            name,
-            space_type,
-            description
-        `)
-
-        .eq(
-            "id",
-            spaceId
-        )
-
-        .maybeSingle();
-
-
-    if (error) {
-
-        console.error(
-            "Failed to load Space:",
-            error
-        );
-
-        return;
-
-    }
-
-
-    if (!data) {
-
-        return;
-
-    }
-
-
-    currentSpace =
-        data;
-
-
-    const header =
-        document.querySelector(
-            ".space-header"
-        );
-
-
-    const content =
-        document.querySelector(
-            ".space-placeholder"
-        );
-
-
-    if (!header || !content) {
-
-        return;
-
-    }
-
-
-    header.innerHTML = `
-
-        <small>
-            ${escapeHtml(
-                data.space_type
-                    .replace(
-                        /_/g,
-                        " "
-                    )
-                    .toUpperCase()
-            )}
-        </small>
-
-
-        <h3>
-            ${escapeHtml(data.name)}
-        </h3>
-
-    `;
-
-
-    content.innerHTML = `
-
-        <div
-            class="space-placeholder-icon"
-        >
-            ${getSpaceIcon(
-                data.space_type
-            )}
-        </div>
-
-
-        <h3>
-            ${escapeHtml(data.name)}
-        </h3>
-
-
-        <p>
-            ${escapeHtml(
-                data.description ||
-                "This Space is ready for its communication interface."
-            )}
-        </p>
-
-    `;
-
 }
 
+async function loadMessages(spaceId) {
+    const messagesList = document.getElementById("messages-list");
+
+    if (!messagesList) return;
+
+    messagesList.innerHTML = `
+        <div class="messages-loading">
+            Loading messages...
+        </div>
+    `;
+
+    const { data: messages, error } = await supabaseClient
+        .from("nemawashi_messages")
+        .select(`
+            id,
+            space_id,
+            user_id,
+            content,
+            reply_to_id,
+            is_edited,
+            created_at
+        `)
+        .eq("space_id", spaceId)
+        .order("created_at", { ascending: true });
+
+    if (error) {
+        console.error("Failed to load messages:", error);
+
+        messagesList.innerHTML = `
+            <div class="messages-loading">
+                Could not load messages.
+            </div>
+        `;
+
+        return;
+    }
+
+    if (!messages || messages.length === 0) {
+        messagesList.innerHTML = `
+            <div class="messages-empty">
+                <div class="messages-empty-icon">◇</div>
+                <h3>No messages yet</h3>
+                <p>Start the conversation in this Space.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    messagesList.innerHTML = messages
+        .map(message => renderMessage(message))
+        .join("");
+
+    scrollMessagesToBottom();
+}
+
+function renderMessage(message) {
+    const date = new Date(message.created_at);
+
+    const time = date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+    return `
+        <article class="message-item" data-message-id="${escapeHtml(message.id)}">
+
+            <div class="message-avatar">
+                ◇
+            </div>
+
+            <div class="message-body">
+
+                <div class="message-meta">
+                    <span class="message-author">
+                        User
+                    </span>
+
+                    <span class="message-time">
+                        ${escapeHtml(time)}
+                    </span>
+
+                    ${
+                        message.is_edited
+                            ? `<span class="message-edited">(edited)</span>`
+                            : ""
+                    }
+                </div>
+
+                <div class="message-text">
+                    ${escapeHtml(message.content)}
+                </div>
+
+            </div>
+
+        </article>
+    `;
+}
+
+function setupMessageComposer() {
+    const composer = document.getElementById("message-composer");
+    const input = document.getElementById("message-input");
+
+    if (!composer || !input) return;
+
+    composer.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const content = input.value.trim();
+
+        if (!content) return;
+
+        const {
+            data: {
+                user
+            }
+        } = await supabaseClient.auth.getUser();
+
+        if (!user) {
+            alert("You must be logged in to send messages.");
+            return;
+        }
+
+        if (!currentSpace) {
+            return;
+        }
+
+        const sendButton = composer.querySelector(".message-send-button");
+
+        input.disabled = true;
+
+        if (sendButton) {
+            sendButton.disabled = true;
+        }
+
+        const { data: message, error } = await supabaseClient
+            .from("nemawashi_messages")
+            .insert({
+                space_id: currentSpace.id,
+                user_id: user.id,
+                content: content
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Failed to send message:", error);
+
+            input.disabled = false;
+
+            if (sendButton) {
+                sendButton.disabled = false;
+            }
+
+            return;
+        }
+
+        input.value = "";
+
+        input.disabled = false;
+
+        if (sendButton) {
+            sendButton.disabled = false;
+        }
+
+        const messagesList = document.getElementById("messages-list");
+
+        if (messagesList) {
+            const emptyState = messagesList.querySelector(".messages-empty");
+
+            if (emptyState) {
+                messagesList.innerHTML = "";
+            }
+
+            messagesList.insertAdjacentHTML(
+                "beforeend",
+                renderMessage(message)
+            );
+
+            scrollMessagesToBottom();
+        }
+
+        input.focus();
+    });
+
+    input.addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            composer.requestSubmit();
+        }
+    });
+}
+
+function scrollMessagesToBottom() {
+    const messagesList = document.getElementById("messages-list");
+
+    if (!messagesList) return;
+
+    messagesList.scrollTop = messagesList.scrollHeight;
+}
 
 /* ============================================================
    SPACE ICONS
