@@ -1082,3 +1082,624 @@ footer div {
     }
 
 }
+
+/* ============================================================
+   NEMAWASHI COMMUNICATIONS
+============================================================ */
+
+.nemawashi-communication-group {
+    margin-top: 18px;
+}
+
+
+/* APP LIST */
+
+.nemawashi-app-list {
+    display: none;
+    padding: 3px 0 3px 18px;
+}
+
+.nemawashi-app-list.open {
+    display: block;
+}
+
+.nemawashi-app-nav-item {
+    width: 100%;
+    border: 0;
+    background: transparent;
+
+    padding: 8px 11px;
+
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    color: #77798d;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.nemawashi-app-nav-item:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.nemawashi-app-nav-item.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.nemawashi-app-icon {
+    width: 20px;
+    height: 20px;
+
+    border-radius: 6px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(99,107,216,.10);
+
+    color: var(--accent);
+
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.nemawashi-app-nav-item.active
+.nemawashi-app-icon {
+    background: rgba(255,255,255,.18);
+    color: #fff;
+}
+
+
+.nemawashi-apps-arrow {
+    margin-left: auto;
+    transition: transform .2s ease;
+}
+
+.nemawashi-apps-toggle.open
+.nemawashi-apps-arrow {
+    transform: rotate(90deg);
+}
+
+
+/* COMMUNICATION PAGE */
+
+.nemawashi-communication-page {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.nemawashi-page-intro {
+    margin-bottom: 28px;
+}
+
+.nemawashi-page-intro h2 {
+    margin: 8px 0 8px;
+    font-size: 30px;
+    letter-spacing: -.03em;
+}
+
+.nemawashi-page-intro p {
+    margin: 0;
+    max-width: 650px;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+
+/* COMMUNICATION CARDS */
+
+.nemawashi-communication-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+.nemawashi-communication-card {
+    border: 1px solid var(--border);
+
+    background: rgba(255,255,255,.72);
+
+    border-radius: 20px;
+
+    padding: 22px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    font-family: inherit;
+
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease;
+}
+
+.nemawashi-communication-card:hover {
+    transform: translateY(-2px);
+
+    border-color:
+        rgba(99,107,216,.25);
+
+    box-shadow:
+        0 15px 35px
+        rgba(40,40,80,.08);
+}
+
+.nemawashi-communication-card .card-icon {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--accent-soft);
+
+    color: var(--accent);
+
+    margin-bottom: 15px;
+}
+
+.nemawashi-communication-card strong {
+    color: var(--text);
+    font-size: 15px;
+    margin-bottom: 6px;
+}
+
+.nemawashi-communication-card span:last-child {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+
+/* EMPTY STATE */
+
+.nemawashi-empty-state {
+    min-height: 300px;
+
+    border:
+        1px dashed
+        rgba(99,107,216,.20);
+
+    border-radius: 22px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 40px;
+}
+
+.nemawashi-empty-state h3 {
+    margin: 15px 0 7px;
+}
+
+.nemawashi-empty-state p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+
+/* APP GRID */
+
+.nemawashi-app-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 15px;
+}
+
+.nemawashi-app-card {
+    position: relative;
+
+    min-height: 145px;
+
+    border: 1px solid var(--border);
+
+    background: rgba(255,255,255,.72);
+
+    border-radius: 20px;
+
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    text-align: left;
+
+    font-family: inherit;
+
+    cursor: pointer;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease;
+}
+
+.nemawashi-app-card:hover {
+    transform: translateY(-2px);
+
+    border-color:
+        rgba(99,107,216,.25);
+
+    box-shadow:
+        0 15px 35px
+        rgba(40,40,80,.08);
+}
+
+.nemawashi-app-card-icon {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--accent-soft);
+
+    color: var(--accent);
+
+    font-size: 13px;
+    font-weight: 900;
+
+    margin-bottom: 14px;
+}
+
+.nemawashi-app-card-name {
+    color: var(--text);
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.nemawashi-app-card-type {
+    margin-top: 5px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.nemawashi-app-card-arrow {
+    position: absolute;
+
+    right: 18px;
+    bottom: 17px;
+
+    color: var(--accent);
+
+    font-size: 17px;
+}
+
+
+/* ============================================================
+   APP PAGE
+============================================================ */
+
+.nemawashi-app-page {
+    width: 100%;
+
+    min-height: calc(100vh - 100px);
+
+    border-radius: 24px;
+
+    overflow: hidden;
+
+    background: #fff;
+
+    border:
+        1px solid
+        rgba(99,107,216,.12);
+}
+
+
+/* APP BANNER */
+
+.nemawashi-app-banner {
+    min-height: 220px;
+
+    position: relative;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--accent),
+            rgba(99,107,216,.35)
+        );
+
+    overflow: hidden;
+}
+
+.nemawashi-app-banner::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle at 80% 20%,
+            rgba(255,255,255,.25),
+            transparent 35%
+        );
+}
+
+.nemawashi-app-banner-overlay {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 2;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: flex-end;
+
+    padding: 32px;
+}
+
+.nemawashi-app-label {
+    color: rgba(255,255,255,.72);
+
+    font-size: 10px;
+
+    font-weight: 900;
+
+    letter-spacing: .15em;
+}
+
+.nemawashi-app-banner h2 {
+    margin: 7px 0 5px;
+
+    color: #fff;
+
+    font-size: 34px;
+
+    letter-spacing: -.04em;
+}
+
+.nemawashi-app-banner p {
+    margin: 0;
+
+    color: rgba(255,255,255,.78);
+
+    font-size: 12px;
+}
+
+
+/* APP BODY */
+
+.nemawashi-app-body {
+    min-height: 500px;
+
+    display: grid;
+
+    grid-template-columns:
+        235px minmax(0, 1fr);
+}
+
+
+/* SPACE SIDEBAR */
+
+.nemawashi-space-sidebar {
+    border-right:
+        1px solid
+        rgba(99,107,216,.10);
+
+    background:
+        rgba(248,248,252,.72);
+
+    padding: 18px 12px;
+}
+
+.nemawashi-space-heading {
+    padding:
+        5px 9px
+        18px;
+
+    color: var(--text);
+
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.nemawashi-space-section {
+    margin-bottom: 23px;
+}
+
+.nemawashi-space-section-title {
+    padding:
+        0 9px
+        7px;
+
+    color: #999aaa;
+
+    font-size: 9px;
+
+    letter-spacing: .13em;
+
+    font-weight: 900;
+}
+
+.nemawashi-space-item {
+    width: 100%;
+
+    border: 0;
+
+    background: transparent;
+
+    padding: 9px;
+
+    border-radius: 10px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    color: #717384;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.nemawashi-space-item:hover {
+    background: var(--accent-soft);
+
+    color: var(--accent);
+}
+
+.nemawashi-space-item.active {
+    background: var(--accent);
+
+    color: #fff;
+}
+
+.nemawashi-project-placeholder {
+    padding: 9px;
+
+    color: #9a9baa;
+
+    font-size: 10px;
+
+    line-height: 1.5;
+}
+
+
+/* SPACE CONTENT */
+
+.nemawashi-space-content {
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+.nemawashi-space-header {
+    padding: 25px 28px;
+
+    border-bottom:
+        1px solid
+        rgba(99,107,216,.10);
+}
+
+.nemawashi-space-header h3 {
+    margin: 5px 0 0;
+
+    font-size: 21px;
+}
+
+.nemawashi-space-preview {
+    flex: 1;
+
+    min-height: 350px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 40px;
+}
+
+.nemawashi-space-preview h3 {
+    margin: 15px 0 6px;
+}
+
+.nemawashi-space-preview p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 850px) {
+
+    .nemawashi-app-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .nemawashi-app-body {
+        grid-template-columns: 190px minmax(0, 1fr);
+    }
+
+}
+
+@media (max-width: 650px) {
+
+    .nemawashi-communication-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nemawashi-app-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nemawashi-app-body {
+        grid-template-columns: 1fr;
+    }
+
+    .nemawashi-space-sidebar {
+        border-right: 0;
+
+        border-bottom:
+            1px solid
+            rgba(99,107,216,.10);
+    }
+
+}
