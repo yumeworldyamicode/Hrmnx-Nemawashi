@@ -1624,6 +1624,98 @@ async function loadMessages(spaceId) {
     scrollMessagesToBottom();
 }
 
+function renderMessage(message, profile) {
+    const date = new Date(message.created_at);
+
+    const time = date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+    const displayName = profile?.display_name || "Unknown user";
+
+    const username = profile?.username
+        ? `@${profile.username}`
+        : "";
+
+    const avatar = profile?.avatar_url
+        ? `
+            <img
+                src="${escapeHtml(profile.avatar_url)}"
+                alt="${escapeHtml(displayName)}"
+            >
+        `
+        : "◇";
+
+    return `
+        <article
+            class="message-item"
+            data-message-id="${escapeHtml(message.id)}"
+        >
+
+            <button
+                type="button"
+                class="message-avatar"
+                data-profile-id="${escapeHtml(message.user_id)}"
+                aria-label="View ${escapeHtml(displayName)}'s profile"
+            >
+                ${avatar}
+            </button>
+
+            <div class="message-body">
+
+                <div class="message-meta">
+
+                    <button
+                        type="button"
+                        class="message-author"
+                        data-profile-id="${escapeHtml(message.user_id)}"
+                    >
+                        ${escapeHtml(displayName)}
+                    </button>
+
+                    ${
+                        username
+                            ? `
+                                <span class="message-username">
+                                    ${escapeHtml(username)}
+                                </span>
+                            `
+                            : ""
+                    }
+
+                    ${
+                        profile?.is_staff
+                            ? `
+                                <span class="message-staff">
+                                    Staff
+                                </span>
+                            `
+                            : ""
+                    }
+
+                    <span class="message-time">
+                        ${escapeHtml(time)}
+                    </span>
+
+                    ${
+                        message.is_edited
+                            ? `<span class="message-edited">(edited)</span>`
+                            : ""
+                    }
+
+                </div>
+
+                <div class="message-text">
+                    ${escapeHtml(message.content)}
+                </div>
+
+            </div>
+
+        </article>
+    `;
+}
+
 function setupMessageComposer() {
     const composer = document.getElementById("message-composer");
     const input = document.getElementById("message-input");
@@ -1701,13 +1793,31 @@ function setupMessageComposer() {
                 messagesList.innerHTML = "";
             }
 
-            messagesList.insertAdjacentHTML(
-                "beforeend",
-                renderMessage(message)
-            );
+            let profile = null;
 
-            scrollMessagesToBottom();
-        }
+            const {
+                data: profileData
+            } = await supabaseClient
+                .from("profiles")
+                .select(`
+                    id,
+                    display_name,
+                    username,
+                    avatar_url,
+                    is_staff
+                `)
+                .eq("id", user.id)
+                .maybeSingle();
+
+            profile = profileData;
+
+               messagesList.insertAdjacentHTML(
+                   "beforeend",
+                   renderMessage(message, profile)
+               );
+
+               scrollMessagesToBottom();
+           }
 
         input.focus();
     });
