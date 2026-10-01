@@ -1,374 +1,18 @@
 /* ============================================================
    NEMAWASHI MESSAGES
+   DATABASE VERSION
 ============================================================ */
 
 
 /* ============================================================
-   APP CONFIGURATION
+   STATE
 ============================================================ */
 
-const nemawashiApps = [
+let nemawashiApps = [];
 
-    {
-        id: "nemawashi",
+let currentApp = null;
 
-        name: "Nemawashi",
-
-        type: "Internal App",
-
-        description:
-            "The internal communication and workspace platform for Hrmnx Entertainment.",
-
-        website: "https://nemawashi.hrmnx.site",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f7f7fb",
-            primary: "#636bd8",
-            secondary: "#aeb3f1",
-            accent: "#4f57c7",
-            text: "#292a35"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "kiki",
-
-        name: "KiKi",
-
-        type: "Hrmnx Service",
-
-        description:
-            "A community space for Hrmnx Entertainment artists, fans and communities.",
-
-        website:
-            "https://yumeworldyamicode.github.io/Hrmnx-KiKi",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f5f7ff",
-            primary: "#7278d9",
-            secondary: "#aeb6f0",
-            accent: "#5960c8",
-            text: "#292b3b"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "audition",
-
-        name: "Audition",
-
-        type: "Hrmnx Service",
-
-        description:
-            "A workspace for auditions, applicants and talent management.",
-
-        website: "",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f8f6fb",
-            primary: "#8b6bb5",
-            secondary: "#c3a9df",
-            accent: "#704e9d",
-            text: "#30283a"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "serashio",
-
-        name: "Serashio",
-
-        type: "Hrmnx Service",
-
-        description:
-            "A private communication and commission space.",
-
-        website:
-            "https://yumeworldyamicode.github.io/Hrmnx-KiKi-Serashio",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f8f5f2",
-            primary: "#9a7660",
-            secondary: "#d3b9a5",
-            accent: "#765441",
-            text: "#332a26"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "hrmnx-entertainment",
-
-        name: "Hrmnx Entertainment",
-
-        type: "Website",
-
-        description:
-            "The main Hrmnx Entertainment website and company workspace.",
-
-        website: "",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f5f5f5",
-            primary: "#171717",
-            secondary: "#555555",
-            accent: "#000000",
-            text: "#181818"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "yumeworld",
-
-        name: "Yumeworld",
-
-        type: "Website",
-
-        description:
-            "The Yumeworld creative and entertainment ecosystem.",
-
-        website: "",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f7f4fb",
-            primary: "#8b68b6",
-            secondary: "#c7aee0",
-            accent: "#70499b",
-            text: "#30283a"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "seiun",
-
-        name: "SEIUN",
-
-        type: "Website",
-
-        description:
-            "The official workspace for SEIUN.",
-
-        website: "",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f5f8fb",
-            primary: "#718ba5",
-            secondary: "#aebfd0",
-            accent: "#506d89",
-            text: "#29323a"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "hoshi",
-
-        name: "HOSHI",
-
-        type: "Website",
-
-        description:
-            "The official HOSHI workspace.",
-
-        website: "",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f8f7f1",
-            primary: "#a08f5d",
-            secondary: "#d1c59a",
-            accent: "#82723e",
-            text: "#302e25"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "osakos-diary",
-
-        name: "Osako's Diary",
-
-        type: "Website",
-
-        description:
-            "The official Osako's Diary workspace.",
-
-        website: "",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f7f4ef",
-            primary: "#a77d60",
-            secondary: "#d5b9a1",
-            accent: "#855d42",
-            text: "#342b26"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "harmonia",
-
-        name: "Harmonia",
-
-        type: "Website",
-
-        description:
-            "The official Harmonia workspace.",
-
-        website: "",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f4f7f5",
-            primary: "#658675",
-            secondary: "#a9c0b3",
-            accent: "#4c6f5c",
-            text: "#29332d"
-        },
-
-        projects: []
-
-    },
-
-
-    {
-        id: "links",
-
-        name: "Links",
-
-        type: "Hrmnx Service",
-
-        description:
-            "A central workspace for Hrmnx links and resources.",
-
-        website: "",
-
-        favicon: "",
-
-        textLogo: "",
-
-        banner: "",
-
-        theme: {
-            background: "#f6f7f8",
-            primary: "#66727c",
-            secondary: "#aab3ba",
-            accent: "#4d5962",
-            text: "#293037"
-        },
-
-        projects: []
-
-    }
-
-];
-
-
-const appIcons = {
-
-    nemawashi: "N",
-    kiki: "K",
-    audition: "A",
-    serashio: "S",
-    "hrmnx-entertainment": "H",
-    yumeworld: "Y",
-    seiun: "S",
-    hoshi: "H",
-    "osakos-diary": "O",
-    harmonia: "H",
-    links: "L"
-
-};
+let currentSpace = null;
 
 
 /* ============================================================
@@ -376,170 +20,231 @@ const appIcons = {
 ============================================================ */
 
 const messagesContent =
-    document.getElementById(
-        "messages-content"
-    );
-
+    document.getElementById("messages-content");
 
 const topbarTitle =
-    document.getElementById(
-        "topbar-title"
-    );
-
+    document.getElementById("topbar-title");
 
 const topbarLabel =
-    document.getElementById(
-        "topbar-label"
-    );
-
+    document.getElementById("topbar-label");
 
 const appsToggle =
-    document.getElementById(
-        "apps-toggle"
-    );
-
+    document.getElementById("apps-toggle");
 
 const appsList =
-    document.getElementById(
-        "apps-list"
-    );
+    document.getElementById("apps-list");
 
 
 /* ============================================================
-   APP THEME
+   FALLBACK ICONS
 ============================================================ */
 
-function applyAppTheme(app) {
+const appIcons = {
 
-    if (!app || !app.theme) {
+    nemawashi: "N",
+    kiki: "K",
+    audition: "A",
+    serashio: "S",
+
+    "hrmnx-entertainment": "H",
+
+    yumeworld: "Y",
+
+    seiun: "S",
+
+    hoshi: "H",
+
+    "osakos-diary": "O",
+
+    harmonia: "H",
+
+    links: "L"
+
+};
+
+
+/* ============================================================
+   START
+============================================================ */
+
+initializeMessages();
+
+
+/* ============================================================
+   INITIALIZE
+============================================================ */
+
+async function initializeMessages() {
+
+    if (
+        typeof supabaseClient === "undefined"
+    ) {
+
+        showError(
+            "Supabase could not be loaded. Check supabase.js."
+        );
 
         return;
 
     }
 
 
-    document.documentElement.style.setProperty(
-        "--messages-background",
-        app.theme.background
-    );
+    await loadApps();
 
+    setupNavigation();
 
-    document.documentElement.style.setProperty(
-        "--messages-accent",
-        app.theme.primary
-    );
-
-
-    document.documentElement.style.setProperty(
-        "--messages-accent-soft",
-        hexToRgba(
-            app.theme.primary,
-            0.10
-        )
-    );
-
-
-    document.documentElement.style.setProperty(
-        "--app-secondary",
-        app.theme.secondary
-    );
-
-
-    document.documentElement.style.setProperty(
-        "--app-accent",
-        app.theme.accent
-    );
-
-
-    document.documentElement.style.setProperty(
-        "--app-text",
-        app.theme.text
-    );
+    renderHome();
 
 }
 
 
 /* ============================================================
-   RESET TO NEMAWASHI THEME
+   LOAD APPS
 ============================================================ */
 
-function resetNemawashiTheme() {
+async function loadApps() {
 
-    const defaultTheme = {
+    try {
 
-        background: "#f7f7fb",
-        primary: "#636bd8",
-        secondary: "#aeb3f1",
-        accent: "#4f57c7",
-        text: "#292a35"
+        const {
+            data,
+            error
+        } = await supabaseClient
 
-    };
+            .from("nemawashi_apps")
+
+            .select(`
+                id,
+                slug,
+                name,
+                description,
+                app_type,
+                website_url,
+                favicon_url,
+                text_logo_url,
+                banner_url,
+                background_color,
+                primary_color,
+                secondary_color,
+                accent_color,
+                text_color,
+                is_active
+            `)
+
+            .eq(
+                "is_active",
+                true
+            )
+
+            .order(
+                "name",
+                {
+                    ascending: true
+                }
+            );
 
 
-    applyAppTheme({
-        theme: defaultTheme
-    });
+        if (error) {
+
+            console.error(
+                "Failed to load Nemawashi Apps:",
+                error
+            );
+
+            showError(
+                "Nemawashi Apps could not be loaded."
+            );
+
+            return;
+
+        }
+
+
+        nemawashiApps =
+            data || [];
+
+
+        renderAppsSidebar();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unexpected App loading error:",
+            error
+        );
+
+        showError(
+            "Something went wrong while loading Apps."
+        );
+
+    }
 
 }
 
 
 /* ============================================================
-   HEX → RGBA
+   RENDER APP SIDEBAR
 ============================================================ */
 
-function hexToRgba(
-    hex,
-    alpha
-) {
+function renderAppsSidebar() {
 
-    if (!hex) {
+    if (!appsList) {
 
-        return `rgba(99,107,216,${alpha})`;
+        return;
 
     }
 
 
-    let value =
-        hex.replace(
-            "#",
-            ""
-        );
+    appsList.innerHTML =
+        nemawashiApps
+            .map(
+                app => `
+
+                    <button
+                        type="button"
+                        class="app-navigation-item"
+                        data-app="${escapeHtml(app.slug)}"
+                    >
+
+                        ${
+                            app.favicon_url
+
+                            ?
+
+                            `
+                                <img
+                                    class="app-navigation-icon"
+                                    src="${escapeHtml(app.favicon_url)}"
+                                    alt=""
+                                >
+                            `
+
+                            :
+
+                            `
+                                <span
+                                    class="app-navigation-icon fallback"
+                                >
+                                    ${
+                                        appIcons[app.slug]
+                                        || "A"
+                                    }
+                                </span>
+                            `
+                        }
 
 
-    if (value.length === 3) {
+                        <span>
+                            ${escapeHtml(app.name)}
+                        </span>
 
-        value =
-            value
-                .split("")
-                .map(
-                    character =>
-                        character + character
-                )
-                .join("");
+                    </button>
 
-    }
-
-
-    const number =
-        parseInt(
-            value,
-            16
-        );
-
-
-    const red =
-        (number >> 16) & 255;
-
-
-    const green =
-        (number >> 8) & 255;
-
-
-    const blue =
-        number & 255;
-
-
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+                `
+            )
+            .join("");
 
 }
 
@@ -548,100 +253,107 @@ function hexToRgba(
    NAVIGATION
 ============================================================ */
 
-document.addEventListener(
-    "click",
-    function (event) {
+function setupNavigation() {
 
-
-        const navigationItem =
-            event.target.closest(
-                "[data-page]"
-            );
-
-
-        if (navigationItem) {
-
-            const page =
-                navigationItem.dataset.page;
-
-
-            setNavigationActive(
-                navigationItem
-            );
-
-
-            resetNemawashiTheme();
-
-
-            renderPage(
-                page
-            );
-
-
-            return;
-
-        }
-
-
-        const appNavigationItem =
-            event.target.closest(
-                "[data-app]"
-            );
-
-
-        if (appNavigationItem) {
-
-            const appId =
-                appNavigationItem.dataset.app;
-
-
-            setAppNavigationActive(
-                appNavigationItem
-            );
-
-
-            renderApp(
-                appId
-            );
-
-
-            return;
-
-        }
-
-    }
-);
-
-
-/* ============================================================
-   APPS TOGGLE
-============================================================ */
-
-if (appsToggle) {
-
-    appsToggle.addEventListener(
+    document.addEventListener(
         "click",
-        function () {
+        async function(event) {
 
-            const isOpen =
-                appsList.classList.toggle(
-                    "open"
+
+            const pageButton =
+                event.target.closest(
+                    "[data-page]"
                 );
 
 
-            appsToggle.classList.toggle(
-                "open",
-                isOpen
-            );
+            if (pageButton) {
+
+                setNavigationActive(
+                    pageButton
+                );
+
+
+                resetNemawashiTheme();
+
+
+                renderPage(
+                    pageButton.dataset.page
+                );
+
+
+                return;
+
+            }
+
+
+            const appButton =
+                event.target.closest(
+                    "[data-app]"
+                );
+
+
+            if (appButton) {
+
+                setAppNavigationActive(
+                    appButton
+                );
+
+
+                await renderApp(
+                    appButton.dataset.app
+                );
+
+
+                return;
+
+            }
+
+
+            const spaceButton =
+                event.target.closest(
+                    "[data-space]"
+                );
+
+
+            if (spaceButton) {
+
+                selectSpace(
+                    spaceButton.dataset.space
+                );
+
+            }
 
         }
     );
+
+
+    if (appsToggle) {
+
+        appsToggle.addEventListener(
+            "click",
+            function() {
+
+                const open =
+                    appsList.classList.toggle(
+                        "open"
+                    );
+
+
+                appsToggle.classList.toggle(
+                    "open",
+                    open
+                );
+
+            }
+        );
+
+    }
 
 }
 
 
 /* ============================================================
-   ACTIVE NAVIGATION
+   NAVIGATION ACTIVE STATES
 ============================================================ */
 
 function setNavigationActive(
@@ -650,31 +362,13 @@ function setNavigationActive(
 
     document
         .querySelectorAll(
-            ".navigation-item"
+            ".navigation-item, .app-navigation-item"
         )
         .forEach(
-            item => {
-
+            item =>
                 item.classList.remove(
                     "active"
-                );
-
-            }
-        );
-
-
-    document
-        .querySelectorAll(
-            ".app-navigation-item"
-        )
-        .forEach(
-            item => {
-
-                item.classList.remove(
-                    "active"
-                );
-
-            }
+                )
         );
 
 
@@ -695,31 +389,13 @@ function setAppNavigationActive(
 
     document
         .querySelectorAll(
-            ".navigation-item"
+            ".navigation-item, .app-navigation-item"
         )
         .forEach(
-            item => {
-
+            item =>
                 item.classList.remove(
                     "active"
-                );
-
-            }
-        );
-
-
-    document
-        .querySelectorAll(
-            ".app-navigation-item"
-        )
-        .forEach(
-            item => {
-
-                item.classList.remove(
-                    "active"
-                );
-
-            }
+                )
         );
 
 
@@ -752,7 +428,6 @@ function renderPage(
 ) {
 
     switch (page) {
-
 
         case "home":
 
@@ -799,7 +474,7 @@ function renderPage(
             renderBasicPage(
                 "App Builder",
                 "Create and configure Apps for the Nemawashi ecosystem.",
-                "＋"
+                "+"
             );
 
             break;
@@ -941,7 +616,7 @@ function renderHome() {
                     <span
                         class="communication-card-icon"
                     >
-                        ＋
+                        +
                     </span>
 
                     <strong>
@@ -972,25 +647,7 @@ function renderHome() {
 
         appsCard.addEventListener(
             "click",
-            function () {
-
-                if (appsList) {
-
-                    appsList.classList.add(
-                        "open"
-                    );
-
-                }
-
-
-                if (appsToggle) {
-
-                    appsToggle.classList.add(
-                        "open"
-                    );
-
-                }
-
+            function() {
 
                 renderAppDirectory();
 
@@ -998,88 +655,6 @@ function renderHome() {
         );
 
     }
-
-}
-
-
-/* ============================================================
-   BASIC PAGE
-============================================================ */
-
-function renderBasicPage(
-    title,
-    description,
-    icon
-) {
-
-    setTopbar(
-        "NEMAWASHI",
-        title
-    );
-
-
-    messagesContent.innerHTML = `
-
-        <section
-            class="communication-page"
-        >
-
-            <div
-                class="communication-intro"
-            >
-
-                <span
-                    class="communication-eyebrow"
-                >
-                    NEMAWASHI
-                </span>
-
-
-                <h2>
-                    ${escapeHtml(title)}
-                </h2>
-
-
-                <p>
-                    ${escapeHtml(description)}
-                </p>
-
-            </div>
-
-
-            <div
-                class="space-placeholder"
-                style="
-                    min-height: 430px;
-                    background: #fff;
-                    border: 1px dashed var(--messages-border);
-                    border-radius: 20px;
-                "
-            >
-
-                <div
-                    class="space-placeholder-icon"
-                >
-                    ${icon}
-                </div>
-
-
-                <h3>
-                    Coming next
-                </h3>
-
-
-                <p>
-                    The real communication
-                    system will be connected
-                    to Supabase here.
-                </p>
-
-            </div>
-
-        </section>
-
-    `;
 
 }
 
@@ -1133,46 +708,71 @@ function renderAppDirectory() {
                 class="app-grid"
             >
 
-                ${nemawashiApps.map(
-                    app => `
+                ${
+                    nemawashiApps
+                        .map(
+                            app => `
 
-                        <button
-                            type="button"
-                            class="app-card"
-                            data-app="${escapeHtml(app.id)}"
-                        >
+                                <button
+                                    type="button"
+                                    class="app-card"
+                                    data-app="${escapeHtml(app.slug)}"
+                                >
 
-                            <span
-                                class="app-card-icon"
-                            >
-                                ${appIcons[app.id] || "•"}
-                            </span>
+                                    ${
+                                        app.favicon_url
+
+                                        ?
+
+                                        `
+                                            <img
+                                                class="app-card-icon"
+                                                src="${escapeHtml(app.favicon_url)}"
+                                                alt=""
+                                            >
+                                        `
+
+                                        :
+
+                                        `
+                                            <span
+                                                class="app-card-icon"
+                                            >
+                                                ${
+                                                    appIcons[app.slug]
+                                                    || "A"
+                                                }
+                                            </span>
+                                        `
+                                    }
 
 
-                            <span
-                                class="app-card-name"
-                            >
-                                ${escapeHtml(app.name)}
-                            </span>
+                                    <span
+                                        class="app-card-name"
+                                    >
+                                        ${escapeHtml(app.name)}
+                                    </span>
 
 
-                            <span
-                                class="app-card-type"
-                            >
-                                ${escapeHtml(app.type)}
-                            </span>
+                                    <span
+                                        class="app-card-type"
+                                    >
+                                        ${escapeHtml(app.app_type)}
+                                    </span>
 
 
-                            <span
-                                class="app-card-arrow"
-                            >
-                                →
-                            </span>
+                                    <span
+                                        class="app-card-arrow"
+                                    >
+                                        →
+                                    </span>
 
-                        </button>
+                                </button>
 
-                    `
-                ).join("")}
+                            `
+                        )
+                        .join("")
+                }
 
             </div>
 
@@ -1187,25 +787,32 @@ function renderAppDirectory() {
    RENDER APP
 ============================================================ */
 
-function renderApp(
-    appId
+async function renderApp(
+    appSlug
 ) {
 
     const app =
         nemawashiApps.find(
             item =>
-                item.id === appId
+                item.slug === appSlug
         );
 
 
     if (!app) {
+
+        console.error(
+            "App not found:",
+            appSlug
+        );
 
         return;
 
     }
 
 
-    /* APPLY APP THEME */
+    currentApp =
+        app;
+
 
     applyAppTheme(
         app
@@ -1222,14 +829,24 @@ function renderApp(
 
         <section
             class="app-page"
-            data-current-app="${escapeHtml(app.id)}"
         >
-
-
-            <!-- APP BANNER -->
 
             <div
                 class="app-banner"
+                style="
+                    ${
+                        app.banner_url
+                        ?
+                        `
+                            background-image:
+                                url('${escapeHtml(app.banner_url)}');
+                            background-size: cover;
+                            background-position: center;
+                        `
+                        :
+                        ""
+                    }
+                "
             >
 
                 <div
@@ -1237,22 +854,27 @@ function renderApp(
                 >
 
                     ${
-                        app.textLogo
+                        app.text_logo_url
+
                         ?
+
                         `
                             <img
                                 class="app-text-logo"
-                                src="${escapeHtml(app.textLogo)}"
+                                src="${escapeHtml(app.text_logo_url)}"
                                 alt="${escapeHtml(app.name)}"
                             >
                         `
+
                         :
+
                         `
                             <div
                                 class="app-logo-fallback"
                             >
                                 ${
-                                    appIcons[app.id] || "A"
+                                    appIcons[app.slug]
+                                    || "A"
                                 }
                             </div>
                         `
@@ -1260,7 +882,7 @@ function renderApp(
 
 
                     <small>
-                        ${escapeHtml(app.type)}
+                        ${escapeHtml(app.app_type)}
                     </small>
 
 
@@ -1270,7 +892,9 @@ function renderApp(
 
 
                     <p>
-                        ${escapeHtml(app.description)}
+                        ${escapeHtml(
+                            app.description || ""
+                        )}
                     </p>
 
                 </div>
@@ -1278,14 +902,9 @@ function renderApp(
             </div>
 
 
-            <!-- APP WORKSPACE -->
-
             <div
                 class="app-workspace"
             >
-
-
-                <!-- SPACE SIDEBAR -->
 
                 <aside
                     class="space-sidebar"
@@ -1309,64 +928,17 @@ function renderApp(
                         </div>
 
 
-                        <button
-                            type="button"
-                            class="space-item active"
-                            data-space="general"
+                        <div
+                            id="general-spaces"
                         >
 
-                            <span>
-                                ◌
-                            </span>
+                            <div
+                                class="space-loading"
+                            >
+                                Loading Spaces...
+                            </div>
 
-                            General Space
-
-                        </button>
-
-
-                        <button
-                            type="button"
-                            class="space-item"
-                            data-space="planning"
-                        >
-
-                            <span>
-                                ◇
-                            </span>
-
-                            Planning Space
-
-                        </button>
-
-
-                        <button
-                            type="button"
-                            class="space-item"
-                            data-space="feedback"
-                        >
-
-                            <span>
-                                ◎
-                            </span>
-
-                            Feedback Space
-
-                        </button>
-
-
-                        <button
-                            type="button"
-                            class="space-item"
-                            data-space="info"
-                        >
-
-                            <span>
-                                ⓘ
-                            </span>
-
-                            Info Space
-
-                        </button>
+                        </div>
 
                     </div>
 
@@ -1382,37 +954,22 @@ function renderApp(
                         </div>
 
 
-                        ${
-                            app.projects.length
-                            ?
-                            app.projects.map(
-                                project => `
-                                    <button
-                                        type="button"
-                                        class="space-item"
-                                        data-project="${escapeHtml(project.id)}"
-                                    >
-                                        ◇
-                                        ${escapeHtml(project.name)}
-                                    </button>
-                                `
-                            ).join("")
-                            :
-                            `
-                                <div
-                                    class="project-empty"
-                                >
-                                    No projects yet.
-                                </div>
-                            `
-                        }
+                        <div
+                            id="project-list"
+                        >
+
+                            <div
+                                class="space-loading"
+                            >
+                                Loading Projects...
+                            </div>
+
+                        </div>
 
                     </div>
 
                 </aside>
 
-
-                <!-- SPACE -->
 
                 <main
                     class="space-main"
@@ -1423,12 +980,12 @@ function renderApp(
                     >
 
                         <small>
-                            GENERAL
+                            SPACE
                         </small>
 
 
                         <h3>
-                            General Space
+                            Select a Space
                         </h3>
 
                     </div>
@@ -1446,128 +1003,343 @@ function renderApp(
 
 
                         <h3>
-                            General Space
+                            Welcome
                         </h3>
 
 
                         <p>
-                            This is where the
-                            Space conversation
-                            will appear.
+                            Select a Space from
+                            the sidebar to begin.
                         </p>
 
                     </div>
 
                 </main>
 
-
             </div>
-
 
         </section>
 
     `;
 
 
-    initializeSpaceNavigation();
+    await loadAppSpaces(
+        app.id
+    );
 
 }
 
 
 /* ============================================================
-   SPACE NAVIGATION
+   LOAD APP SPACES
 ============================================================ */
 
-function initializeSpaceNavigation() {
+async function loadAppSpaces(
+    appId
+) {
+
+    const generalSpaces =
+        document.getElementById(
+            "general-spaces"
+        );
+
+
+    const projectList =
+        document.getElementById(
+            "project-list"
+        );
+
+
+    try {
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+
+            .from("nemawashi_spaces")
+
+            .select(`
+                id,
+                app_id,
+                project_id,
+                slug,
+                name,
+                space_type,
+                description,
+                position,
+                is_active
+            `)
+
+            .eq(
+                "app_id",
+                appId
+            )
+
+            .eq(
+                "is_active",
+                true
+            )
+
+            .order(
+                "position",
+                {
+                    ascending: true
+                }
+            );
+
+
+        if (error) {
+
+            console.error(
+                "Failed to load Spaces:",
+                error
+            );
+
+            if (generalSpaces) {
+
+                generalSpaces.innerHTML =
+                    `
+                        <div class="space-loading">
+                            Could not load Spaces.
+                        </div>
+                    `;
+
+            }
+
+            return;
+
+        }
+
+
+        const spaces =
+            data || [];
+
+
+        const general =
+            spaces.filter(
+                space =>
+                    space.project_id === null
+            );
+
+
+        const projects =
+            spaces.filter(
+                space =>
+                    space.project_id !== null
+            );
+
+
+        if (generalSpaces) {
+
+            if (!general.length) {
+
+                generalSpaces.innerHTML =
+                    `
+                        <div class="space-loading">
+                            No Spaces yet.
+                        </div>
+                    `;
+
+            }
+
+            else {
+
+                generalSpaces.innerHTML =
+                    general
+                        .map(
+                            space => `
+
+                                <button
+                                    type="button"
+                                    class="space-item"
+                                    data-space="${escapeHtml(space.id)}"
+                                >
+
+                                    <span>
+                                        ${getSpaceIcon(
+                                            space.space_type
+                                        )}
+                                    </span>
+
+                                    ${escapeHtml(space.name)}
+
+                                </button>
+
+                            `
+                        )
+                        .join("");
+
+            }
+
+        }
+
+
+        if (projectList) {
+
+            if (!projects.length) {
+
+                projectList.innerHTML =
+                    `
+                        <div class="project-empty">
+                            No projects yet.
+                        </div>
+                    `;
+
+            }
+
+            else {
+
+                projectList.innerHTML =
+                    projects
+                        .map(
+                            space => `
+
+                                <button
+                                    type="button"
+                                    class="space-item"
+                                    data-space="${escapeHtml(space.id)}"
+                                >
+
+                                    <span>
+                                        ${getSpaceIcon(
+                                            space.space_type
+                                        )}
+                                    </span>
+
+                                    ${escapeHtml(space.name)}
+
+                                </button>
+
+                            `
+                        )
+                        .join("");
+
+            }
+
+        }
+
+
+        document
+            .querySelectorAll(
+                ".space-item[data-space]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        function() {
+
+                            selectSpace(
+                                this.dataset.space
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Space loading error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   SELECT SPACE
+============================================================ */
+
+async function selectSpace(
+    spaceId
+) {
+
+    if (!currentApp) {
+
+        return;
+
+    }
+
 
     document
         .querySelectorAll(
-            ".space-item[data-space]"
+            ".space-item"
         )
         .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        document
-                            .querySelectorAll(
-                                ".space-item"
-                            )
-                            .forEach(
-                                item => {
-
-                                    item.classList.remove(
-                                        "active"
-                                    );
-
-                                }
-                            );
-
-
-                        this.classList.add(
-                            "active"
-                        );
-
-
-                        const space =
-                            this.dataset.space;
-
-
-                        renderSpacePreview(
-                            space
-                        );
-
-                    }
-                );
-
-            }
+            item =>
+                item.classList.remove(
+                    "active"
+                )
         );
 
-}
+
+    const selectedButton =
+        document.querySelector(
+            `[data-space="${CSS.escape(spaceId)}"]`
+        );
 
 
-/* ============================================================
-   SPACE PREVIEW
-============================================================ */
+    if (selectedButton) {
 
-function renderSpacePreview(
-    space
-) {
+        selectedButton.classList.add(
+            "active"
+        );
 
-    const names = {
-
-        general: {
-            label: "GENERAL",
-            title: "General Space",
-            icon: "◌"
-        },
-
-        planning: {
-            label: "PLANNING",
-            title: "Planning Space",
-            icon: "◇"
-        },
-
-        feedback: {
-            label: "FEEDBACK",
-            title: "Feedback Space",
-            icon: "◎"
-        },
-
-        info: {
-            label: "INFO",
-            title: "Info Space",
-            icon: "ⓘ"
-        }
-
-    };
+    }
 
 
-    const selected =
-        names[space] ||
-        names.general;
+    const {
+        data,
+        error
+    } = await supabaseClient
+
+        .from("nemawashi_spaces")
+
+        .select(`
+            id,
+            name,
+            space_type,
+            description
+        `)
+
+        .eq(
+            "id",
+            spaceId
+        )
+
+        .maybeSingle();
+
+
+    if (error) {
+
+        console.error(
+            "Failed to load Space:",
+            error
+        );
+
+        return;
+
+    }
+
+
+    if (!data) {
+
+        return;
+
+    }
+
+
+    currentSpace =
+        data;
 
 
     const header =
@@ -1576,13 +1348,13 @@ function renderSpacePreview(
         );
 
 
-    const preview =
+    const content =
         document.querySelector(
             ".space-placeholder"
         );
 
 
-    if (!header || !preview) {
+    if (!header || !content) {
 
         return;
 
@@ -1592,33 +1364,45 @@ function renderSpacePreview(
     header.innerHTML = `
 
         <small>
-            ${escapeHtml(selected.label)}
+            ${escapeHtml(
+                data.space_type
+                    .replace(
+                        /_/g,
+                        " "
+                    )
+                    .toUpperCase()
+            )}
         </small>
 
+
         <h3>
-            ${escapeHtml(selected.title)}
+            ${escapeHtml(data.name)}
         </h3>
 
     `;
 
 
-    preview.innerHTML = `
+    content.innerHTML = `
 
         <div
             class="space-placeholder-icon"
         >
-            ${selected.icon}
+            ${getSpaceIcon(
+                data.space_type
+            )}
         </div>
 
 
         <h3>
-            ${escapeHtml(selected.title)}
+            ${escapeHtml(data.name)}
         </h3>
 
 
         <p>
-            The ${escapeHtml(selected.title)}
-            interface will be built here.
+            ${escapeHtml(
+                data.description ||
+                "This Space is ready for its communication interface."
+            )}
         </p>
 
     `;
@@ -1627,7 +1411,134 @@ function renderSpacePreview(
 
 
 /* ============================================================
-   TOP BAR
+   SPACE ICONS
+============================================================ */
+
+function getSpaceIcon(
+    type
+) {
+
+    switch (type) {
+
+        case "general":
+            return "◌";
+
+        case "planning":
+            return "◇";
+
+        case "feedback":
+            return "◎";
+
+        case "info":
+            return "ⓘ";
+
+        case "creative":
+            return "✦";
+
+        case "music":
+            return "♫";
+
+        case "meeting":
+            return "◉";
+
+        case "app_creating":
+            return "＋";
+
+        case "project":
+            return "◆";
+
+        case "massive_project":
+            return "◆";
+
+        default:
+            return "◌";
+
+    }
+
+}
+
+
+/* ============================================================
+   APP THEME
+============================================================ */
+
+function applyAppTheme(
+    app
+) {
+
+    if (!app) {
+
+        return;
+
+    }
+
+
+    document.documentElement.style.setProperty(
+        "--messages-background",
+        app.background_color
+    );
+
+
+    document.documentElement.style.setProperty(
+        "--messages-accent",
+        app.primary_color
+    );
+
+
+    document.documentElement.style.setProperty(
+        "--messages-accent-soft",
+        hexToRgba(
+            app.primary_color,
+            0.10
+        )
+    );
+
+
+    document.documentElement.style.setProperty(
+        "--app-secondary",
+        app.secondary_color
+    );
+
+
+    document.documentElement.style.setProperty(
+        "--app-accent",
+        app.accent_color
+    );
+
+
+    document.documentElement.style.setProperty(
+        "--app-text",
+        app.text_color
+    );
+
+}
+
+
+/* ============================================================
+   RESET THEME
+============================================================ */
+
+function resetNemawashiTheme() {
+
+    applyAppTheme({
+
+        background_color: "#f7f7fb",
+
+        primary_color: "#636bd8",
+
+        secondary_color: "#aeb3f1",
+
+        accent_color: "#4f57c7",
+
+        text_color: "#292a35"
+
+    });
+
+}
+
+
+/* ============================================================
+   TOPBAR
 ============================================================ */
 
 function setTopbar(
@@ -1653,6 +1564,124 @@ function setTopbar(
 
     document.title =
         `根回し - ${title}`;
+   
+}
+
+
+/* ============================================================
+   HEX → RGBA
+============================================================ */
+
+function hexToRgba(
+    hex,
+    alpha
+) {
+
+    if (!hex) {
+
+        return `rgba(99,107,216,${alpha})`;
+
+    }
+
+
+    let value =
+        hex.replace(
+            "#",
+            ""
+        );
+
+
+    if (value.length === 3) {
+
+        value =
+            value
+                .split("")
+                .map(
+                    character =>
+                        character + character
+                )
+                .join("");
+
+    }
+
+
+    const number =
+        parseInt(
+            value,
+            16
+        );
+
+
+    const red =
+        (number >> 16) & 255;
+
+
+    const green =
+        (number >> 8) & 255;
+
+
+    const blue =
+        number & 255;
+
+
+    return `
+        rgba(
+            ${red},
+            ${green},
+            ${blue},
+            ${alpha}
+        )
+    `;
+
+}
+
+
+/* ============================================================
+   ERROR
+============================================================ */
+
+function showError(
+    message
+) {
+
+    if (!messagesContent) {
+
+        return;
+
+    }
+
+
+    messagesContent.innerHTML = `
+
+        <section
+            class="communication-page"
+        >
+
+            <div
+                class="communication-intro"
+            >
+
+                <span
+                    class="communication-eyebrow"
+                >
+                    NEMAWASHI
+                </span>
+
+
+                <h2>
+                    Something went wrong
+                </h2>
+
+
+                <p>
+                    ${escapeHtml(message)}
+                </p>
+
+            </div>
+
+        </section>
+
+    `;
 
 }
 
@@ -1690,10 +1719,3 @@ function escapeHtml(
         );
 
 }
-
-
-/* ============================================================
-   START
-============================================================ */
-
-renderHome();
