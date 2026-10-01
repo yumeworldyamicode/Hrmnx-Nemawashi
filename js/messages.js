@@ -483,6 +483,76 @@ function renderPage(
 
 }
 
+/* ============================================================
+   BASIC PAGE
+============================================================ */
+
+function renderBasicPage(
+    title,
+    description,
+    icon
+) {
+
+    resetNemawashiTheme();
+
+    setTopbar(
+        "NEMAWASHI",
+        title
+    );
+
+    messagesContent.innerHTML = `
+
+        <section
+            class="communication-page"
+        >
+
+            <div
+                class="communication-intro"
+            >
+
+                <span
+                    class="communication-eyebrow"
+                >
+                    NEMAWASHI
+                </span>
+
+                <h2>
+                    ${escapeHtml(title)}
+                </h2>
+
+                <p>
+                    ${escapeHtml(description)}
+                </p>
+
+            </div>
+
+
+            <div
+                class="space-placeholder"
+            >
+
+                <div
+                    class="space-placeholder-icon"
+                >
+                    ${escapeHtml(icon)}
+                </div>
+
+                <h3>
+                    ${escapeHtml(title)}
+                </h3>
+
+                <p>
+                    The ${escapeHtml(title)}
+                    section will be built here.
+                </p>
+
+            </div>
+
+        </section>
+
+    `;
+
+}
 
 /* ============================================================
    HOME
