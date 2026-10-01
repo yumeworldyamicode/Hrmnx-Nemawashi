@@ -1186,7 +1186,7 @@ function setTopbar(
 
 
     document.title =
-        `${title} — Nemawashi`;
+        `根回し - ${title}`;
 
 }
 
