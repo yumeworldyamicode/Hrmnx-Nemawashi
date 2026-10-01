@@ -1098,7 +1098,6 @@ async function loadAppSpaces(
             "general-spaces"
         );
 
-
     const projectList =
         document.getElementById(
             "project-list"
@@ -1107,9 +1106,73 @@ async function loadAppSpaces(
 
     try {
 
+        /* =====================================================
+           LOAD PROJECTS
+        ===================================================== */
+
         const {
-            data,
-            error
+            data: projects,
+            error: projectError
+        } = await supabaseClient
+
+            .from("nemawashi_projects")
+
+            .select(`
+                id,
+                app_id,
+                slug,
+                name,
+                description,
+                is_active
+            `)
+
+            .eq(
+                "app_id",
+                appId
+            )
+
+            .eq(
+                "is_active",
+                true
+            )
+
+            .order(
+                "name",
+                {
+                    ascending: true
+                }
+            );
+
+
+        if (projectError) {
+
+            console.error(
+                "Failed to load Projects:",
+                projectError
+            );
+
+            if (projectList) {
+
+                projectList.innerHTML = `
+                    <div class="project-empty">
+                        Could not load Projects.
+                    </div>
+                `;
+
+            }
+
+            return;
+
+        }
+
+
+        /* =====================================================
+           LOAD SPACES
+        ===================================================== */
+
+        const {
+            data: spaces,
+            error: spaceError
         } = await supabaseClient
 
             .from("nemawashi_spaces")
@@ -1144,21 +1207,20 @@ async function loadAppSpaces(
             );
 
 
-        if (error) {
+        if (spaceError) {
 
             console.error(
                 "Failed to load Spaces:",
-                error
+                spaceError
             );
 
             if (generalSpaces) {
 
-                generalSpaces.innerHTML =
-                    `
-                        <div class="space-loading">
-                            Could not load Spaces.
-                        </div>
-                    `;
+                generalSpaces.innerHTML = `
+                    <div class="space-loading">
+                        Could not load Spaces.
+                    </div>
+                `;
 
             }
 
@@ -1167,21 +1229,21 @@ async function loadAppSpaces(
         }
 
 
-        const spaces =
-            data || [];
+        const allSpaces =
+            spaces || [];
 
+        const allProjects =
+            projects || [];
+
+
+        /* =====================================================
+           GENERAL SPACES
+        ===================================================== */
 
         const general =
-            spaces.filter(
+            allSpaces.filter(
                 space =>
                     space.project_id === null
-            );
-
-
-        const projects =
-            spaces.filter(
-                space =>
-                    space.project_id !== null
             );
 
 
@@ -1189,12 +1251,11 @@ async function loadAppSpaces(
 
             if (!general.length) {
 
-                generalSpaces.innerHTML =
-                    `
-                        <div class="space-loading">
-                            No Spaces yet.
-                        </div>
-                    `;
+                generalSpaces.innerHTML = `
+                    <div class="space-loading">
+                        No Spaces yet.
+                    </div>
+                `;
 
             }
 
@@ -1217,7 +1278,9 @@ async function loadAppSpaces(
                                         )}
                                     </span>
 
-                                    ${escapeHtml(space.name)}
+                                    ${escapeHtml(
+                                        space.name
+                                    )}
 
                                 </button>
 
@@ -1230,43 +1293,110 @@ async function loadAppSpaces(
         }
 
 
+        /* =====================================================
+           PROJECTS + THEIR SPACES
+        ===================================================== */
+
         if (projectList) {
 
-            if (!projects.length) {
+            if (!allProjects.length) {
 
-                projectList.innerHTML =
-                    `
-                        <div class="project-empty">
-                            No projects yet.
-                        </div>
-                    `;
+                projectList.innerHTML = `
+                    <div class="project-empty">
+                        No projects yet.
+                    </div>
+                `;
 
             }
 
             else {
 
                 projectList.innerHTML =
-                    projects
+                    allProjects
                         .map(
-                            space => `
+                            project => {
 
-                                <button
-                                    type="button"
-                                    class="space-item"
-                                    data-space="${escapeHtml(space.id)}"
-                                >
+                                const projectSpaces =
+                                    allSpaces.filter(
+                                        space =>
+                                            space.project_id ===
+                                            project.id
+                                    );
 
-                                    <span>
-                                        ${getSpaceIcon(
-                                            space.space_type
-                                        )}
-                                    </span>
 
-                                    ${escapeHtml(space.name)}
+                                return `
 
-                                </button>
+                                    <div
+                                        class="project-group"
+                                        data-project="${escapeHtml(project.id)}"
+                                    >
 
-                            `
+                                        <div
+                                            class="project-group-title"
+                                        >
+
+                                            <span>
+                                                ◆
+                                            </span>
+
+                                            ${escapeHtml(
+                                                project.name
+                                            )}
+
+                                        </div>
+
+
+                                        <div
+                                            class="project-space-list"
+                                        >
+
+                                            ${
+                                                projectSpaces.length
+
+                                                ?
+
+                                                projectSpaces
+                                                    .map(
+                                                        space => `
+
+                                                            <button
+                                                                type="button"
+                                                                class="space-item"
+                                                                data-space="${escapeHtml(space.id)}"
+                                                            >
+
+                                                                <span>
+                                                                    ${getSpaceIcon(
+                                                                        space.space_type
+                                                                    )}
+                                                                </span>
+
+                                                                ${escapeHtml(
+                                                                    space.name
+                                                                )}
+
+                                                            </button>
+
+                                                        `
+                                                    )
+                                                    .join("")
+
+                                                :
+
+                                                `
+                                                    <div class="project-empty">
+                                                        No Spaces yet.
+                                                    </div>
+                                                `
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+                                `;
+
+                            }
                         )
                         .join("");
 
@@ -1274,6 +1404,10 @@ async function loadAppSpaces(
 
         }
 
+
+        /* =====================================================
+           SPACE CLICK HANDLING
+        ===================================================== */
 
         document
             .querySelectorAll(
@@ -1301,14 +1435,13 @@ async function loadAppSpaces(
     catch (error) {
 
         console.error(
-            "Space loading error:",
+            "App workspace loading error:",
             error
         );
 
     }
 
 }
-
 
 /* ============================================================
    SELECT SPACE
