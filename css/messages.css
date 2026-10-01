@@ -1503,3 +1503,49 @@ button {
         1.5;
 
 }
+
+.app-navigation-icon {
+    width: 22px;
+    height: 22px;
+
+    border-radius: 6px;
+
+    object-fit: cover;
+
+    flex-shrink: 0;
+}
+
+.app-navigation-icon.fallback {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: var(--messages-accent);
+
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.app-card-icon {
+    width: 46px;
+    height: 46px;
+
+    border-radius: 13px;
+
+    object-fit: cover;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: var(--messages-accent);
+
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 800;
+}
