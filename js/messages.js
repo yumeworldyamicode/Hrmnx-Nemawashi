@@ -1,431 +1,265 @@
-// ============================================================
-// NEMAWASHI — MESSAGES & COMMUNITIES
-// ============================================================
-//
-// This is the foundation for Nemawashi's communication system.
-//
-// It intentionally does NOT replace dashboard.js.
-// It adds the communication navigation and its first UI layer
-// without touching the existing administration modules.
-// ============================================================
+/* ============================================================
+   NEMAWASHI MESSAGES
+============================================================ */
 
 
-// ============================================================
-// NEMAWASHI COMMUNICATION DATA
-// ============================================================
+const nemawashiApps = [
 
-const nemawashiCommunicationApps = [
     {
         id: "nemawashi",
         name: "Nemawashi",
-        type: "internal"
+        type: "Internal App"
     },
 
     {
         id: "kiki",
         name: "KiKi",
-        type: "service"
+        type: "Hrmnx Service"
     },
 
     {
         id: "audition",
         name: "Audition",
-        type: "service"
+        type: "Hrmnx Service"
     },
 
     {
         id: "serashio",
         name: "Serashio",
-        type: "service"
+        type: "Hrmnx Service"
     },
 
     {
         id: "hrmnx-entertainment",
         name: "Hrmnx Entertainment",
-        type: "website"
+        type: "Website"
     },
 
     {
         id: "yumeworld",
         name: "Yumeworld",
-        type: "website"
+        type: "Website"
     },
 
     {
         id: "seiun",
         name: "SEIUN",
-        type: "website"
+        type: "Website"
     },
 
     {
         id: "hoshi",
         name: "HOSHI",
-        type: "website"
+        type: "Website"
     },
 
     {
         id: "osakos-diary",
         name: "Osako's Diary",
-        type: "website"
+        type: "Website"
     },
 
     {
         id: "harmonia",
         name: "Harmonia",
-        type: "website"
+        type: "Website"
     },
 
     {
         id: "links",
         name: "Links",
-        type: "service"
+        type: "Hrmnx Service"
     }
+
 ];
 
 
-// ============================================================
-// SPACE TYPES
-// ============================================================
+const appIcons = {
 
-const nemawashiSpaceTypes = {
+    nemawashi: "N",
 
-    general: {
-        label: "General Space",
-        icon: "◌",
-        mode: "chat"
-    },
+    kiki: "K",
 
-    planning: {
-        label: "Planning Space",
-        icon: "◇",
-        mode: "chat"
-    },
+    audition: "A",
 
-    creative: {
-        label: "Creative Space",
-        icon: "✦",
-        mode: "creative"
-    },
+    serashio: "S",
 
-    feedback: {
-        label: "Feedback Space",
-        icon: "◎",
-        mode: "chat"
-    },
+    "hrmnx-entertainment": "H",
 
-    info: {
-        label: "Info Space",
-        icon: "ⓘ",
-        mode: "info"
-    },
+    yumeworld: "Y",
 
-    music: {
-        label: "Music Space",
-        icon: "♫",
-        mode: "music"
-    },
+    seiun: "S",
 
-    meeting: {
-        label: "Meeting Space",
-        icon: "▣",
-        mode: "meeting"
-    },
+    hoshi: "H",
 
-    appCreating: {
-        label: "App Creating Space",
-        icon: "⌘",
-        mode: "app-creating"
-    },
+    "osakos-diary": "O",
 
-    massiveProject: {
-        label: "Massive Project Space",
-        icon: "◆",
-        mode: "chat"
-    }
+    harmonia: "H",
+
+    links: "L"
+
 };
 
 
-// ============================================================
-// ADD COMMUNICATION NAVIGATION
-// ============================================================
-
-function addNemawashiCommunicationNavigation() {
-
-    const sidebar =
-        document.querySelector(".sidebar");
-
-    if (!sidebar) {
-        return;
-    }
-
-    if (
-        document.getElementById(
-            "nemawashi-communication-navigation"
-        )
-    ) {
-        return;
-    }
+const messagesContent =
+    document.getElementById(
+        "messages-content"
+    );
 
 
-    const group =
-        document.createElement("div");
-
-    group.className =
-        "nav-group nemawashi-communication-group";
-
-    group.id =
-        "nemawashi-communication-navigation";
+const topbarTitle =
+    document.getElementById(
+        "topbar-title"
+    );
 
 
-    group.innerHTML = `
-
-        <div class="nav-group-title">
-            NEMAWASHI
-        </div>
-
-
-        <button
-            type="button"
-            class="nav-item"
-            data-nemawashi-section="nemawashi-administration"
-        >
-            <span class="nav-item-icon">
-                ⚙
-            </span>
-
-            <span>
-                Administration
-            </span>
-        </button>
+const topbarLabel =
+    document.getElementById(
+        "topbar-label"
+    );
 
 
-        <button
-            type="button"
-            class="nav-item"
-            data-nemawashi-section="nemawashi-home"
-        >
-            <span class="nav-item-icon">
-                ◈
-            </span>
+/* ============================================================
+   NAVIGATION
+============================================================ */
 
-            <span>
-                Nemawashi
-            </span>
-        </button>
+document.addEventListener(
+    "click",
+    function (event) {
 
 
-        <button
-            type="button"
-            class="nav-item"
-            data-nemawashi-section="personal-messages"
-        >
-            <span class="nav-item-icon">
-                ◇
-            </span>
-
-            <span>
-                Personal Messages
-            </span>
-        </button>
+        const navigationItem =
+            event.target.closest(
+                "[data-page]"
+            );
 
 
-        <button
-            type="button"
-            class="nav-item"
-            data-nemawashi-section="subsidiary-messages"
-        >
-            <span class="nav-item-icon">
-                ◇
-            </span>
+        if (navigationItem) {
 
-            <span>
-                Subsidiary Messages
-            </span>
-        </button>
+            const page =
+                navigationItem.dataset.page;
 
 
-        <button
-            type="button"
-            class="nav-item"
-            data-nemawashi-section="business-messages"
-        >
-            <span class="nav-item-icon">
-                ◇
-            </span>
-
-            <span>
-                Business Messages
-            </span>
-        </button>
+            setNavigationActive(
+                navigationItem
+            );
 
 
-        <button
-            type="button"
-            class="nav-item nemawashi-apps-toggle"
-            data-nemawashi-section="apps"
-        >
-            <span class="nav-item-icon">
-                ▦
-            </span>
-
-            <span>
-                Apps
-            </span>
-
-            <span class="nemawashi-apps-arrow">
-                ›
-            </span>
-        </button>
+            renderPage(
+                page
+            );
 
 
-        <div
-            class="nemawashi-app-list"
-            id="nemawashi-app-list"
-        >
+            return;
 
-            ${nemawashiCommunicationApps.map(app => `
-
-                <button
-                    type="button"
-                    class="nemawashi-app-nav-item"
-                    data-nemawashi-app="${escapeNemawashiAttribute(app.id)}"
-                >
-
-                    <span class="nemawashi-app-icon">
-                        ${getNemawashiAppIcon(app)}
-                    </span>
-
-                    <span>
-                        ${escapeNemawashiHtml(app.name)}
-                    </span>
-
-                </button>
-
-            `).join("")}
-
-        </div>
+        }
 
 
-        <button
-            type="button"
-            class="nav-item"
-            data-nemawashi-section="app-builder"
-        >
-            <span class="nav-item-icon">
-                ＋
-            </span>
-
-            <span>
-                App Builder
-            </span>
-        </button>
-
-    `;
+        const appNavigationItem =
+            event.target.closest(
+                "[data-app]"
+            );
 
 
-    const firstNavGroup =
-        sidebar.querySelector(
-            ".nav-group"
-        );
+        if (appNavigationItem) {
+
+            const appId =
+                appNavigationItem.dataset.app;
 
 
-    if (firstNavGroup) {
+            setAppNavigationActive(
+                appNavigationItem
+            );
 
-        sidebar.insertBefore(
-            group,
-            firstNavGroup
-        );
 
-    } else {
+            renderApp(
+                appId
+            );
 
-        sidebar.appendChild(
-            group
-        );
+
+            return;
+
+        }
 
     }
+);
+
+
+/* ============================================================
+   APPS TOGGLE
+============================================================ */
+
+const appsToggle =
+    document.getElementById(
+        "apps-toggle"
+    );
+
+
+const appsList =
+    document.getElementById(
+        "apps-list"
+    );
+
+
+if (appsToggle) {
+
+    appsToggle.addEventListener(
+        "click",
+        function () {
+
+            const isOpen =
+                appsList.classList.toggle(
+                    "open"
+                );
+
+
+            appsToggle.classList.toggle(
+                "open",
+                isOpen
+            );
+
+        }
+    );
 
 }
 
 
-// ============================================================
-// APP ICON
-// ============================================================
+/* ============================================================
+   ACTIVE NAVIGATION
+============================================================ */
 
-function getNemawashiAppIcon(app) {
-
-    const icons = {
-
-        nemawashi: "N",
-
-        kiki: "K",
-
-        audition: "A",
-
-        serashio: "S",
-
-        "hrmnx-entertainment": "H",
-
-        yumeworld: "Y",
-
-        seiun: "S",
-
-        hoshi: "H",
-
-        "osakos-diary": "O",
-
-        harmonia: "H",
-
-        links: "L"
-
-    };
-
-
-    return icons[app.id] || "•";
-
-}
-
-
-// ============================================================
-// ESCAPING
-// ============================================================
-
-function escapeNemawashiHtml(value) {
-
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-
-}
-
-
-function escapeNemawashiAttribute(value) {
-
-    return escapeNemawashiHtml(value);
-
-}
-
-
-// ============================================================
-// ACTIVE NAVIGATION
-// ============================================================
-
-function setNemawashiCommunicationActive(element) {
+function setNavigationActive(
+    element
+) {
 
     document
         .querySelectorAll(
-            "#nemawashi-communication-navigation .nav-item, " +
-            "#nemawashi-communication-navigation .nemawashi-app-nav-item"
+            ".navigation-item"
         )
-        .forEach(item => {
+        .forEach(
+            item => {
 
-            item.classList.remove(
-                "active"
-            );
+                item.classList.remove(
+                    "active"
+                );
 
-        });
+            }
+        );
+
+
+    document
+        .querySelectorAll(
+            ".app-navigation-item"
+        )
+        .forEach(
+            item => {
+
+                item.classList.remove(
+                    "active"
+                );
+
+            }
+        );
 
 
     if (element) {
@@ -439,76 +273,185 @@ function setNemawashiCommunicationActive(element) {
 }
 
 
-// ============================================================
-// RENDER COMMUNICATION HOME
-// ============================================================
+function setAppNavigationActive(
+    element
+) {
 
-function renderNemawashiCommunicationHome() {
+    document
+        .querySelectorAll(
+            ".navigation-item"
+        )
+        .forEach(
+            item => {
 
-    const content =
-        document.getElementById(
-            "dashboard-content"
-        );
+                item.classList.remove(
+                    "active"
+                );
 
-    if (!content) {
-        return;
-    }
-
-
-    const title =
-        document.getElementById(
-            "section-title"
-        );
-
-    const label =
-        document.getElementById(
-            "section-label"
+            }
         );
 
 
-    if (label) {
-        label.textContent =
-            "NEMAWASHI";
+    document
+        .querySelectorAll(
+            ".app-navigation-item"
+        )
+        .forEach(
+            item => {
+
+                item.classList.remove(
+                    "active"
+                );
+
+            }
+        );
+
+
+    if (appsToggle) {
+
+        appsToggle.classList.add(
+            "active"
+        );
+
     }
 
-    if (title) {
-        title.textContent =
-            "Nemawashi";
+
+    if (element) {
+
+        element.classList.add(
+            "active"
+        );
+
     }
 
+}
 
-    content.innerHTML = `
 
-        <section class="nemawashi-communication-page">
+/* ============================================================
+   PAGE ROUTER
+============================================================ */
 
-            <div class="nemawashi-page-intro">
+function renderPage(
+    page
+) {
 
-                <span class="eyebrow">
+    switch (page) {
+
+
+        case "home":
+
+            renderHome();
+
+            break;
+
+
+        case "personal":
+
+            renderBasicPage(
+                "Personal Messages",
+                "Private conversations with other Nemawashi users.",
+                "◇"
+            );
+
+            break;
+
+
+        case "subsidiary":
+
+            renderBasicPage(
+                "Subsidiary Messages",
+                "Communication between Hrmnx subsidiaries and their teams.",
+                "◇"
+            );
+
+            break;
+
+
+        case "business":
+
+            renderBasicPage(
+                "Business Messages",
+                "Professional communication across Hrmnx Entertainment.",
+                "◇"
+            );
+
+            break;
+
+
+        case "app-builder":
+
+            renderBasicPage(
+                "App Builder",
+                "Create and configure Apps for the Nemawashi ecosystem.",
+                "＋"
+            );
+
+            break;
+
+
+    }
+
+}
+
+
+/* ============================================================
+   HOME
+============================================================ */
+
+function renderHome() {
+
+    setTopbar(
+        "NEMAWASHI",
+        "Nemawashi"
+    );
+
+
+    messagesContent.innerHTML = `
+
+        <section
+            class="communication-page"
+        >
+
+            <div
+                class="communication-intro"
+            >
+
+                <span
+                    class="communication-eyebrow"
+                >
                     NEMAWASHI
                 </span>
+
 
                 <h2>
                     Work together.
                 </h2>
 
+
                 <p>
-                    Connect with people, teams,
-                    projects and Hrmnx services
-                    through Nemawashi.
+                    Connect with people,
+                    teams, projects and
+                    Hrmnx services through
+                    Nemawashi.
                 </p>
 
             </div>
 
 
-            <div class="nemawashi-communication-grid">
+            <div
+                class="communication-grid"
+            >
+
 
                 <button
                     type="button"
-                    class="nemawashi-communication-card"
-                    data-nemawashi-section="personal-messages"
+                    class="communication-card"
+                    data-page="personal"
                 >
 
-                    <span class="card-icon">
+                    <span
+                        class="communication-card-icon"
+                    >
                         ◇
                     </span>
 
@@ -526,11 +469,13 @@ function renderNemawashiCommunicationHome() {
 
                 <button
                     type="button"
-                    class="nemawashi-communication-card"
-                    data-nemawashi-section="business-messages"
+                    class="communication-card"
+                    data-page="business"
                 >
 
-                    <span class="card-icon">
+                    <span
+                        class="communication-card-icon"
+                    >
                         ◇
                     </span>
 
@@ -548,11 +493,13 @@ function renderNemawashiCommunicationHome() {
 
                 <button
                     type="button"
-                    class="nemawashi-communication-card"
-                    data-nemawashi-section="apps"
+                    class="communication-card"
+                    id="home-apps-card"
                 >
 
-                    <span class="card-icon">
+                    <span
+                        class="communication-card-icon"
+                    >
                         ▦
                     </span>
 
@@ -561,7 +508,7 @@ function renderNemawashiCommunicationHome() {
                     </strong>
 
                     <span>
-                        Enter an Hrmnx App and
+                        Enter an App and
                         its Spaces.
                     </span>
 
@@ -570,11 +517,13 @@ function renderNemawashiCommunicationHome() {
 
                 <button
                     type="button"
-                    class="nemawashi-communication-card"
-                    data-nemawashi-section="app-builder"
+                    class="communication-card"
+                    data-page="app-builder"
                 >
 
-                    <span class="card-icon">
+                    <span
+                        class="communication-card-icon"
+                    >
                         ＋
                     </span>
 
@@ -589,137 +538,125 @@ function renderNemawashiCommunicationHome() {
 
                 </button>
 
+
             </div>
 
         </section>
 
     `;
 
-}
+
+    const appsCard =
+        document.getElementById(
+            "home-apps-card"
+        );
 
 
-// ============================================================
-// RENDER PERSONAL MESSAGES
-// ============================================================
+    if (appsCard) {
 
-function renderNemawashiPersonalMessages() {
+        appsCard.addEventListener(
+            "click",
+            function () {
 
-    renderNemawashiBasicCommunicationPage(
-        "Personal Messages",
-        "Private conversations between you and other Nemawashi users.",
-        "◇"
-    );
+                if (appsList) {
 
-}
+                    appsList.classList.add(
+                        "open"
+                    );
 
-
-// ============================================================
-// RENDER SUBSIDIARY MESSAGES
-// ============================================================
-
-function renderNemawashiSubsidiaryMessages() {
-
-    renderNemawashiBasicCommunicationPage(
-        "Subsidiary Messages",
-        "Communication belonging to Hrmnx subsidiaries.",
-        "◇"
-    );
-
-}
+                }
 
 
-// ============================================================
-// RENDER BUSINESS MESSAGES
-// ============================================================
+                if (appsToggle) {
 
-function renderNemawashiBusinessMessages() {
+                    appsToggle.classList.add(
+                        "open"
+                    );
 
-    renderNemawashiBasicCommunicationPage(
-        "Business Messages",
-        "Professional communication across Hrmnx Entertainment.",
-        "◇"
-    );
+                }
+
+
+                renderAppDirectory();
+
+            }
+        );
+
+    }
 
 }
 
 
-// ============================================================
-// BASIC COMMUNICATION PAGE
-// ============================================================
+/* ============================================================
+   BASIC PAGE
+============================================================ */
 
-function renderNemawashiBasicCommunicationPage(
-    titleText,
+function renderBasicPage(
+    title,
     description,
     icon
 ) {
 
-    const content =
-        document.getElementById(
-            "dashboard-content"
-        );
-
-    if (!content) {
-        return;
-    }
+    setTopbar(
+        "NEMAWASHI",
+        title
+    );
 
 
-    const title =
-        document.getElementById(
-            "section-title"
-        );
+    messagesContent.innerHTML = `
 
-    const label =
-        document.getElementById(
-            "section-label"
-        );
+        <section
+            class="communication-page"
+        >
 
+            <div
+                class="communication-intro"
+            >
 
-    if (label) {
-        label.textContent =
-            "NEMAWASHI";
-    }
-
-    if (title) {
-        title.textContent =
-            titleText;
-    }
-
-
-    content.innerHTML = `
-
-        <section class="nemawashi-communication-page">
-
-            <div class="nemawashi-page-intro">
-
-                <span class="eyebrow">
+                <span
+                    class="communication-eyebrow"
+                >
                     NEMAWASHI
                 </span>
 
+
                 <h2>
-                    ${escapeNemawashiHtml(titleText)}
+                    ${escapeHtml(title)}
                 </h2>
 
+
                 <p>
-                    ${escapeNemawashiHtml(description)}
+                    ${escapeHtml(description)}
                 </p>
 
             </div>
 
 
-            <div class="nemawashi-empty-state">
+            <div
+                class="space-placeholder"
+                style="
+                    min-height: 430px;
+                    background: #fff;
+                    border: 1px dashed var(--messages-border);
+                    border-radius: 20px;
+                "
+            >
 
-                <div class="placeholder-icon">
-                    ${escapeNemawashiHtml(icon)}
+                <div
+                    class="space-placeholder-icon"
+                >
+                    ${icon}
                 </div>
 
+
                 <h3>
-                    Nothing here yet
+                    Coming next
                 </h3>
 
+
                 <p>
-                    The communication system will
-                    be connected to Supabase in the
-                    next stage.
+                    The real communication
+                    system will be connected
+                    to Supabase here.
                 </p>
 
             </div>
@@ -731,95 +668,92 @@ function renderNemawashiBasicCommunicationPage(
 }
 
 
-// ============================================================
-// RENDER APPS
-// ============================================================
+/* ============================================================
+   APP DIRECTORY
+============================================================ */
 
-function renderNemawashiApps() {
+function renderAppDirectory() {
 
-    const content =
-        document.getElementById(
-            "dashboard-content"
-        );
-
-    if (!content) {
-        return;
-    }
+    setTopbar(
+        "NEMAWASHI",
+        "Apps"
+    );
 
 
-    const title =
-        document.getElementById(
-            "section-title"
-        );
+    messagesContent.innerHTML = `
 
-    const label =
-        document.getElementById(
-            "section-label"
-        );
+        <section
+            class="app-directory"
+        >
 
+            <div
+                class="communication-intro"
+            >
 
-    if (label) {
-        label.textContent =
-            "NEMAWASHI";
-    }
-
-    if (title) {
-        title.textContent =
-            "Apps";
-    }
-
-
-    content.innerHTML = `
-
-        <section class="nemawashi-communication-page">
-
-            <div class="nemawashi-page-intro">
-
-                <span class="eyebrow">
+                <span
+                    class="communication-eyebrow"
+                >
                     APPS
                 </span>
+
 
                 <h2>
                     Hrmnx Apps
                 </h2>
 
+
                 <p>
-                    Select an App to enter its
-                    community and Spaces.
+                    Select an App to enter
+                    its community and Spaces.
                 </p>
 
             </div>
 
 
-            <div class="nemawashi-app-grid">
+            <div
+                class="app-grid"
+            >
 
-                ${nemawashiCommunicationApps.map(app => `
+                ${nemawashiApps.map(
+                    app => `
 
-                    <button
-                        type="button"
-                        class="nemawashi-app-card"
-                        data-nemawashi-app="${escapeNemawashiAttribute(app.id)}"
-                    >
+                        <button
+                            type="button"
+                            class="app-card"
+                            data-app="${escapeHtml(app.id)}"
+                        >
 
-                        <span class="nemawashi-app-card-icon">
-                            ${getNemawashiAppIcon(app)}
-                        </span>
+                            <span
+                                class="app-card-icon"
+                            >
+                                ${appIcons[app.id] || "•"}
+                            </span>
 
-                        <span class="nemawashi-app-card-name">
-                            ${escapeNemawashiHtml(app.name)}
-                        </span>
 
-                        <span class="nemawashi-app-card-type">
-                            ${escapeNemawashiHtml(app.type)}
-                        </span>
+                            <span
+                                class="app-card-name"
+                            >
+                                ${escapeHtml(app.name)}
+                            </span>
 
-                        <span class="nemawashi-app-card-arrow">
-                            →
-                        </span>
 
-                    </button>
+                            <span
+                                class="app-card-type"
+                            >
+                                ${escapeHtml(app.type)}
+                            </span>
 
-                `).join("")}
+
+                            <span
+                                class="app-card-arrow"
+                            >
+                                →
+                            </span>
+
+                        </button>
+
+                    `
+                ).join("")}
 
             </div>
 
@@ -830,79 +764,64 @@ function renderNemawashiApps() {
 }
 
 
-// ============================================================
-// RENDER APP
-// ============================================================
+/* ============================================================
+   APP
+============================================================ */
 
-function renderNemawashiApp(
+function renderApp(
     appId
 ) {
 
     const app =
-        nemawashiCommunicationApps.find(
+        nemawashiApps.find(
             item =>
                 item.id === appId
         );
 
 
     if (!app) {
+
         return;
+
     }
 
 
-    const content =
-        document.getElementById(
-            "dashboard-content"
-        );
-
-    if (!content) {
-        return;
-    }
+    setTopbar(
+        "APP",
+        app.name
+    );
 
 
-    const title =
-        document.getElementById(
-            "section-title"
-        );
-
-    const label =
-        document.getElementById(
-            "section-label"
-        );
-
-
-    if (label) {
-        label.textContent =
-            "APP";
-    }
-
-    if (title) {
-        title.textContent =
-            app.name;
-    }
-
-
-    content.innerHTML = `
+    messagesContent.innerHTML = `
 
         <section
-            class="nemawashi-app-page"
-            data-app-id="${escapeNemawashiAttribute(app.id)}"
+            class="app-page"
+            data-current-app="${escapeHtml(app.id)}"
         >
 
-            <div class="nemawashi-app-banner">
 
-                <div class="nemawashi-app-banner-overlay">
+            <!-- BANNER -->
 
-                    <span class="nemawashi-app-label">
+            <div
+                class="app-banner"
+            >
+
+                <div
+                    class="app-banner-content"
+                >
+
+                    <small>
                         APP
-                    </span>
+                    </small>
+
 
                     <h2>
-                        ${escapeNemawashiHtml(app.name)}
+                        ${escapeHtml(app.name)}
                     </h2>
 
+
                     <p>
-                        ${escapeNemawashiHtml(app.type)}
+                        ${escapeHtml(app.type)}
                     </p>
 
                 </div>
@@ -910,77 +829,120 @@ function renderNemawashiApp(
             </div>
 
 
-            <div class="nemawashi-app-body">
+            <!-- WORKSPACE -->
 
-                <aside class="nemawashi-space-sidebar">
+            <div
+                class="app-workspace"
+            >
 
-                    <div class="nemawashi-space-heading">
-                        <span>
-                            ${escapeNemawashiHtml(app.name)}
-                        </span>
+
+                <!-- SPACE SIDEBAR -->
+
+                <aside
+                    class="space-sidebar"
+                >
+
+                    <div
+                        class="space-sidebar-title"
+                    >
+                        ${escapeHtml(app.name)}
                     </div>
 
 
-                    <div class="nemawashi-space-section">
+                    <div
+                        class="space-category"
+                    >
 
-                        <div class="nemawashi-space-section-title">
+                        <div
+                            class="space-category-title"
+                        >
                             GENERAL
                         </div>
 
 
                         <button
                             type="button"
-                            class="nemawashi-space-item active"
-                            data-nemawashi-space="general"
+                            class="space-item active"
+                            data-space="general"
                         >
-                            <span>◌</span>
+
+                            <span>
+                                ◌
+                            </span>
+
                             General Space
+
                         </button>
 
 
                         <button
                             type="button"
-                            class="nemawashi-space-item"
-                            data-nemawashi-space="planning"
+                            class="space-item"
+                            data-space="planning"
                         >
-                            <span>◇</span>
+
+                            <span>
+                                ◇
+                            </span>
+
                             Planning Space
+
                         </button>
 
 
                         <button
                             type="button"
-                            class="nemawashi-space-item"
-                            data-nemawashi-space="feedback"
+                            class="space-item"
+                            data-space="feedback"
                         >
-                            <span>◎</span>
+
+                            <span>
+                                ◎
+                            </span>
+
                             Feedback Space
+
                         </button>
 
 
                         <button
                             type="button"
-                            class="nemawashi-space-item"
-                            data-nemawashi-space="info"
+                            class="space-item"
+                            data-space="info"
                         >
-                            <span>ⓘ</span>
+
+                            <span>
+                                ⓘ
+                            </span>
+
                             Info Space
+
                         </button>
 
                     </div>
 
 
-                    <div class="nemawashi-space-section">
+                    <div
+                        class="space-category"
+                    >
 
-                        <div class="nemawashi-space-section-title">
+                        <div
+                            class="space-category-title"
+                        >
                             PROJECTS
                         </div>
 
 
-                        <div class="nemawashi-project-placeholder">
-
-                            Projects will appear here.
-
+                        <div
+                            style="
+                                padding: 9px;
+                                color: #9a9aa7;
+                                font-size: 10px;
+                                line-height: 1.5;
+                            "
+                        >
+                            Projects will appear
+                            here once created.
                         </div>
 
                     </div>
@@ -988,220 +950,282 @@ function renderNemawashiApp(
                 </aside>
 
 
-                <main class="nemawashi-space-content">
+                <!-- SPACE -->
 
-                    <div class="nemawashi-space-header">
+                <main
+                    class="space-main"
+                >
 
-                        <div>
+                    <div
+                        class="space-header"
+                    >
 
-                            <span class="eyebrow">
-                                GENERAL
-                            </span>
+                        <small>
+                            GENERAL
+                        </small>
 
-                            <h3>
-                                General Space
-                            </h3>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="nemawashi-space-preview">
-
-                        <div class="placeholder-icon">
-                            ◌
-                        </div>
 
                         <h3>
                             General Space
                         </h3>
 
+                    </div>
+
+
+                    <div
+                        class="space-placeholder"
+                    >
+
+                        <div
+                            class="space-placeholder-icon"
+                        >
+                            ◌
+                        </div>
+
+
+                        <h3>
+                            General Space
+                        </h3>
+
+
                         <p>
-                            This is where the Space
-                            conversation will appear.
+                            This is where the
+                            Space conversation
+                            will appear.
                         </p>
 
                     </div>
 
                 </main>
 
+
             </div>
 
+
         </section>
+
+    `;
+
+
+    initializeSpaceNavigation();
+
+}
+
+
+/* ============================================================
+   SPACE NAVIGATION
+============================================================ */
+
+function initializeSpaceNavigation() {
+
+    document
+        .querySelectorAll(
+            ".space-item"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        document
+                            .querySelectorAll(
+                                ".space-item"
+                            )
+                            .forEach(
+                                item => {
+
+                                    item.classList.remove(
+                                        "active"
+                                    );
+
+                                }
+                            );
+
+
+                        this.classList.add(
+                            "active"
+                        );
+
+
+                        const space =
+                            this.dataset.space;
+
+
+                        renderSpacePreview(
+                            space
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+}
+
+
+function renderSpacePreview(
+    space
+) {
+
+    const names = {
+
+        general: {
+            label: "GENERAL",
+            title: "General Space",
+            icon: "◌"
+        },
+
+        planning: {
+            label: "PLANNING",
+            title: "Planning Space",
+            icon: "◇"
+        },
+
+        feedback: {
+            label: "FEEDBACK",
+            title: "Feedback Space",
+            icon: "◎"
+        },
+
+        info: {
+            label: "INFO",
+            title: "Info Space",
+            icon: "ⓘ"
+        }
+
+    };
+
+
+    const selected =
+        names[space] ||
+        names.general;
+
+
+    const header =
+        document.querySelector(
+            ".space-header"
+        );
+
+
+    const preview =
+        document.querySelector(
+            ".space-placeholder"
+        );
+
+
+    if (!header || !preview) {
+
+        return;
+
+    }
+
+
+    header.innerHTML = `
+
+        <small>
+            ${escapeHtml(selected.label)}
+        </small>
+
+        <h3>
+            ${escapeHtml(selected.title)}
+        </h3>
+
+    `;
+
+
+    preview.innerHTML = `
+
+        <div
+            class="space-placeholder-icon"
+        >
+            ${selected.icon}
+        </div>
+
+
+        <h3>
+            ${escapeHtml(selected.title)}
+        </h3>
+
+
+        <p>
+            The ${escapeHtml(selected.title)}
+            interface will be built here.
+        </p>
 
     `;
 
 }
 
 
-// ============================================================
-// RENDER APP BUILDER
-// ============================================================
+/* ============================================================
+   TOP BAR
+============================================================ */
 
-function renderNemawashiAppBuilder() {
-
-    renderNemawashiBasicCommunicationPage(
-        "App Builder",
-        "Create and configure Apps for the Nemawashi ecosystem.",
-        "＋"
-    );
-
-}
-
-
-// ============================================================
-// NAVIGATION HANDLER
-// ============================================================
-
-function handleNemawashiCommunicationNavigation(
-    event
+function setTopbar(
+    label,
+    title
 ) {
 
-    const sectionElement =
-        event.target.closest(
-            "[data-nemawashi-section]"
-        );
+    if (topbarLabel) {
 
-
-    if (sectionElement) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-
-        setNemawashiCommunicationActive(
-            sectionElement
-        );
-
-
-        const section =
-            sectionElement.dataset.nemawashiSection;
-
-
-        if (section === "nemawashi-home") {
-
-            renderNemawashiCommunicationHome();
-
-        } else if (
-            section === "nemawashi-administration"
-        ) {
-
-            renderNemawashiBasicCommunicationPage(
-                "Nemawashi Administration",
-                "Manage Nemawashi's communication infrastructure, Apps, Spaces, roles and permissions.",
-                "⚙"
-            );
-
-        } else if (
-            section === "personal-messages"
-        ) {
-
-            renderNemawashiPersonalMessages();
-
-        } else if (
-            section === "subsidiary-messages"
-        ) {
-
-            renderNemawashiSubsidiaryMessages();
-
-        } else if (
-            section === "business-messages"
-        ) {
-
-            renderNemawashiBusinessMessages();
-
-        } else if (
-            section === "apps"
-        ) {
-
-            renderNemawashiApps();
-
-        } else if (
-            section === "app-builder"
-        ) {
-
-            renderNemawashiAppBuilder();
-
-        }
-
-
-        return true;
+        topbarLabel.textContent =
+            label;
 
     }
 
 
-    const appElement =
-        event.target.closest(
-            "[data-nemawashi-app]"
-        );
+    if (topbarTitle) {
 
-
-    if (appElement) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-
-        const appId =
-            appElement.dataset.nemawashiApp;
-
-
-        setNemawashiCommunicationActive(
-            appElement
-        );
-
-
-        renderNemawashiApp(
-            appId
-        );
-
-
-        return true;
+        topbarTitle.textContent =
+            title;
 
     }
 
 
-    return false;
+    document.title =
+        `${title} — Nemawashi`;
 
 }
 
 
-// ============================================================
-// CAPTURE NAVIGATION
-// ============================================================
-//
-// dashboard.js already has a global click handler.
-// We intercept Nemawashi communication buttons during
-// capture so the existing administration navigation is
-// completely untouched.
-// ============================================================
+/* ============================================================
+   HTML ESCAPING
+============================================================ */
 
-document.addEventListener(
-    "click",
-    function(event) {
+function escapeHtml(
+    value
+) {
 
-        handleNemawashiCommunicationNavigation(
-            event
+    return String(value ?? "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
         );
 
-    },
-    true
-);
-
-
-// ============================================================
-// INITIALIZE
-// ============================================================
-
-function initializeNemawashiCommunicationNavigation() {
-
-    addNemawashiCommunicationNavigation();
-
 }
 
 
-// The dashboard HTML loads its scripts after the page,
-// so the DOM is already available here.
+/* ============================================================
+   START
+============================================================ */
 
-initializeNemawashiCommunicationNavigation();
+renderHome();
