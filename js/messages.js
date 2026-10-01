@@ -1541,19 +1541,26 @@ async function loadMessages(spaceId) {
         </div>
     `;
 
-    const { data: messages, error } = await supabaseClient
-        .from("nemawashi_messages")
-        .select(`
-            id,
-            space_id,
-            user_id,
-            content,
-            reply_to_id,
-            is_edited,
-            created_at
-        `)
-        .eq("space_id", spaceId)
-        .order("created_at", { ascending: true });
+   const { data: messages, error } = await supabaseClient
+       .from("nemawashi_messages")
+       .select(`
+           id,
+           space_id,
+           user_id,
+           content,
+           reply_to_id,
+           is_edited,
+           created_at,
+           profiles:user_id (
+               id,
+               display_name,
+               username,
+               avatar_url,
+               is_staff
+           )
+       `)
+       .eq("space_id", spaceId)
+       .order("created_at", { ascending: true });
 
     if (error) {
         console.error("Failed to load messages:", error);
@@ -1638,7 +1645,9 @@ function setupMessageComposer() {
     composer.addEventListener("submit", async function(event) {
         event.preventDefault();
 
-        const content = input.value.trim();
+        const content = input.value
+            .replace(/^[ \t]+|[ \t]+$/gm, "")
+            .trim();
 
         if (!content) return;
 
