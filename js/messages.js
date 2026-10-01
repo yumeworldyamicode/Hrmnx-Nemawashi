@@ -1541,26 +1541,19 @@ async function loadMessages(spaceId) {
         </div>
     `;
 
-   const { data: messages, error } = await supabaseClient
-       .from("nemawashi_messages")
-       .select(`
-           id,
-           space_id,
-           user_id,
-           content,
-           reply_to_id,
-           is_edited,
-           created_at,
-           profiles:user_id (
-               id,
-               display_name,
-               username,
-               avatar_url,
-               is_staff
-           )
-       `)
-       .eq("space_id", spaceId)
-       .order("created_at", { ascending: true });
+    const { data: messages, error } = await supabaseClient
+        .from("nemawashi_messages")
+        .select(`
+            id,
+            space_id,
+            user_id,
+            content,
+            reply_to_id,
+            is_edited,
+            created_at
+        `)
+        .eq("space_id", spaceId)
+        .order("created_at", { ascending: true });
 
     if (error) {
         console.error("Failed to load messages:", error);
@@ -1586,54 +1579,49 @@ async function loadMessages(spaceId) {
         return;
     }
 
+    const userIds = [
+        ...new Set(
+            messages
+                .map(message => message.user_id)
+                .filter(Boolean)
+        )
+    ];
+
+    let profiles = [];
+
+    if (userIds.length) {
+        const { data: profileData, error: profileError } = await supabaseClient
+            .from("profiles")
+            .select(`
+                id,
+                display_name,
+                username,
+                avatar_url,
+                is_staff
+            `)
+            .in("id", userIds);
+
+        if (profileError) {
+            console.error("Failed to load message profiles:", profileError);
+        } else {
+            profiles = profileData || [];
+        }
+    }
+
+    const profileMap = new Map(
+        profiles.map(profile => [profile.id, profile])
+    );
+
     messagesList.innerHTML = messages
-        .map(message => renderMessage(message))
+        .map(message => {
+            return renderMessage(
+                message,
+                profileMap.get(message.user_id) || null
+            );
+        })
         .join("");
 
     scrollMessagesToBottom();
-}
-
-function renderMessage(message) {
-    const date = new Date(message.created_at);
-
-    const time = date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
-    });
-
-    return `
-        <article class="message-item" data-message-id="${escapeHtml(message.id)}">
-
-            <div class="message-avatar">
-                ◇
-            </div>
-
-            <div class="message-body">
-
-                <div class="message-meta">
-                    <span class="message-author">
-                        User
-                    </span>
-
-                    <span class="message-time">
-                        ${escapeHtml(time)}
-                    </span>
-
-                    ${
-                        message.is_edited
-                            ? `<span class="message-edited">(edited)</span>`
-                            : ""
-                    }
-                </div>
-
-                <div class="message-text">
-                    ${escapeHtml(message.content)}
-                </div>
-
-            </div>
-
-        </article>
-    `;
 }
 
 function setupMessageComposer() {
