@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Messages — Nemawashi</title>
+
+    <link
+        rel="icon"
+        type="image/x-icon"
+        href="images/nemawashi-favicon.ico"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/messages.css"
+    >
+
+</head>
+
+
+<body>
+
+    <div class="messages-app">
+
+
+        <!-- ==================================================
+             LEFT SIDEBAR
+        =================================================== -->
+
+        <aside class="messages-sidebar">
+
+
+            <!-- BRAND -->
+
+            <div class="messages-brand">
+
+                <a
+                    href="dashboard.html"
+                    class="messages-brand-link"
+                >
+
+                    <img
+                        src="images/nemawashi-logo.png"
+                        alt="Nemawashi"
+                    >
+
+                </a>
+
+            </div>
+
+
+            <!-- MAIN NAVIGATION -->
+
+            <nav class="messages-navigation">
+
+
+                <div class="navigation-label">
+                    NEMAWASHI
+                </div>
+
+
+                <button
+                    type="button"
+                    class="navigation-item active"
+                    data-page="home"
+                >
+
+                    <span class="navigation-icon">
+                        ◈
+                    </span>
+
+                    <span>
+                        Nemawashi
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="navigation-item"
+                    data-page="personal"
+                >
+
+                    <span class="navigation-icon">
+                        ◇
+                    </span>
+
+                    <span>
+                        Personal Messages
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="navigation-item"
+                    data-page="subsidiary"
+                >
+
+                    <span class="navigation-icon">
+                        ◇
+                    </span>
+
+                    <span>
+                        Subsidiary Messages
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="navigation-item"
+                    data-page="business"
+                >
+
+                    <span class="navigation-icon">
+                        ◇
+                    </span>
+
+                    <span>
+                        Business Messages
+                    </span>
+
+                </button>
+
+
+                <!-- APPS -->
+
+                <div class="navigation-apps">
+
+
+                    <button
+                        type="button"
+                        class="navigation-item apps-toggle"
+                        id="apps-toggle"
+                    >
+
+                        <span class="navigation-icon">
+                            ▦
+                        </span>
+
+                        <span>
+                            Apps
+                        </span>
+
+                        <span
+                            class="apps-toggle-arrow"
+                            id="apps-toggle-arrow"
+                        >
+                            ›
+                        </span>
+
+                    </button>
+
+
+                    <div
+                        class="apps-list"
+                        id="apps-list"
+                    >
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="nemawashi"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                N
+                            </span>
+
+                            <span>
+                                Nemawashi
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="kiki"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                K
+                            </span>
+
+                            <span>
+                                KiKi
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="audition"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                A
+                            </span>
+
+                            <span>
+                                Audition
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="serashio"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                S
+                            </span>
+
+                            <span>
+                                Serashio
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="hrmnx-entertainment"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                H
+                            </span>
+
+                            <span>
+                                Hrmnx Entertainment
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="yumeworld"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                Y
+                            </span>
+
+                            <span>
+                                Yumeworld
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="seiun"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                S
+                            </span>
+
+                            <span>
+                                SEIUN
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="hoshi"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                H
+                            </span>
+
+                            <span>
+                                HOSHI
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="osakos-diary"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                O
+                            </span>
+
+                            <span>
+                                Osako's Diary
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="harmonia"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                H
+                            </span>
+
+                            <span>
+                                Harmonia
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-navigation-item"
+                            data-app="links"
+                        >
+
+                            <span class="app-sidebar-icon">
+                                L
+                            </span>
+
+                            <span>
+                                Links
+                            </span>
+
+                        </button>
+
+
+                    </div>
+
+                </div>
+
+
+                <!-- APP BUILDER -->
+
+                <button
+                    type="button"
+                    class="navigation-item"
+                    data-page="app-builder"
+                >
+
+                    <span class="navigation-icon">
+                        ＋
+                    </span>
+
+                    <span>
+                        App Builder
+                    </span>
+
+                </button>
+
+
+            </nav>
+
+
+            <!-- BOTTOM -->
+
+            <div class="messages-sidebar-bottom">
+
+                <a
+                    href="dashboard.html"
+                    class="return-dashboard"
+                >
+
+                    ← Administration
+
+                </a>
+
+            </div>
+
+
+        </aside>
+
+
+        <!-- ==================================================
+             APP AREA
+        =================================================== -->
+
+        <main class="messages-main">
+
+
+            <!-- TOP BAR -->
+
+            <header class="messages-topbar">
+
+                <div>
+
+                    <span
+                        class="messages-topbar-label"
+                        id="topbar-label"
+                    >
+                        NEMAWASHI
+                    </span>
+
+                    <h1 id="topbar-title">
+                        Nemawashi
+                    </h1>
+
+                </div>
+
+
+                <div class="messages-topbar-actions">
+
+                    <button
+                        type="button"
+                        class="topbar-button"
+                        id="search-button"
+                    >
+                        Search
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- CONTENT -->
+
+            <section
+                class="messages-content"
+                id="messages-content"
+            >
+
+                <!-- JavaScript renders content here -->
+
+            </section>
+
+
+        </main>
+
+
+    </div>
+
+
+    <script src="js/messages.js"></script>
+
+</body>
+
+</html>
