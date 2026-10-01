@@ -221,61 +221,74 @@ function setupNavigation() {
         "click",
         async function(event) {
 
+            /* ==================================================
+               APP BUTTONS
+            ================================================== */
+
+            const appButton =
+                event.target.closest(
+                    ".app-navigation-item, .app-card"
+                );
+
+            if (appButton) {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                const appSlug =
+                    appButton.dataset.app;
+
+                if (!appSlug) {
+                    return;
+                }
+
+                setAppNavigationActive(
+                    appButton
+                );
+
+                await renderApp(
+                    appSlug
+                );
+
+                return;
+            }
+
+
+            /* ==================================================
+               NORMAL PAGE BUTTONS
+            ================================================== */
 
             const pageButton =
                 event.target.closest(
                     "[data-page]"
                 );
 
-
             if (pageButton) {
+
+                event.preventDefault();
 
                 setNavigationActive(
                     pageButton
                 );
 
-
                 resetNemawashiTheme();
-
 
                 renderPage(
                     pageButton.dataset.page
                 );
 
-
                 return;
-
             }
 
 
-            const appButton =
-                event.target.closest(
-                    "[data-app]"
-                );
-
-
-            if (appButton) {
-
-                setAppNavigationActive(
-                    appButton
-                );
-
-
-                await renderApp(
-                    appButton.dataset.app
-                );
-
-
-                return;
-
-            }
-
+            /* ==================================================
+               SPACE BUTTONS
+            ================================================== */
 
             const spaceButton =
                 event.target.closest(
                     "[data-space]"
                 );
-
 
             if (spaceButton) {
 
@@ -283,27 +296,34 @@ function setupNavigation() {
                     spaceButton.dataset.space
                 );
 
+                return;
             }
 
         }
     );
 
 
+    /* ========================================================
+       APPS DROPDOWN
+    ======================================================== */
+
     if (appsToggle) {
 
         appsToggle.addEventListener(
             "click",
-            function() {
+            function(event) {
 
-if (!appsList) {
-    return;
-}
+                event.preventDefault();
+                event.stopPropagation();
 
-const open =
-    appsList.classList.toggle(
-        "open"
-    );
+                if (!appsList) {
+                    return;
+                }
 
+                const open =
+                    appsList.classList.toggle(
+                        "open"
+                    );
 
                 appsToggle.classList.toggle(
                     "open",
@@ -316,7 +336,6 @@ const open =
     }
 
 }
-
 
 /* ============================================================
    NAVIGATION ACTIVE STATES
