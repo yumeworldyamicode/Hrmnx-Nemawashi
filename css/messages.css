@@ -1773,3 +1773,64 @@ button {
     opacity: 0.5;
     cursor: default;
 }
+
+.message-avatar {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.06);
+    color: #77798a;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.message-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+.message-author {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #30313d;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.message-author:hover {
+    text-decoration: underline;
+}
+
+.message-username {
+    color: #9a9ba8;
+    font-size: 10px;
+}
+
+.message-staff {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: rgba(99, 107, 216, 0.10);
+    color: var(--app-primary, #636bd8);
+    font-size: 9px;
+    font-weight: 700;
+}
