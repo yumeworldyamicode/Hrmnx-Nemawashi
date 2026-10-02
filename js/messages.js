@@ -1505,18 +1505,97 @@ async function selectSpace(spaceId) {
                         </div>
                     </div>
 
-                    <form class="message-composer" id="message-composer">
-                        <textarea
-                            id="message-input"
-                            placeholder="Message ${escapeHtml(space.name)}..."
-                            rows="1"
-                            maxlength="5000"
-                        ></textarea>
+<form class="message-composer" id="message-composer">
 
-                        <button type="submit" class="message-send-button">
-                            Send
-                        </button>
-                    </form>
+    <div class="attachment-wrapper">
+
+        <button
+            type="button"
+            class="attachment-button"
+            id="attachment-button"
+            aria-label="Add attachment"
+        >
+            +
+        </button>
+
+        <div
+            class="attachment-menu"
+            id="attachment-menu"
+        >
+
+            <button
+                type="button"
+                class="attachment-option"
+                data-attachment-type="lyrdem"
+            >
+                <span class="attachment-option-icon">TXT</span>
+                <span>
+                    <strong>Demo Lyrics</strong>
+                    <small>Lyrics demo</small>
+                </span>
+            </button>
+
+            <button
+                type="button"
+                class="attachment-option"
+                data-attachment-type="prodem"
+            >
+                <span class="attachment-option-icon">♫</span>
+                <span>
+                    <strong>Demo Base</strong>
+                    <small>Music demo</small>
+                </span>
+            </button>
+
+            <button
+                type="button"
+                class="attachment-option"
+                data-attachment-type="image"
+            >
+                <span class="attachment-option-icon">▧</span>
+                <span>
+                    <strong>Image</strong>
+                    <small>Upload an image</small>
+                </span>
+            </button>
+
+            <button
+                type="button"
+                class="attachment-option"
+                data-attachment-type="file"
+            >
+                <span class="attachment-option-icon">□</span>
+                <span>
+                    <strong>File</strong>
+                    <small>Upload a file</small>
+                </span>
+            </button>
+
+        </div>
+
+        <input
+            type="file"
+            id="attachment-input"
+            hidden
+        >
+
+    </div>
+
+    <textarea
+        id="message-input"
+        placeholder="Message ${escapeHtml(space.name)}..."
+        rows="1"
+        maxlength="5000"
+    ></textarea>
+
+    <button
+        type="submit"
+        class="message-send-button"
+    >
+        Send
+    </button>
+
+</form>
 
                 </div>
             `;
