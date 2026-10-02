@@ -1620,7 +1620,13 @@ async function loadMessages(spaceId) {
         </div>
     `;
 
-    const { data: messages, error } = await supabaseClient
+    /*
+     * Load messages
+     */
+    const {
+        data: messages,
+        error
+    } = await supabaseClient
         .from("nemawashi_messages")
         .select(`
             id,
@@ -1646,6 +1652,9 @@ async function loadMessages(spaceId) {
         return;
     }
 
+    /*
+     * No messages
+     */
     if (!messages || messages.length === 0) {
         messagesList.innerHTML = `
             <div class="messages-empty">
@@ -1701,61 +1710,64 @@ async function loadMessages(spaceId) {
     );
 
     /*
-     * Load attachments
-     */
-    const messageIds = messages.map(message => message.id);
-
-    let attachments = [];
-
-    if (messageIds.length) {
-        const {
-            data: attachmentData,
-            error: attachmentError
-        } = await supabaseClient
-            .from("nemawashi_message_attachments")
-            .select(`
-                id,
-                message_id,
-                user_id,
-                file_name,
-                file_type,
-                file_size,
-                storage_path,
-                attachment_type,
-                created_at
-            `)
-            .in("message_id", messageIds)
-            .order("created_at", {
-                ascending: true
-            });
-
-        if (attachmentError) {
-            console.error(
-                "Failed to load message attachments:",
-                attachmentError
-            );
-        } else {
-            attachments = attachmentData || [];
-        }
-    }
-
-    /*
-     * Group attachments by message.
+     * Load attachments.
+     *
+     * Attachments are optional. If this query fails,
+     * normal messages will STILL be rendered.
      */
     const attachmentMap = new Map();
 
-    attachments.forEach(attachment => {
-        if (!attachmentMap.has(attachment.message_id)) {
-            attachmentMap.set(
-                attachment.message_id,
-                []
-            );
-        }
+    try {
+        const messageIds = messages.map(message => message.id);
 
-        attachmentMap
-            .get(attachment.message_id)
-            .push(attachment);
-    });
+        if (messageIds.length) {
+            const {
+                data: attachmentData,
+                error: attachmentError
+            } = await supabaseClient
+                .from("nemawashi_message_attachments")
+                .select(`
+                    id,
+                    message_id,
+                    user_id,
+                    file_name,
+                    file_type,
+                    file_size,
+                    storage_path,
+                    attachment_type,
+                    created_at
+                `)
+                .in("message_id", messageIds)
+                .order("created_at", {
+                    ascending: true
+                });
+
+            if (attachmentError) {
+                console.error(
+                    "Failed to load message attachments:",
+                    attachmentError
+                );
+            } else if (attachmentData) {
+                attachmentData.forEach(attachment => {
+                    if (!attachmentMap.has(attachment.message_id)) {
+                        attachmentMap.set(
+                            attachment.message_id,
+                            []
+                        );
+                    }
+
+                    attachmentMap
+                        .get(attachment.message_id)
+                        .push(attachment);
+                });
+            }
+        }
+    } catch (attachmentException) {
+        console.error(
+            "Attachment loading failed:",
+            attachmentException
+        );
+    }
 
     /*
      * Current logged-in user
@@ -1767,39 +1779,64 @@ async function loadMessages(spaceId) {
     } = await supabaseClient.auth.getUser();
 
     /*
-     * Render everything.
+     * Render messages
      */
-    messagesList.innerHTML = messages
-        .map((message, index) => {
+    try {
+        messagesList.innerHTML = messages
+            .map((message, index) => {
 
-            const previousMessage =
-                index > 0
-                    ? messages[index - 1]
-                    : null;
+                const previousMessage =
+                    index > 0
+                        ? messages[index - 1]
+                        : null;
 
-            const previousProfile =
-                previousMessage
-                    ? profileMap.get(
-                        previousMessage.user_id
-                    ) || null
-                    : null;
+                const previousProfile =
+                    previousMessage
+                        ? profileMap.get(
+                            previousMessage.user_id
+                        ) || null
+                        : null;
 
-            return renderMessage(
-                message,
-                profileMap.get(message.user_id) || null,
-                user?.id || null,
-                previousProfile,
-                previousMessage,
-                index === 0,
-                attachmentMap.get(message.id) || []
-            );
-        })
-        .join("");
+                return renderMessage(
+                    message,
+                    profileMap.get(message.user_id) || null,
+                    user?.id || null,
+                    previousProfile,
+                    previousMessage,
+                    index === 0,
+                    attachmentMap.get(message.id) || []
+                );
+            })
+            .join("");
 
-   scrollMessagesToBottom();
+    } catch (renderError) {
+        console.error(
+            "Failed to render Nemawashi messages:",
+            renderError
+        );
 
-   setupAttachmentDownloads();
-   loadAttachmentImages();
+        messagesList.innerHTML = `
+            <div class="messages-loading">
+                Could not display messages.
+            </div>
+        `;
+
+        return;
+    }
+
+    scrollMessagesToBottom();
+
+    /*
+     * Load attachment previews/download handlers
+     * after the messages have been inserted.
+     */
+    if (typeof setupAttachmentDownloads === "function") {
+        setupAttachmentDownloads();
+    }
+
+    if (typeof loadAttachmentImages === "function") {
+        loadAttachmentImages();
+    }
 }
 
 function setupAttachmentMenu() {
