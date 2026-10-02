@@ -2521,6 +2521,36 @@ function renderMessage(
     `;
 }
 
+function formatFileSize(bytes) {
+    if (!bytes || bytes <= 0) {
+        return "Unknown size";
+    }
+
+    const units = [
+        "B",
+        "KB",
+        "MB",
+        "GB"
+    ];
+
+    let size = Number(bytes);
+    let unitIndex = 0;
+
+    while (
+        size >= 1024 &&
+        unitIndex < units.length - 1
+    ) {
+        size /= 1024;
+        unitIndex++;
+    }
+
+    if (unitIndex === 0) {
+        return `${Math.round(size)} ${units[unitIndex]}`;
+    }
+
+    return `${size.toFixed(1)} ${units[unitIndex]}`;
+}
+
 function renderMessageAttachment(
     attachment,
     isOwnMessage
