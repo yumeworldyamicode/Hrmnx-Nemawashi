@@ -2555,38 +2555,37 @@ function renderMessageAttachment(
     attachment,
     isOwnMessage
 ) {
-    const type = attachment.attachment_type;
+    const type =
+        attachment.attachment_type;
 
-    /*
-     * Create a temporary signed URL.
-     *
-     * The bucket is private, so we cannot simply use
-     * the storage path as an <img> or download URL.
-     */
     const storagePath =
         attachment.storage_path;
 
     let icon = "□";
     let label = "File";
 
+
     if (type === "lyrdem") {
         icon = "TXT";
         label = "Demo Lyrics";
+
     } else if (type === "prodem") {
         icon = "♫";
         label = "Demo Base";
+
     } else if (type === "image") {
         icon = "▧";
         label = "Image";
     }
 
+
     /*
-     * For now images are rendered as a placeholder.
-     *
-     * The signed URL is loaded immediately after
-     * rendering by loadAttachmentImages().
+     * Images are handled separately by
+     * loadAttachmentImages().
      */
+
     if (type === "image") {
+
         return `
             <div
                 class="
@@ -2603,6 +2602,56 @@ function renderMessageAttachment(
             </div>
         `;
     }
+
+
+    /*
+     * PRODEM is NOT a normal downloadable file.
+     *
+     * It opens the dedicated Nemawashi
+     * PRODEM viewer instead.
+     */
+
+    if (type === "prodem") {
+
+        return `
+            <button
+                type="button"
+                class="
+                    message-attachment
+                    message-file-attachment
+                    message-prodem-attachment
+                    ${isOwnMessage ? "message-attachment-own" : ""}
+                "
+                data-attachment-id="${escapeHtml(attachment.id)}"
+            >
+
+                <span class="message-attachment-icon">
+                    ${icon}
+                </span>
+
+                <span class="message-attachment-info">
+
+                    <span class="message-attachment-name">
+                        ${escapeHtml(attachment.file_name)}
+                    </span>
+
+                    <span class="message-attachment-type">
+                        ${escapeHtml(label)}
+                        ·
+                        ${formatFileSize(attachment.file_size)}
+                    </span>
+
+                </span>
+
+            </button>
+        `;
+    }
+
+
+    /*
+     * Normal files and .lyrdem continue using
+     * the existing attachment behavior for now.
+     */
 
     return `
         <button
@@ -2639,31 +2688,75 @@ function renderMessageAttachment(
 }
 
 function setupAttachmentDownloads() {
+
     document
-        .querySelectorAll(".message-file-attachment")
+        .querySelectorAll(
+            ".message-file-attachment"
+        )
         .forEach(button => {
 
             button.addEventListener(
                 "click",
                 async function() {
 
+                    const attachmentId =
+                        this.dataset.attachmentId;
+
+                    if (!attachmentId) {
+                        return;
+                    }
+
+
+                    /*
+                     * PRODEM files must ONLY be opened
+                     * through the dedicated PRODEM viewer.
+                     */
+
+                    if (
+                        this.classList.contains(
+                            "message-prodem-attachment"
+                        )
+                    ) {
+
+                        window.location.href =
+                            `prodem-viewer.html?attachment=${encodeURIComponent(
+                                attachmentId
+                            )}`;
+
+                        return;
+                    }
+
+
+                    /*
+                     * Existing behavior for normal
+                     * downloadable attachments.
+                     */
+
                     const storagePath =
                         this.dataset.storagePath;
 
-                    if (!storagePath) return;
+                    if (!storagePath) {
+                        return;
+                    }
+
 
                     const {
                         data,
                         error
-                    } = await supabaseClient
-                        .storage
-                        .from("nemawashi-attachments")
-                        .createSignedUrl(
-                            storagePath,
-                            60 * 10
-                        );
+                    } =
+                        await supabaseClient
+                            .storage
+                            .from(
+                                "nemawashi-attachments"
+                            )
+                            .createSignedUrl(
+                                storagePath,
+                                60 * 10
+                            );
+
 
                     if (error) {
+
                         console.error(
                             "Could not create attachment URL:",
                             error
@@ -2672,15 +2765,19 @@ function setupAttachmentDownloads() {
                         return;
                     }
 
+
                     if (data?.signedUrl) {
+
                         window.open(
                             data.signedUrl,
                             "_blank",
                             "noopener,noreferrer"
                         );
                     }
+
                 }
             );
+
         });
 }
 
