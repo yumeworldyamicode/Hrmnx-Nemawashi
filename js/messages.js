@@ -1889,11 +1889,11 @@ function setupMessageComposer() {
     composer.addEventListener("submit", async function(event) {
         event.preventDefault();
 
-        const content = input.value
-            .replace(/^[ \t]+|[ \t]+$/gm, "")
-            .trim();
+   const content = input.value
+       .replace(/^[ \t]+|[ \t]+$/gm, "")
+       .trim();
 
-        if (!content) return;
+   if (!content) return;
 
         const {
             data: {
