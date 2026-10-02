@@ -4689,7 +4689,6 @@ async function changeSongDemoArtist(artistId) {
     renderSongDemoSectionList();
 }
 
-
 // LYRICS WIZARD
 // ------------------------------------------------------------
 
@@ -4800,25 +4799,33 @@ function renderSongDemoLyricsWizard() {
             ></div>
 
 
-            <div class="song-demo-wizard-footer">
+<div class="song-demo-wizard-footer">
 
-                <button
-                    type="button"
-                    class="secondary-button"
-                    data-song-demo-back="true"
-                >
-                    Cancel
-                </button>
+    <button
+        type="button"
+        class="secondary-button"
+        data-song-demo-back="true"
+    >
+        Cancel
+    </button>
 
-                <button
-                    type="button"
-                    class="person-save-button"
-                    data-song-demo-save-lyrics="true"
-                >
-                    Save lyrics demo
-                </button>
+    <button
+        type="button"
+        class="secondary-button"
+        data-song-demo-download-lyrics="true"
+    >
+        Download .lyrdem
+    </button>
 
-            </div>
+    <button
+        type="button"
+        class="person-save-button"
+        data-song-demo-save-lyrics="true"
+    >
+        Save lyrics demo
+    </button>
+
+</div>
 
         </div>
 
@@ -5597,6 +5604,159 @@ async function deleteSongDemo(demoId) {
     }
 }
 
+// ------------------------------------------------------------
+// DOWNLOAD LYRICS DEMO
+// ------------------------------------------------------------
+
+function downloadSongDemoLyrics() {
+
+    syncSongDemoSectionInputs();
+
+
+    const enabledSections =
+        nemawashiSongDemoSections
+            .filter(section =>
+                section.enabled
+            );
+
+
+    if (!enabledSections.length) {
+
+        alert(
+            "Please enable at least one lyrics section first."
+        );
+
+        return;
+    }
+
+
+    const title =
+        enabledSections[0]?.title ||
+        "Untitled Lyrics Demo";
+
+
+    const lines = [];
+
+
+    lines.push(
+        "NEMAWASHI_LYRDEM"
+    );
+
+    lines.push(
+        "VERSION=1"
+    );
+
+    lines.push(
+        `TITLE=${title}`
+    );
+
+    lines.push(
+        "TYPE=LYRICS_DEMO"
+    );
+
+    lines.push(
+        "STATUS=DEMO"
+    );
+
+    lines.push("");
+
+
+    enabledSections.forEach(section => {
+
+        const sectionTitle =
+            section.title ||
+            "Untitled Section";
+
+
+        lines.push(
+            `[${sectionTitle.toUpperCase()}]`
+        );
+
+
+        if (section.lyrics) {
+
+            lines.push(
+                section.lyrics
+            );
+
+        }
+
+
+        lines.push("");
+
+    });
+
+
+    lines.push(
+        "[NOTES]"
+    );
+
+    lines.push(
+        "Nemawashi-exclusive demo lyrics file."
+    );
+
+
+    const content =
+        lines.join("\n");
+
+
+    const blob =
+        new Blob(
+            [content],
+            {
+                type:
+                    "text/plain;charset=utf-8"
+            }
+        );
+
+
+    const safeTitle =
+        title
+            .replace(
+                /[^a-zA-Z0-9_-]+/g,
+                "_"
+            )
+            .replace(
+                /^_+|_+$/g,
+                ""
+            ) ||
+        "Lyrics_Demo";
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+    link.download =
+        `${safeTitle}.lyrdem`;
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    link.remove();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+}
 
 // ------------------------------------------------------------
 // SAVE LYRICS DEMO
@@ -6019,17 +6179,33 @@ function renderSongDemoSongBaseWizard() {
                 <audio id="song-demo-audio-player" controls preload="metadata"></audio>
             </div>
 
-            <div class="song-demo-wizard-footer">
+<div class="song-demo-wizard-footer">
 
-                <button type="button" class="secondary-button" data-song-demo-back="true">
-                    Cancel
-                </button>
+    <button
+        type="button"
+        class="secondary-button"
+        data-song-demo-back="true"
+    >
+        Cancel
+    </button>
 
-                <button type="button" class="person-save-button" data-song-demo-save-base="true">
-                    Continue
-                </button>
+    <button
+        type="button"
+        class="secondary-button"
+        data-song-demo-download-prodem="true"
+    >
+        Download .prodem
+    </button>
 
-            </div>
+    <button
+        type="button"
+        class="person-save-button"
+        data-song-demo-save-base="true"
+    >
+        Continue
+    </button>
+
+</div>
 
         </div>
 
@@ -6214,6 +6390,190 @@ function validateSongDemoAudio() {
         objectUrl;
 }
 
+// ------------------------------------------------------------
+// DOWNLOAD PRODEM
+// ------------------------------------------------------------
+
+async function downloadSongDemoProdem() {
+
+    const input =
+        document.getElementById(
+            "song-demo-audio-file"
+        );
+
+
+    if (
+        !input ||
+        !input.files ||
+        !input.files.length
+    ) {
+
+        alert(
+            "Please select a WAV or MP3 demo first."
+        );
+
+        return;
+    }
+
+
+    const file =
+        input.files[0];
+
+
+    try {
+
+        /*
+         * Read the original audio file.
+         */
+
+        const arrayBuffer =
+            await file.arrayBuffer();
+
+
+        /*
+         * Create a temporary Web Audio context.
+         */
+
+        const AudioContextClass =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+
+        if (!AudioContextClass) {
+
+            throw new Error(
+                "Web Audio API is not available in this browser."
+            );
+
+        }
+
+
+        const audioContext =
+            new AudioContextClass();
+
+
+        try {
+
+            /*
+             * Decode WAV/MP3 into raw audio samples.
+             */
+
+            const audioBuffer =
+                await audioContext.decodeAudioData(
+                    arrayBuffer.slice(0)
+                );
+
+
+            /*
+             * Enforce the same one-minute limit
+             * used by the Song Demo Studio.
+             */
+
+            if (
+                !Number.isFinite(
+                    audioBuffer.duration
+                ) ||
+                audioBuffer.duration >= 60
+            ) {
+
+                throw new Error(
+                    "The demo must be shorter than 1 minute."
+                );
+
+            }
+
+
+            /*
+             * Convert the decoded audio into
+             * Nemawashi PRODEM binary.
+             */
+
+            const prodemBlob =
+                await encodeProdem(
+                    audioBuffer
+                );
+
+
+            /*
+             * Create a safe filename.
+             */
+
+            const originalName =
+                file.name
+                    .replace(
+                        /\.[^/.]+$/,
+                        ""
+                    )
+                    .replace(
+                        /[^a-zA-Z0-9_-]+/g,
+                        "_"
+                    )
+                    .replace(
+                        /^_+|_+$/g,
+                        ""
+                    ) ||
+                "Demo_Audio";
+
+
+            /*
+             * Download the .prodem file.
+             */
+
+            const url =
+                URL.createObjectURL(
+                    prodemBlob
+                );
+
+
+            const link =
+                document.createElement(
+                    "a"
+                );
+
+
+            link.href =
+                url;
+
+            link.download =
+                `${originalName}.prodem`;
+
+
+            document.body.appendChild(
+                link
+            );
+
+
+            link.click();
+
+
+            link.remove();
+
+
+            URL.revokeObjectURL(
+                url
+            );
+
+
+        } finally {
+
+            await audioContext.close();
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Could not create PRODEM file:",
+            error
+        );
+
+
+        alert(
+            error.message ||
+            "Could not create the PRODEM file."
+        );
+    }
+}
 
 // ------------------------------------------------------------
 // TEMPORARY SONG BASE SAVE
@@ -6868,6 +7228,31 @@ document.addEventListener(
 
             return;
         }
+
+        const downloadLyrics =
+    event.target.closest(
+        "[data-song-demo-download-lyrics]"
+    );
+
+if (downloadLyrics) {
+
+    downloadSongDemoLyrics();
+
+    return;
+}
+
+
+const downloadProdem =
+    event.target.closest(
+        "[data-song-demo-download-prodem]"
+    );
+
+if (downloadProdem) {
+
+    downloadSongDemoProdem();
+
+    return;
+}
 
 
         const saveLyrics =
