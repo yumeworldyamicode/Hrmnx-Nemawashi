@@ -2794,20 +2794,22 @@ function appendNewMessage(message, currentUserId) {
     });
 }
 
-function scrollMessagesToBottom(smooth = false) {
-    const messagesList = document.getElementById("messages-list");
+function scrollMessagesToBottom(
+    smooth = false
+) {
+    const messagesList =
+        document.getElementById("messages-list");
 
-    if (!messagesList) return;
-
-    if (smooth) {
-        messagesList.scrollTo({
-            top: messagesList.scrollHeight,
-            behavior: "smooth"
-        });
+    if (!messagesList) {
         return;
     }
 
-    messagesList.scrollTop = messagesList.scrollHeight;
+    messagesList.scrollTo({
+        top: messagesList.scrollHeight,
+        behavior: smooth
+            ? "smooth"
+            : "auto"
+    });
 }
 
 /* ============================================================
