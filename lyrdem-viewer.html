@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>LYRDEM — Nemawashi</title>
+
+<link
+    rel="icon"
+    type="image/x-icon"
+    href="images/nemawashi-favicon.ico"
+>
+
+<link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+>
+
+<link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@400;700&display=swap"
+    rel="stylesheet"
+>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    font-family:
+        "LINE Seed JP",
+        sans-serif;
+
+    background: #f5f5fa;
+    color: #292a35;
+}
+
+.lyrdem-page {
+    width: min(900px, calc(100% - 32px));
+    margin: 40px auto;
+}
+
+.lyrdem-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+
+    margin-bottom: 20px;
+}
+
+.lyrdem-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lyrdem-icon {
+    width: 52px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #636bd8;
+    color: white;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.lyrdem-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0.5;
+    letter-spacing: 0.08em;
+}
+
+.lyrdem-header h1 {
+    margin: 2px 0 0;
+    font-size: 24px;
+}
+
+.lyrdem-back {
+    border: 0;
+    background: white;
+    border-radius: 10px;
+
+    padding: 9px 13px;
+
+    cursor: pointer;
+    font: inherit;
+}
+
+.lyrdem-card {
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+
+    box-shadow:
+        0 12px 35px rgba(0, 0, 0, 0.06);
+}
+
+.lyrdem-status {
+    padding: 16px;
+    text-align: center;
+    opacity: 0.6;
+}
+
+.lyrdem-meta {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-bottom: 24px;
+}
+
+.lyrdem-meta-item {
+    padding: 12px;
+
+    border-radius: 12px;
+    background: #f5f5fa;
+}
+
+.lyrdem-meta-label {
+    display: block;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    opacity: 0.48;
+}
+
+.lyrdem-meta-value {
+    display: block;
+
+    margin-top: 3px;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.lyrdem-section {
+    margin-top: 20px;
+    padding-top: 20px;
+
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.lyrdem-section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.lyrdem-section-number {
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0.45;
+}
+
+.lyrdem-section h2 {
+    margin: 0;
+    font-size: 17px;
+}
+
+.lyrdem-section-type {
+    margin-left: auto;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    opacity: 0.45;
+}
+
+.lyrdem-lyrics {
+    margin-top: 12px;
+
+    padding: 15px;
+
+    border-radius: 12px;
+
+    background: #fafafe;
+
+    white-space: pre-wrap;
+
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.lyrdem-error {
+    padding: 16px;
+
+    border-radius: 12px;
+
+    background: #fff0f0;
+    color: #8d3434;
+
+    font-size: 13px;
+}
+
+@media (max-width: 650px) {
+
+    .lyrdem-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .lyrdem-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<main class="lyrdem-page">
+
+    <header class="lyrdem-header">
+
+        <div class="lyrdem-brand">
+
+            <div class="lyrdem-icon">
+                LYR
+            </div>
+
+            <div>
+
+                <div class="lyrdem-eyebrow">
+                    NEMAWASHI · LYRDEM INSPECTOR
+                </div>
+
+                <h1 id="lyrdem-title">
+                    Loading...
+                </h1>
+
+            </div>
+
+        </div>
+
+        <button
+            type="button"
+            class="lyrdem-back"
+            id="lyrdem-back"
+        >
+            ← Back
+        </button>
+
+    </header>
+
+
+    <section class="lyrdem-card">
+
+        <div
+            id="lyrdem-status"
+            class="lyrdem-status"
+        >
+            Checking access...
+        </div>
+
+        <div
+            id="lyrdem-content"
+            hidden
+        ></div>
+
+    </section>
+
+</main>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="js/supabase.js"></script>
+
+<script src="js/lyrdem-viewer.js"></script>
+
+</body>
+
+</html>
