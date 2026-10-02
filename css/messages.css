@@ -1874,20 +1874,23 @@ button {
 
 .message-composer {
     display: flex;
-    align-items: flex-end;
-    gap: 10px;
-    margin: 0 22px 20px;
-    padding: 10px;
+    align-items: center;
+    gap: 7px;
+    margin: 0 20px 16px;
+    padding: 6px 7px 6px 12px;
     border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 15px;
-    background: rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.035);
 }
 
 .message-composer textarea {
     flex: 1;
-    min-height: 22px;
-    max-height: 140px;
-    padding: 8px 10px;
+    min-width: 0;
+    height: 20px;
+    min-height: 20px;
+    max-height: 110px;
+    padding: 2px 3px;
     border: 0;
     outline: none;
     resize: none;
@@ -1895,7 +1898,7 @@ button {
     color: #363744;
     font-family: inherit;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 20px;
 }
 
 .message-composer textarea::placeholder {
@@ -1904,13 +1907,13 @@ button {
 
 .message-send-button {
     flex: 0 0 auto;
-    padding: 8px 15px;
+    padding: 7px 13px;
     border: 0;
-    border-radius: 10px;
+    border-radius: 999px;
     background: var(--app-primary, #636bd8);
     color: #fff;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     cursor: pointer;
     transition: opacity 0.15s ease, transform 0.15s ease;
