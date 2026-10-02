@@ -1992,3 +1992,76 @@ button {
     font-size: 9px;
     font-weight: 700;
 }
+
+.message-item.message-own {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.message-item.message-own .message-body {
+    align-items: flex-end;
+    max-width: min(70%, 620px);
+}
+
+.message-own-bubble {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    background: var(--app-accent, var(--app-primary, #636bd8));
+    color: #ffffff;
+    border-radius: 16px;
+}
+
+.message-own-meta {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 7px;
+}
+
+.message-own .message-author {
+    color: #77798a;
+    cursor: default;
+}
+
+.message-own .message-author:hover {
+    text-decoration: none;
+}
+
+.message-item {
+    margin: 0;
+    padding: 3px 4px;
+}
+
+.message-item.message-grouped {
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.message-item:not(.message-grouped) {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.message-bubble {
+    margin: 0;
+}
+
+.message-body {
+    margin: 0;
+}
+
+.message-meta {
+    margin-top: 0;
+}
+
+.message-day-divider {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.message-time-divider {
+    margin-top: 12px;
+    margin-bottom: 7px;
+}
