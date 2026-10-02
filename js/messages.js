@@ -1599,7 +1599,7 @@ async function selectSpace(spaceId) {
                 </div>
             `;
 
-            loadMessages(space.id);
+            (space.id);
             setupMessageComposer();
             setupAttachmentMenu();
         }
@@ -1658,6 +1658,9 @@ async function loadMessages(spaceId) {
         return;
     }
 
+    /*
+     * Load profiles
+     */
     const userIds = [
         ...new Set(
             messages
@@ -1669,17 +1672,19 @@ async function loadMessages(spaceId) {
     let profiles = [];
 
     if (userIds.length) {
-        const { data: profileData, error: profileError } =
-            await supabaseClient
-                .from("profiles")
-                .select(`
-                    id,
-                    display_name,
-                    username,
-                    avatar_url,
-                    is_staff
-                `)
-                .in("id", userIds);
+        const {
+            data: profileData,
+            error: profileError
+        } = await supabaseClient
+            .from("profiles")
+            .select(`
+                id,
+                display_name,
+                username,
+                avatar_url,
+                is_staff
+            `)
+            .in("id", userIds);
 
         if (profileError) {
             console.error(
@@ -1695,20 +1700,88 @@ async function loadMessages(spaceId) {
         profiles.map(profile => [profile.id, profile])
     );
 
+    /*
+     * Load attachments
+     */
+    const messageIds = messages.map(message => message.id);
+
+    let attachments = [];
+
+    if (messageIds.length) {
+        const {
+            data: attachmentData,
+            error: attachmentError
+        } = await supabaseClient
+            .from("nemawashi_message_attachments")
+            .select(`
+                id,
+                message_id,
+                user_id,
+                file_name,
+                file_type,
+                file_size,
+                storage_path,
+                attachment_type,
+                created_at
+            `)
+            .in("message_id", messageIds)
+            .order("created_at", {
+                ascending: true
+            });
+
+        if (attachmentError) {
+            console.error(
+                "Failed to load message attachments:",
+                attachmentError
+            );
+        } else {
+            attachments = attachmentData || [];
+        }
+    }
+
+    /*
+     * Group attachments by message.
+     */
+    const attachmentMap = new Map();
+
+    attachments.forEach(attachment => {
+        if (!attachmentMap.has(attachment.message_id)) {
+            attachmentMap.set(
+                attachment.message_id,
+                []
+            );
+        }
+
+        attachmentMap
+            .get(attachment.message_id)
+            .push(attachment);
+    });
+
+    /*
+     * Current logged-in user
+     */
     const {
         data: {
             user
         }
     } = await supabaseClient.auth.getUser();
 
+    /*
+     * Render everything.
+     */
     messagesList.innerHTML = messages
         .map((message, index) => {
+
             const previousMessage =
-                index > 0 ? messages[index - 1] : null;
+                index > 0
+                    ? messages[index - 1]
+                    : null;
 
             const previousProfile =
                 previousMessage
-                    ? profileMap.get(previousMessage.user_id) || null
+                    ? profileMap.get(
+                        previousMessage.user_id
+                    ) || null
                     : null;
 
             return renderMessage(
@@ -1717,12 +1790,16 @@ async function loadMessages(spaceId) {
                 user?.id || null,
                 previousProfile,
                 previousMessage,
-                index === 0
+                index === 0,
+                attachmentMap.get(message.id) || []
             );
         })
         .join("");
 
-    scrollMessagesToBottom();
+   scrollMessagesToBottom();
+
+   setupAttachmentDownloads();
+   loadAttachmentImages();
 }
 
 function setupAttachmentMenu() {
@@ -1970,19 +2047,20 @@ function renderMessage(
     currentUserId,
     previousProfile,
     previousMessage,
-    isFirstMessage
+    isFirstMessage,
+    attachments = []
 ) {
     const date = new Date(message.created_at);
 
-    const displayName = profile?.display_name || "Unknown user";
+    const displayName =
+        profile?.display_name || "Unknown user";
 
     const isOwnMessage =
-        String(message.user_id) === String(currentUserId);
+        String(message.user_id) ===
+        String(currentUserId);
 
     /*
-     * Clean whitespace for display as well.
-     * This fixes older messages that were already saved
-     * with accidental indentation/spaces.
+     * Clean whitespace.
      */
     const cleanContent = String(message.content || "")
         .replace(/^[ \t]+|[ \t]+$/gm, "")
@@ -1997,21 +2075,22 @@ function renderMessage(
             new Date(previousMessage.created_at);
 
         sameDay =
-            date.getFullYear() === previousDate.getFullYear() &&
-            date.getMonth() === previousDate.getMonth() &&
-            date.getDate() === previousDate.getDate();
+            date.getFullYear() ===
+                previousDate.getFullYear() &&
+            date.getMonth() ===
+                previousDate.getMonth() &&
+            date.getDate() ===
+                previousDate.getDate();
 
         sameUser =
             String(previousMessage.user_id) ===
             String(message.user_id);
 
         timeDifference =
-            date.getTime() - previousDate.getTime();
+            date.getTime() -
+            previousDate.getTime();
     }
 
-    /*
-     * Same person + same day + within five minutes.
-     */
     const grouped =
         !isFirstMessage &&
         sameDay &&
@@ -2019,47 +2098,33 @@ function renderMessage(
         timeDifference >= 0 &&
         timeDifference <= 5 * 60 * 1000;
 
-    /*
-     * Long inactivity period.
-     */
     const longGap =
         !isFirstMessage &&
         sameDay &&
         timeDifference >= 2 * 60 * 60 * 1000;
 
-    const dayLabel = date.toLocaleDateString([], {
-        month: "long",
-        day: "numeric",
-        year: "numeric"
-    });
+    const dayLabel =
+        date.toLocaleDateString([], {
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+        });
 
-    const timeLabel = date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
-    });
+    const timeLabel =
+        date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
 
     let divider = "";
 
-    /*
-     * ONLY show the day divider when the actual
-     * calendar day changed.
-     */
-    if (
-        isFirstMessage ||
-        !sameDay
-    ) {
+    if (isFirstMessage || !sameDay) {
         divider = `
             <div class="message-day-divider">
                 <span>${escapeHtml(dayLabel)}</span>
             </div>
         `;
-    }
-
-    /*
-     * Otherwise, only show a small time divider
-     * after a very long period.
-     */
-    else if (longGap) {
+    } else if (longGap) {
         divider = `
             <div class="message-time-divider">
                 <span>${escapeHtml(timeLabel)}</span>
@@ -2068,11 +2133,20 @@ function renderMessage(
     }
 
     /*
-     * -------------------------
-     * YOUR MESSAGE
-     * -------------------------
+     * Attachment HTML
      */
+    const attachmentHTML = attachments
+        .map(attachment => {
+            return renderMessageAttachment(
+                attachment,
+                isOwnMessage
+            );
+        })
+        .join("");
 
+    /*
+     * YOUR MESSAGE
+     */
     if (isOwnMessage) {
         return `
             ${divider}
@@ -2116,9 +2190,17 @@ function renderMessage(
                             : ""
                     }
 
-                    <div class="message-bubble message-own-bubble">
-                        ${escapeHtml(cleanContent)}
-                    </div>
+                    ${
+                        cleanContent
+                            ? `
+                                <div class="message-bubble message-own-bubble">
+                                    ${escapeHtml(cleanContent)}
+                                </div>
+                            `
+                            : ""
+                    }
+
+                    ${attachmentHTML}
 
                 </div>
 
@@ -2127,11 +2209,8 @@ function renderMessage(
     }
 
     /*
-     * -------------------------
      * SOMEONE ELSE'S MESSAGE
-     * -------------------------
      */
-
     const avatar = profile?.avatar_url
         ? `
             <img
@@ -2224,14 +2303,205 @@ function renderMessage(
                         : ""
                 }
 
-                <div class="message-bubble message-other-bubble">
-                    ${escapeHtml(cleanContent)}
-                </div>
+                ${
+                    cleanContent
+                        ? `
+                            <div class="message-bubble message-other-bubble">
+                                ${escapeHtml(cleanContent)}
+                            </div>
+                        `
+                        : ""
+                }
+
+                ${attachmentHTML}
 
             </div>
 
         </article>
     `;
+}
+
+function renderMessageAttachment(
+    attachment,
+    isOwnMessage
+) {
+    const type = attachment.attachment_type;
+
+    /*
+     * Create a temporary signed URL.
+     *
+     * The bucket is private, so we cannot simply use
+     * the storage path as an <img> or download URL.
+     */
+    const storagePath =
+        attachment.storage_path;
+
+    let icon = "□";
+    let label = "File";
+
+    if (type === "lyrdem") {
+        icon = "TXT";
+        label = "Demo Lyrics";
+    } else if (type === "prodem") {
+        icon = "♫";
+        label = "Demo Base";
+    } else if (type === "image") {
+        icon = "▧";
+        label = "Image";
+    }
+
+    /*
+     * For now images are rendered as a placeholder.
+     *
+     * The signed URL is loaded immediately after
+     * rendering by loadAttachmentImages().
+     */
+    if (type === "image") {
+        return `
+            <div
+                class="
+                    message-attachment
+                    message-image-attachment
+                    ${isOwnMessage ? "message-attachment-own" : ""}
+                "
+                data-storage-path="${escapeHtml(storagePath)}"
+                data-attachment-id="${escapeHtml(attachment.id)}"
+            >
+                <div class="message-image-loading">
+                    Loading image...
+                </div>
+            </div>
+        `;
+    }
+
+    return `
+        <button
+            type="button"
+            class="
+                message-attachment
+                message-file-attachment
+                ${isOwnMessage ? "message-attachment-own" : ""}
+            "
+            data-storage-path="${escapeHtml(storagePath)}"
+            data-attachment-id="${escapeHtml(attachment.id)}"
+        >
+
+            <span class="message-attachment-icon">
+                ${icon}
+            </span>
+
+            <span class="message-attachment-info">
+
+                <span class="message-attachment-name">
+                    ${escapeHtml(attachment.file_name)}
+                </span>
+
+                <span class="message-attachment-type">
+                    ${escapeHtml(label)}
+                    ·
+                    ${formatFileSize(attachment.file_size)}
+                </span>
+
+            </span>
+
+        </button>
+    `;
+}
+
+function setupAttachmentDownloads() {
+    document
+        .querySelectorAll(".message-file-attachment")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                async function() {
+
+                    const storagePath =
+                        this.dataset.storagePath;
+
+                    if (!storagePath) return;
+
+                    const {
+                        data,
+                        error
+                    } = await supabaseClient
+                        .storage
+                        .from("nemawashi-attachments")
+                        .createSignedUrl(
+                            storagePath,
+                            60 * 10
+                        );
+
+                    if (error) {
+                        console.error(
+                            "Could not create attachment URL:",
+                            error
+                        );
+
+                        return;
+                    }
+
+                    if (data?.signedUrl) {
+                        window.open(
+                            data.signedUrl,
+                            "_blank",
+                            "noopener,noreferrer"
+                        );
+                    }
+                }
+            );
+        });
+}
+
+async function loadAttachmentImages() {
+    const imageAttachments =
+        document.querySelectorAll(
+            ".message-image-attachment"
+        );
+
+    for (const container of imageAttachments) {
+
+        const storagePath =
+            container.dataset.storagePath;
+
+        if (!storagePath) continue;
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .storage
+            .from("nemawashi-attachments")
+            .createSignedUrl(
+                storagePath,
+                60 * 60
+            );
+
+        if (error) {
+            console.error(
+                "Could not create image URL:",
+                error
+            );
+
+            container.innerHTML = `
+                <div class="message-image-error">
+                    Could not load image.
+                </div>
+            `;
+
+            continue;
+        }
+
+        if (!data?.signedUrl) continue;
+
+        container.innerHTML = `
+            <img
+                src="${escapeHtml(data.signedUrl)}"
+                alt="Uploaded image"
+            >
+        `;
+    }
 }
 
 function setupMessageComposer() {
