@@ -2375,3 +2375,85 @@ button {
      */
     scrollbar-gutter: stable;
 }
+
+/* ============================================================
+   SPACE HEADER
+============================================================ */
+
+.space-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    flex-shrink: 0;
+}
+
+.space-header-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    min-width: 0;
+}
+
+.space-header-info {
+    min-width: 0;
+}
+
+.space-header-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.space-header-title-row h2 {
+    margin: 0;
+}
+
+.space-header-info p {
+    margin: 4px 0 0;
+}
+
+.space-header-type {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 3px 8px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    opacity: 0.65;
+}
+
+.space-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    flex-shrink: 0;
+}
+
+.space-header-action {
+    border: 0;
+    background: transparent;
+
+    cursor: pointer;
+
+    padding: 8px 11px;
+    border-radius: 9px;
+
+    font: inherit;
+}
+
+.space-header-action:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.space-header-more {
+    font-size: 20px;
+    line-height: 1;
+}
