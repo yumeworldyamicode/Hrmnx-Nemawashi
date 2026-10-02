@@ -293,6 +293,7 @@ function setupNavigation() {
 
                 selectSpace(
                     spaceButton.dataset.space
+                    console.log("SELECT SPACE CALLING LOAD:", space.id);
                 );
 
                 return;
@@ -1609,8 +1610,12 @@ async function selectSpace(spaceId) {
     }
 }
 
+console.log("LOAD MESSAGES CALLED:", spaceId);
+
 async function loadMessages(spaceId) {
     const messagesList = document.getElementById("messages-list");
+
+    console.log("LOAD MESSAGES CALLED:", spaceId);
 
     if (!messagesList) return;
 
