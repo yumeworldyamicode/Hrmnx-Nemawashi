@@ -2342,3 +2342,36 @@ button {
 .message-own .message-file-attachment:hover {
     background: rgba(255, 255, 255, 0.20);
 }
+
+/* ============================================================
+   MESSAGE SCROLL FRAME
+============================================================ */
+
+.space-chat {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.messages-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scroll-behavior: smooth;
+
+    /*
+     * Keeps the newest message comfortably above
+     * the bottom edge of the chat frame.
+     */
+    padding-bottom: 18px;
+
+    /*
+     * Prevents the scrollbar from affecting the
+     * horizontal layout of the conversation.
+     */
+    scrollbar-gutter: stable;
+}
