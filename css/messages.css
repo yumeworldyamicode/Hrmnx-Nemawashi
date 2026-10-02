@@ -2065,3 +2065,237 @@ button {
     margin-top: 12px;
     margin-bottom: 7px;
 }
+
+/* ================================= */
+/* ATTACHMENT MENU                   */
+/* ================================= */
+
+.attachment-wrapper {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.attachment-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.055);
+    color: #77798a;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.attachment-button:hover {
+    background: rgba(0, 0, 0, 0.09);
+    color: #555666;
+}
+
+.attachment-button.active {
+    background: var(--app-primary, #636bd8);
+    color: #ffffff;
+    transform: rotate(45deg);
+}
+
+
+/* --------------------------------- */
+/* EXPANDING MENU                    */
+/* --------------------------------- */
+
+.attachment-menu {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 10px);
+    z-index: 50;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    width: 210px;
+    padding: 7px;
+
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 15px;
+
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow:
+        0 12px 35px rgba(0, 0, 0, 0.10),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(6px) scale(0.97);
+    transform-origin: bottom left;
+
+    transition:
+        opacity 0.15s ease,
+        visibility 0.15s ease,
+        transform 0.15s ease;
+}
+
+.attachment-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+
+/* --------------------------------- */
+/* MENU OPTIONS                      */
+/* --------------------------------- */
+
+.attachment-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+    padding: 8px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: transparent;
+    color: #363744;
+
+    font-family: inherit;
+    text-align: left;
+
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.attachment-option:hover {
+    background: rgba(0, 0, 0, 0.045);
+}
+
+.attachment-option-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+
+    border-radius: 9px;
+
+    background: rgba(99, 107, 216, 0.10);
+    color: var(--app-primary, #636bd8);
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.attachment-option:nth-child(2) .attachment-option-icon {
+    font-size: 16px;
+}
+
+.attachment-option span:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.attachment-option strong {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.attachment-option small {
+    color: #999ba8;
+    font-size: 9px;
+}
+
+
+/* ================================= */
+/* ATTACHMENT MESSAGE CARDS          */
+/* ================================= */
+
+.message-attachment {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: fit-content;
+    max-width: 100%;
+
+    margin-top: 6px;
+    padding: 9px 11px;
+
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    border-radius: 12px;
+
+    background: rgba(255, 255, 255, 0.72);
+
+    box-sizing: border-box;
+}
+
+.message-own .message-attachment {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.20);
+}
+
+.message-attachment-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+
+    border-radius: 9px;
+
+    background: rgba(99, 107, 216, 0.10);
+    color: var(--app-primary, #636bd8);
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.message-own .message-attachment-icon {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+}
+
+.message-attachment-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.message-attachment-name {
+    color: #363744;
+    font-size: 11px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.message-own .message-attachment-name {
+    color: #ffffff;
+}
+
+.message-attachment-type {
+    margin-top: 2px;
+    color: #999ba8;
+    font-size: 9px;
+}
+
+.message-own .message-attachment-type {
+    color: rgba(255, 255, 255, 0.72);
+}
