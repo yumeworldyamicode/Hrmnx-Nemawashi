@@ -2457,3 +2457,90 @@ button {
     font-size: 20px;
     line-height: 1;
 }
+
+.message-native-demo-attachment {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    width: min(420px, 100%);
+    padding: 12px 14px;
+
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+
+    background: rgba(255, 255, 255, 0.72);
+
+    cursor: pointer;
+    text-align: left;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.message-native-demo-attachment:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(0, 0, 0, 0.14);
+}
+
+.message-native-file-icon {
+    width: 48px;
+    height: 54px;
+
+    flex: 0 0 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: var(--messages-accent, #636bd8);
+    color: white;
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.message-prodem-attachment
+.message-native-file-icon {
+    font-size: 11px;
+}
+
+.message-native-file-info {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.message-native-file-action {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.message-native-file-shared {
+    font-size: 12px;
+    opacity: 0.58;
+}
+
+.message-native-file-name {
+    margin-top: 4px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.message-native-file-meta {
+    font-size: 11px;
+    opacity: 0.52;
+}
