@@ -1590,19 +1590,23 @@ async function loadMessages(spaceId) {
     let profiles = [];
 
     if (userIds.length) {
-        const { data: profileData, error: profileError } = await supabaseClient
-            .from("profiles")
-            .select(`
-                id,
-                display_name,
-                username,
-                avatar_url,
-                is_staff
-            `)
-            .in("id", userIds);
+        const { data: profileData, error: profileError } =
+            await supabaseClient
+                .from("profiles")
+                .select(`
+                    id,
+                    display_name,
+                    username,
+                    avatar_url,
+                    is_staff
+                `)
+                .in("id", userIds);
 
         if (profileError) {
-            console.error("Failed to load message profiles:", profileError);
+            console.error(
+                "Failed to load message profiles:",
+                profileError
+            );
         } else {
             profiles = profileData || [];
         }
@@ -1612,11 +1616,24 @@ async function loadMessages(spaceId) {
         profiles.map(profile => [profile.id, profile])
     );
 
+    const {
+        data: {
+            user
+        }
+    } = await supabaseClient.auth.getUser();
+
     messagesList.innerHTML = messages
-        .map(message => {
+        .map((message, index) => {
+            const previousMessage = messages[index - 1] || null;
+
             return renderMessage(
                 message,
-                profileMap.get(message.user_id) || null
+                profileMap.get(message.user_id) || null,
+                user?.id || null,
+                previousMessage
+                    ? profileMap.get(previousMessage.user_id) || null
+                    : null,
+                previousMessage
             );
         })
         .join("");
@@ -1624,20 +1641,143 @@ async function loadMessages(spaceId) {
     scrollMessagesToBottom();
 }
 
-function renderMessage(message, profile) {
+function renderMessage(
+    message,
+    profile,
+    currentUserId,
+    previousProfile,
+    previousMessage
+) {
     const date = new Date(message.created_at);
 
-    const time = date.toLocaleTimeString([], {
+    const displayName = profile?.display_name || "Unknown user";
+
+    const isOwnMessage =
+        String(message.user_id) === String(currentUserId);
+
+    const previousDate = previousMessage
+        ? new Date(previousMessage.created_at)
+        : null;
+
+    const sameDay =
+        previousDate &&
+        date.toDateString() === previousDate.toDateString();
+
+    const sameUser =
+        previousMessage &&
+        String(previousMessage.user_id) === String(message.user_id);
+
+    const timeDifference = previousDate
+        ? date.getTime() - previousDate.getTime()
+        : Infinity;
+
+    /*
+     * Messages are grouped when the same person sends them
+     * within 5 minutes of each other.
+     */
+    const grouped =
+        sameDay &&
+        sameUser &&
+        timeDifference <= 5 * 60 * 1000;
+
+    /*
+     * A longer gap during the same day gets a small time divider.
+     * Here we use 2 hours.
+     */
+    const longGap =
+        sameDay &&
+        timeDifference >= 2 * 60 * 60 * 1000;
+
+    const dayLabel = date.toLocaleDateString([], {
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+    });
+
+    const timeLabel = date.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit"
     });
 
-    const displayName = profile?.display_name || "Unknown user";
+    let divider = "";
 
-    const username = profile?.username
-        ? `@${profile.username}`
-        : "";
+    /*
+     * New calendar day
+     */
+    if (!sameDay) {
+        divider = `
+            <div class="message-day-divider">
+                <span>${escapeHtml(dayLabel)}</span>
+            </div>
+        `;
+    }
 
+    /*
+     * Long period of inactivity during the same day
+     */
+    else if (longGap) {
+        divider = `
+            <div class="message-time-divider">
+                <span>${escapeHtml(timeLabel)}</span>
+            </div>
+        `;
+    }
+
+    /*
+     * YOUR MESSAGE
+     */
+    if (isOwnMessage) {
+        return `
+            ${divider}
+
+            <article
+                class="
+                    message-item
+                    message-own
+                    ${grouped ? "message-grouped" : ""}
+                "
+                data-message-id="${escapeHtml(message.id)}"
+            >
+                <div class="message-body">
+
+                    ${
+                        !grouped
+                            ? `
+                                <div class="message-meta message-own-meta">
+                                    <span class="message-author">
+                                        you
+                                    </span>
+
+                                    <span class="message-time">
+                                        ${escapeHtml(timeLabel)}
+                                    </span>
+
+                                    ${
+                                        message.is_edited
+                                            ? `
+                                                <span class="message-edited">
+                                                    (edited)
+                                                </span>
+                                            `
+                                            : ""
+                                    }
+                                </div>
+                            `
+                            : ""
+                    }
+
+                    <div class="message-bubble message-own-bubble">
+                        ${escapeHtml(message.content)}
+                    </div>
+
+                </div>
+            </article>
+        `;
+    }
+
+    /*
+     * SOMEONE ELSE'S MESSAGE
+     */
     const avatar = profile?.avatar_url
         ? `
             <img
@@ -1648,65 +1788,89 @@ function renderMessage(message, profile) {
         : "◇";
 
     return `
+        ${divider}
+
         <article
-            class="message-item"
+            class="
+                message-item
+                message-other
+                ${grouped ? "message-grouped" : ""}
+            "
             data-message-id="${escapeHtml(message.id)}"
         >
 
-            <button
-                type="button"
-                class="message-avatar"
-                data-profile-id="${escapeHtml(message.user_id)}"
-                aria-label="View ${escapeHtml(displayName)}'s profile"
-            >
-                ${avatar}
-            </button>
+            ${
+                grouped
+                    ? `
+                        <div class="message-avatar-spacer"></div>
+                    `
+                    : `
+                        <button
+                            type="button"
+                            class="message-avatar"
+                            data-profile-id="${escapeHtml(message.user_id)}"
+                            aria-label="View ${escapeHtml(displayName)}'s profile"
+                        >
+                            ${avatar}
+                        </button>
+                    `
+            }
 
             <div class="message-body">
 
-                <div class="message-meta">
+                ${
+                    !grouped
+                        ? `
+                            <div class="message-meta">
 
-                    <button
-                        type="button"
-                        class="message-author"
-                        data-profile-id="${escapeHtml(message.user_id)}"
-                    >
-                        ${escapeHtml(displayName)}
-                    </button>
+                                <button
+                                    type="button"
+                                    class="message-author"
+                                    data-profile-id="${escapeHtml(message.user_id)}"
+                                >
+                                    ${escapeHtml(displayName)}
+                                </button>
 
-                    ${
-                        username
-                            ? `
-                                <span class="message-username">
-                                    ${escapeHtml(username)}
+                                ${
+                                    profile?.username
+                                        ? `
+                                            <span class="message-username">
+                                                @${escapeHtml(profile.username)}
+                                            </span>
+                                        `
+                                        : ""
+                                }
+
+                                ${
+                                    profile?.is_staff
+                                        ? `
+                                            <span class="message-staff">
+                                                Staff
+                                            </span>
+                                        `
+                                        : ""
+                                }
+
+                                <span class="message-time">
+                                    ${escapeHtml(timeLabel)}
                                 </span>
-                            `
-                            : ""
-                    }
 
-                    ${
-                        profile?.is_staff
-                            ? `
-                                <span class="message-staff">
-                                    Staff
-                                </span>
-                            `
-                            : ""
-                    }
+                                ${
+                                    message.is_edited
+                                        ? `
+                                            <span class="message-edited">
+                                                (edited)
+                                            </span>
+                                        `
+                                        : ""
+                                }
 
-                    <span class="message-time">
-                        ${escapeHtml(time)}
-                    </span>
+                            </div>
+                        `
+                        : ""
+                }
 
-                    ${
-                        message.is_edited
-                            ? `<span class="message-edited">(edited)</span>`
-                            : ""
-                    }
-
-                </div>
-
-                <div class="message-text">
+                <div class="message-bubble message-other-bubble">
                     ${escapeHtml(message.content)}
                 </div>
 
