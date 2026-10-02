@@ -183,7 +183,6 @@ async function loadApps() {
 
 }
 
-
 /* ============================================================
    RENDER APP SIDEBAR
 ============================================================ */
@@ -1602,6 +1601,7 @@ async function selectSpace(spaceId) {
 
             loadMessages(space.id);
             setupMessageComposer();
+            setupAttachmentMenu();
         }
 
     } catch (error) {
@@ -1723,6 +1723,245 @@ async function loadMessages(spaceId) {
         .join("");
 
     scrollMessagesToBottom();
+}
+
+function setupAttachmentMenu() {
+    const attachmentButton =
+        document.getElementById("attachment-button");
+
+    const attachmentMenu =
+        document.getElementById("attachment-menu");
+
+    const attachmentInput =
+        document.getElementById("attachment-input");
+
+    if (
+        !attachmentButton ||
+        !attachmentMenu ||
+        !attachmentInput
+    ) {
+        return;
+    }
+
+    attachmentButton.addEventListener("click", function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isOpen =
+            attachmentMenu.classList.toggle("open");
+
+        attachmentButton.classList.toggle(
+            "active",
+            isOpen
+        );
+    });
+
+    attachmentMenu
+        .querySelectorAll(".attachment-option")
+        .forEach(option => {
+
+            option.addEventListener("click", function(event) {
+                event.preventDefault();
+
+                const attachmentType =
+                    this.dataset.attachmentType;
+
+                attachmentInput.dataset.attachmentType =
+                    attachmentType;
+
+                attachmentInput.value = "";
+
+                if (attachmentType === "image") {
+                    attachmentInput.accept =
+                        "image/*";
+                } else if (attachmentType === "lyrdem") {
+                    attachmentInput.accept =
+                        ".txt,.lrc,.lyrdem";
+                } else if (attachmentType === "prodem") {
+                    attachmentInput.accept =
+                        ".mp3,.wav,.flac,.m4a,.ogg,.prodem";
+                } else {
+                    attachmentInput.accept = "*/*";
+                }
+
+                attachmentInput.click();
+
+                attachmentMenu.classList.remove("open");
+                attachmentButton.classList.remove("active");
+            });
+
+        });
+
+    document.addEventListener("click", function(event) {
+        if (
+            !attachmentMenu.contains(event.target) &&
+            !attachmentButton.contains(event.target)
+        ) {
+            attachmentMenu.classList.remove("open");
+            attachmentButton.classList.remove("active");
+        }
+    });
+
+   async function uploadMessageAttachment(file, attachmentType) {
+    if (!currentSpace) {
+        return;
+    }
+
+    const {
+        data: {
+            user
+        }
+    } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+        alert("You must be logged in to upload files.");
+        return;
+    }
+
+    /*
+     * Basic size protection for now.
+     * We can make this configurable later.
+     */
+    const maxSize = 50 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+        alert("This file is too large. The maximum size is 50 MB.");
+        return;
+    }
+
+    const messagesList =
+        document.getElementById("messages-list");
+
+    /*
+     * Uploading a file creates a message first.
+     * This gives the attachment somewhere to belong.
+     */
+    const { data: message, error: messageError } =
+        await supabaseClient
+            .from("nemawashi_messages")
+            .insert({
+                space_id: currentSpace.id,
+                user_id: user.id,
+                content: ""
+            })
+            .select()
+            .single();
+
+    if (messageError) {
+        console.error(
+            "Failed to create attachment message:",
+            messageError
+        );
+
+        alert("Could not create the attachment message.");
+        return;
+    }
+
+    const safeFileName =
+        file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    const storagePath =
+        `${currentSpace.id}/${user.id}/${message.id}-${Date.now()}-${safeFileName}`;
+
+    /*
+     * Upload to Supabase Storage
+     */
+    const {
+        error: uploadError
+    } = await supabaseClient
+        .storage
+        .from("nemawashi-attachments")
+        .upload(
+            storagePath,
+            file,
+            {
+                cacheControl: "3600",
+                upsert: false,
+                contentType: file.type || "application/octet-stream"
+            }
+        );
+
+    if (uploadError) {
+        console.error(
+            "Failed to upload attachment:",
+            uploadError
+        );
+
+        /*
+         * Remove the empty message if storage upload failed.
+         */
+        await supabaseClient
+            .from("nemawashi_messages")
+            .delete()
+            .eq("id", message.id);
+
+        alert("Could not upload the file.");
+        return;
+    }
+
+    /*
+     * Save attachment metadata.
+     */
+    const {
+        error: attachmentError
+    } = await supabaseClient
+        .from("nemawashi_message_attachments")
+        .insert({
+            message_id: message.id,
+            user_id: user.id,
+            file_name: file.name,
+            file_type: file.type || null,
+            file_size: file.size,
+            storage_path: storagePath,
+            attachment_type: attachmentType
+        });
+
+    if (attachmentError) {
+        console.error(
+            "Failed to save attachment metadata:",
+            attachmentError
+        );
+
+        await supabaseClient
+            .storage
+            .from("nemawashi-attachments")
+            .remove([storagePath]);
+
+        await supabaseClient
+            .from("nemawashi_messages")
+            .delete()
+            .eq("id", message.id);
+
+        alert("Could not save the attachment.");
+        return;
+    }
+
+    /*
+     * Reload the Space so the new attachment appears
+     * using the exact same message rendering logic.
+     */
+    await loadMessages(currentSpace.id);
+}
+
+    attachmentInput.addEventListener(
+        "change",
+        async function() {
+
+            const file = this.files?.[0];
+
+            if (!file) return;
+
+            const attachmentType =
+                this.dataset.attachmentType || "file";
+
+            await uploadMessageAttachment(
+                file,
+                attachmentType
+            );
+
+            this.value = "";
+        }
+    );
 }
 
 function renderMessage(
