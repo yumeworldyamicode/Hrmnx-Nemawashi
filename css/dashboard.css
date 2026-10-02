@@ -1173,6 +1173,62 @@ body {
     gap: 16px;
 }
 
+.dashboard-module-2 {
+    margin-bottom: 30px;
+    padding: 34px;
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(99, 107, 216),
+            rgba(99,107,216,.09)
+        );
+    box-shadow:
+        0 18px 55px rgba(70,75,150,.06);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-module-2::after {
+    content: "";
+    position: absolute;
+    width: 190px;
+    height: 190px;
+    right: -55px;
+    top: -75px;
+    border-radius: 50%;
+    background: rgba(99,107,216,.08);
+    pointer-events: none;
+}
+
+.module-2-text {
+    position: relative;
+    z-index: 1;
+}
+
+.eyebrow-m-2 {
+    display: inline-block;
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+}
+
+.dashboard-module-2 h2 {
+    margin: 8px 0 7px;
+    font-size: 30px;
+    letter-spacing: -.04em;
+}
+
+.dashboard-module-2 p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
 .dashboard-module-card {
     position: relative;
     width: 100%;
