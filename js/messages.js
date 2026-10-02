@@ -2563,29 +2563,27 @@ function renderMessageAttachment(
 
     let icon = "□";
     let label = "File";
-
+    let previewClass = "";
 
     if (type === "lyrdem") {
-        icon = "TXT";
-        label = "Demo Lyrics";
-
+        icon = "LYR";
+        label = "Nemawashi Lyrics";
+        previewClass =
+            "message-native-demo-attachment message-lyrdem-attachment";
     } else if (type === "prodem") {
-        icon = "♫";
-        label = "Demo Base";
-
+        icon = "PRO";
+        label = "Nemawashi Audio";
+        previewClass =
+            "message-native-demo-attachment message-prodem-attachment";
     } else if (type === "image") {
         icon = "▧";
         label = "Image";
     }
 
-
     /*
-     * Images are handled separately by
-     * loadAttachmentImages().
+     * IMAGE
      */
-
     if (type === "image") {
-
         return `
             <div
                 class="
@@ -2603,15 +2601,17 @@ function renderMessageAttachment(
         `;
     }
 
-
     /*
-     * PRODEM is NOT a normal downloadable file.
-     *
-     * It opens the dedicated Nemawashi
-     * PRODEM viewer instead.
+     * NEMAWASHI-NATIVE DEMO FILES
      */
-
-    if (type === "prodem") {
+    if (
+        type === "lyrdem" ||
+        type === "prodem"
+    ) {
+        const extension =
+            type === "lyrdem"
+                ? ".lyrdem"
+                : ".prodem";
 
         return `
             <button
@@ -2619,26 +2619,40 @@ function renderMessageAttachment(
                 class="
                     message-attachment
                     message-file-attachment
-                    message-prodem-attachment
+                    ${previewClass}
                     ${isOwnMessage ? "message-attachment-own" : ""}
                 "
-                data-attachment-id="${escapeHtml(attachment.id)}"
+                data-attachment-id="${escapeHtml(
+                    attachment.id
+                )}"
             >
 
-                <span class="message-attachment-icon">
+                <span class="message-native-file-icon">
                     ${icon}
                 </span>
 
-                <span class="message-attachment-info">
+                <span class="message-native-file-info">
 
-                    <span class="message-attachment-name">
-                        ${escapeHtml(attachment.file_name)}
+                    <span class="message-native-file-action">
+                        View ${extension} file
                     </span>
 
-                    <span class="message-attachment-type">
+                    <span class="message-native-file-shared">
+                        Shared with you
+                    </span>
+
+                    <span class="message-native-file-name">
+                        ${escapeHtml(
+                            attachment.file_name
+                        )}
+                    </span>
+
+                    <span class="message-native-file-meta">
                         ${escapeHtml(label)}
                         ·
-                        ${formatFileSize(attachment.file_size)}
+                        ${formatFileSize(
+                            attachment.file_size
+                        )}
                     </span>
 
                 </span>
@@ -2647,12 +2661,9 @@ function renderMessageAttachment(
         `;
     }
 
-
     /*
-     * Normal files and .lyrdem continue using
-     * the existing attachment behavior for now.
+     * NORMAL FILE
      */
-
     return `
         <button
             type="button"
@@ -2672,13 +2683,17 @@ function renderMessageAttachment(
             <span class="message-attachment-info">
 
                 <span class="message-attachment-name">
-                    ${escapeHtml(attachment.file_name)}
+                    ${escapeHtml(
+                        attachment.file_name
+                    )}
                 </span>
 
                 <span class="message-attachment-type">
                     ${escapeHtml(label)}
                     ·
-                    ${formatFileSize(attachment.file_size)}
+                    ${formatFileSize(
+                        attachment.file_size
+                    )}
                 </span>
 
             </span>
@@ -2688,7 +2703,6 @@ function renderMessageAttachment(
 }
 
 function setupAttachmentDownloads() {
-
     document
         .querySelectorAll(
             ".message-file-attachment"
@@ -2706,18 +2720,30 @@ function setupAttachmentDownloads() {
                         return;
                     }
 
+                    /*
+                     * LYRDEM
+                     */
+                    if (
+                        this.classList.contains(
+                            "message-lyrdem-attachment"
+                        )
+                    ) {
+                        window.location.href =
+                            `lyrdem-viewer.html?attachment=${encodeURIComponent(
+                                attachmentId
+                            )}`;
+
+                        return;
+                    }
 
                     /*
-                     * PRODEM files must ONLY be opened
-                     * through the dedicated PRODEM viewer.
+                     * PRODEM
                      */
-
                     if (
                         this.classList.contains(
                             "message-prodem-attachment"
                         )
                     ) {
-
                         window.location.href =
                             `prodem-viewer.html?attachment=${encodeURIComponent(
                                 attachmentId
@@ -2726,19 +2752,15 @@ function setupAttachmentDownloads() {
                         return;
                     }
 
-
                     /*
-                     * Existing behavior for normal
-                     * downloadable attachments.
+                     * NORMAL FILE
                      */
-
                     const storagePath =
                         this.dataset.storagePath;
 
                     if (!storagePath) {
                         return;
                     }
-
 
                     const {
                         data,
@@ -2754,9 +2776,7 @@ function setupAttachmentDownloads() {
                                 60 * 10
                             );
 
-
                     if (error) {
-
                         console.error(
                             "Could not create attachment URL:",
                             error
@@ -2765,9 +2785,7 @@ function setupAttachmentDownloads() {
                         return;
                     }
 
-
                     if (data?.signedUrl) {
-
                         window.open(
                             data.signedUrl,
                             "_blank",
