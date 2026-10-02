@@ -1491,6 +1491,22 @@ async function loadAppSpaces(
 
 }
 
+function formatSpaceType(type) {
+
+    const labels = {
+        general: "General Space",
+        project: "Project Space",
+        massive_project: "Massive Project Space",
+        info: "Info Space",
+        meeting: "Meeting Space",
+        music: "Music Space",
+        creative: "Creative Space",
+        app_creating: "App Creating Space"
+    };
+
+    return labels[type] || "Space";
+}
+
 /* ============================================================
    SELECT SPACE
 ============================================================ */
@@ -1529,18 +1545,62 @@ async function selectSpace(spaceId) {
         const spacePlaceholder = document.querySelector(".space-placeholder");
 
         if (spaceHeader) {
-            spaceHeader.innerHTML = `
-                <div class="space-header-icon">
-                    ${getSpaceIcon(space.space_type)}
-                </div>
+spaceHeader.innerHTML = `
+    <div class="space-header-main">
 
-                <div>
-                    <h2>${escapeHtml(space.name)}</h2>
-                    <p>${escapeHtml(
-                        space.description || "Communication for this Space."
-                    )}</p>
-                </div>
-            `;
+        <div class="space-header-icon">
+            ${getSpaceIcon(space.space_type)}
+        </div>
+
+        <div class="space-header-info">
+
+            <div class="space-header-title-row">
+
+                <h2>
+                    ${escapeHtml(space.name)}
+                </h2>
+
+                <span class="space-header-type">
+                    ${escapeHtml(
+                        formatSpaceType(space.space_type)
+                    )}
+                </span>
+
+            </div>
+
+            <p>
+                ${escapeHtml(
+                    space.description ||
+                    "Communication for this Space."
+                )}
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="space-header-actions">
+
+        <button
+            type="button"
+            class="space-header-action"
+            id="space-members-button"
+            title="Members"
+        >
+            Members
+        </button>
+
+        <button
+            type="button"
+            class="space-header-action space-header-more"
+            id="space-more-button"
+            title="More"
+        >
+            ⋯
+        </button>
+
+    </div>
+`;
         }
 
         if (spacePlaceholder) {
