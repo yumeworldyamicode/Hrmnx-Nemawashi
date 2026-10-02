@@ -9,6 +9,13 @@
 const PRODEM_MAGIC = "NMWPRODEM";
 const PRODEM_VERSION = 1;
 
+
+/*
+ * --------------------------------------------------
+ * Binary helpers
+ * --------------------------------------------------
+ */
+
 function writeAscii(view, offset, text) {
     for (let i = 0; i < text.length; i++) {
         view.setUint8(
@@ -17,6 +24,7 @@ function writeAscii(view, offset, text) {
         );
     }
 }
+
 
 function readAscii(view, offset, length) {
     let result = "";
@@ -32,9 +40,11 @@ function readAscii(view, offset, length) {
 
 
 /*
- * Convert Float32 audio samples
- * into signed 16-bit samples.
+ * --------------------------------------------------
+ * Audio sample conversion
+ * --------------------------------------------------
  */
+
 function floatToInt16(sample) {
     const clamped = Math.max(
         -1,
@@ -54,42 +64,52 @@ function floatToInt16(sample) {
 
 
 /*
- * Nemawashi sample transformation.
+ * Convert signed 16-bit PCM into an unsigned
+ * 16-bit representation.
  *
- * This is deliberately reversible.
- *
- * It is NOT encryption.
+ * This preserves every possible int16 value.
  */
-function encodeSample(sample, previousSample) {
-    const delta =
-        sample - previousSample;
-
-    /*
-     * Store the delta using unsigned
-     * 16-bit wrapping.
-     */
-    return (
-        delta +
-        32768
-    ) & 0xffff;
+function encodeSample(sample) {
+    return sample & 0xffff;
 }
 
 
-function decodeSample(encoded, previousSample) {
-    const delta =
-        encoded - 32768;
+function decodeSample(encoded) {
+    if (encoded & 0x8000) {
+        return encoded - 0x10000;
+    }
 
-    return (
-        previousSample +
-        delta
-    );
+    return encoded;
 }
 
 
 /*
- * Encode an AudioBuffer into .prodem
+ * --------------------------------------------------
+ * PRODEM encoder
+ * --------------------------------------------------
+ *
+ * Header:
+ *
+ * magic       9 bytes
+ * version     1 byte
+ * sampleRate  4 bytes
+ * channels    1 byte
+ * samples     4 bytes
+ *
+ * Audio data:
+ *
+ * signed 16-bit PCM
+ *
+ * Channels are stored channel-by-channel.
  */
+
 async function encodeProdem(audioBuffer) {
+
+    if (!audioBuffer) {
+        throw new Error(
+            "No AudioBuffer was provided."
+        );
+    }
 
     const sampleRate =
         audioBuffer.sampleRate;
@@ -100,15 +120,27 @@ async function encodeProdem(audioBuffer) {
     const sampleCount =
         audioBuffer.length;
 
-    /*
-     * Header:
-     *
-     * magic       9 bytes
-     * version     1 byte
-     * sampleRate  4 bytes
-     * channels    1 byte
-     * samples     4 bytes
-     */
+
+    if (
+        !Number.isInteger(sampleRate) ||
+        sampleRate <= 0
+    ) {
+        throw new Error(
+            "Invalid sample rate."
+        );
+    }
+
+
+    if (
+        !Number.isInteger(channels) ||
+        channels <= 0 ||
+        channels > 255
+    ) {
+        throw new Error(
+            "Invalid channel count."
+        );
+    }
+
 
     const headerSize =
         9 + 1 + 4 + 1 + 4;
@@ -122,6 +154,7 @@ async function encodeProdem(audioBuffer) {
         headerSize +
         totalSamples * bytesPerSample;
 
+
     const buffer =
         new ArrayBuffer(totalSize);
 
@@ -130,9 +163,11 @@ async function encodeProdem(audioBuffer) {
 
     let offset = 0;
 
+
     /*
      * Magic
      */
+
     writeAscii(
         view,
         offset,
@@ -141,9 +176,11 @@ async function encodeProdem(audioBuffer) {
 
     offset += 9;
 
+
     /*
      * Version
      */
+
     view.setUint8(
         offset,
         PRODEM_VERSION
@@ -151,9 +188,11 @@ async function encodeProdem(audioBuffer) {
 
     offset += 1;
 
+
     /*
      * Sample rate
      */
+
     view.setUint32(
         offset,
         sampleRate,
@@ -162,9 +201,11 @@ async function encodeProdem(audioBuffer) {
 
     offset += 4;
 
+
     /*
      * Channels
      */
+
     view.setUint8(
         offset,
         channels
@@ -172,9 +213,11 @@ async function encodeProdem(audioBuffer) {
 
     offset += 1;
 
+
     /*
      * Number of frames/samples
      */
+
     view.setUint32(
         offset,
         sampleCount,
@@ -187,6 +230,7 @@ async function encodeProdem(audioBuffer) {
     /*
      * Encode channel-by-channel.
      */
+
     for (
         let channel = 0;
         channel < channels;
@@ -198,7 +242,6 @@ async function encodeProdem(audioBuffer) {
                 channel
             );
 
-        let previousSample = 0;
 
         for (
             let i = 0;
@@ -211,11 +254,12 @@ async function encodeProdem(audioBuffer) {
                     samples[i]
                 );
 
+
             const encoded =
                 encodeSample(
-                    pcm,
-                    previousSample
+                    pcm
                 );
+
 
             view.setUint16(
                 offset,
@@ -224,10 +268,9 @@ async function encodeProdem(audioBuffer) {
             );
 
             offset += 2;
-
-            previousSample = pcm;
         }
     }
+
 
     return new Blob(
         [buffer],
@@ -240,23 +283,46 @@ async function encodeProdem(audioBuffer) {
 
 
 /*
- * Decode a .prodem Blob.
+ * --------------------------------------------------
+ * PRODEM decoder
+ * --------------------------------------------------
  *
  * Returns an AudioBuffer.
  */
+
 async function decodeProdem(blob) {
+
+    if (!blob) {
+        throw new Error(
+            "No PRODEM file was provided."
+        );
+    }
+
 
     const arrayBuffer =
         await blob.arrayBuffer();
+
+
+    if (
+        arrayBuffer.byteLength <
+        19
+    ) {
+        throw new Error(
+            "PRODEM file is too small."
+        );
+    }
+
 
     const view =
         new DataView(arrayBuffer);
 
     let offset = 0;
 
+
     /*
      * Verify magic.
      */
+
     const magic =
         readAscii(
             view,
@@ -266,29 +332,38 @@ async function decodeProdem(blob) {
 
     offset += 9;
 
+
     if (magic !== PRODEM_MAGIC) {
         throw new Error(
             "This is not a valid Nemawashi PRODEM file."
         );
     }
 
+
     /*
      * Version.
      */
+
     const version =
         view.getUint8(offset);
 
     offset += 1;
 
-    if (version !== PRODEM_VERSION) {
+
+    if (
+        version !==
+        PRODEM_VERSION
+    ) {
         throw new Error(
             `Unsupported PRODEM version: ${version}`
         );
     }
 
+
     /*
      * Audio information.
      */
+
     const sampleRate =
         view.getUint32(
             offset,
@@ -297,10 +372,12 @@ async function decodeProdem(blob) {
 
     offset += 4;
 
+
     const channels =
         view.getUint8(offset);
 
     offset += 1;
+
 
     const sampleCount =
         view.getUint32(
@@ -312,12 +389,66 @@ async function decodeProdem(blob) {
 
 
     /*
-     * Create an offline AudioContext
-     * for decoding.
+     * Validate header values.
      */
+
+    if (
+        sampleRate <= 0
+    ) {
+        throw new Error(
+            "Invalid PRODEM sample rate."
+        );
+    }
+
+
+    if (
+        channels <= 0
+    ) {
+        throw new Error(
+            "Invalid PRODEM channel count."
+        );
+    }
+
+
+    if (
+        sampleCount <= 0
+    ) {
+        throw new Error(
+            "Invalid PRODEM sample count."
+        );
+    }
+
+
+    /*
+     * Make sure the file actually contains
+     * enough bytes for the declared audio.
+     */
+
+    const requiredAudioBytes =
+        sampleCount *
+        channels *
+        2;
+
+
+    if (
+        offset +
+        requiredAudioBytes >
+        arrayBuffer.byteLength
+    ) {
+        throw new Error(
+            "PRODEM file is incomplete."
+        );
+    }
+
+
+    /*
+     * Create an AudioContext.
+     */
+
     const AudioContextClass =
         window.AudioContext ||
         window.webkitAudioContext;
+
 
     if (!AudioContextClass) {
         throw new Error(
@@ -325,72 +456,86 @@ async function decodeProdem(blob) {
         );
     }
 
+
     const audioContext =
         new AudioContextClass();
 
-    const audioBuffer =
-        audioContext.createBuffer(
-            channels,
-            sampleCount,
-            sampleRate
-        );
 
+    try {
 
-    /*
-     * Decode each channel.
-     */
-    for (
-        let channel = 0;
-        channel < channels;
-        channel++
-    ) {
-
-        const output =
-            audioBuffer.getChannelData(
-                channel
+        const audioBuffer =
+            audioContext.createBuffer(
+                channels,
+                sampleCount,
+                sampleRate
             );
 
-        let previousSample = 0;
+
+        /*
+         * Decode each channel.
+         */
 
         for (
-            let i = 0;
-            i < sampleCount;
-            i++
+            let channel = 0;
+            channel < channels;
+            channel++
         ) {
 
-            if (
-                offset + 2 >
-                arrayBuffer.byteLength
+            const output =
+                audioBuffer.getChannelData(
+                    channel
+                );
+
+
+            for (
+                let i = 0;
+                i < sampleCount;
+                i++
             ) {
-                await audioContext.close();
 
-                throw new Error(
-                    "PRODEM file is incomplete."
-                );
+                const encoded =
+                    view.getUint16(
+                        offset,
+                        true
+                    );
+
+                offset += 2;
+
+
+                const pcm =
+                    decodeSample(
+                        encoded
+                    );
+
+
+                /*
+                 * Convert signed 16-bit PCM
+                 * back into Web Audio Float32.
+                 */
+
+                if (pcm < 0) {
+
+                    output[i] =
+                        pcm / 32768;
+
+                } else {
+
+                    output[i] =
+                        pcm / 32767;
+                }
             }
-
-            const encoded =
-                view.getUint16(
-                    offset,
-                    true
-                );
-
-            offset += 2;
-
-            const pcm =
-                decodeSample(
-                    encoded,
-                    previousSample
-                );
-
-            output[i] =
-                pcm / 32768;
-
-            previousSample = pcm;
         }
+
+
+        return audioBuffer;
+
+    } finally {
+
+        /*
+         * The AudioBuffer has already been created,
+         * so the temporary context can be closed.
+         */
+
+        await audioContext.close();
     }
-
-    await audioContext.close();
-
-    return audioBuffer;
 }
