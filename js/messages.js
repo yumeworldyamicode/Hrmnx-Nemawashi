@@ -1624,16 +1624,21 @@ async function loadMessages(spaceId) {
 
     messagesList.innerHTML = messages
         .map((message, index) => {
-            const previousMessage = messages[index - 1] || null;
+            const previousMessage =
+                index > 0 ? messages[index - 1] : null;
+
+            const previousProfile =
+                previousMessage
+                    ? profileMap.get(previousMessage.user_id) || null
+                    : null;
 
             return renderMessage(
                 message,
                 profileMap.get(message.user_id) || null,
                 user?.id || null,
-                previousMessage
-                    ? profileMap.get(previousMessage.user_id) || null
-                    : null,
-                previousMessage
+                previousProfile,
+                previousMessage,
+                index === 0
             );
         })
         .join("");
@@ -1646,7 +1651,8 @@ function renderMessage(
     profile,
     currentUserId,
     previousProfile,
-    previousMessage
+    previousMessage,
+    isFirstMessage
 ) {
     const date = new Date(message.created_at);
 
@@ -1655,36 +1661,51 @@ function renderMessage(
     const isOwnMessage =
         String(message.user_id) === String(currentUserId);
 
-    const previousDate = previousMessage
-        ? new Date(previousMessage.created_at)
-        : null;
+    /*
+     * Clean whitespace for display as well.
+     * This fixes older messages that were already saved
+     * with accidental indentation/spaces.
+     */
+    const cleanContent = String(message.content || "")
+        .replace(/^[ \t]+|[ \t]+$/gm, "")
+        .trim();
 
-    const sameDay =
-        previousDate &&
-        date.toDateString() === previousDate.toDateString();
+    let sameDay = false;
+    let sameUser = false;
+    let timeDifference = Infinity;
 
-    const sameUser =
-        previousMessage &&
-        String(previousMessage.user_id) === String(message.user_id);
+    if (previousMessage) {
+        const previousDate =
+            new Date(previousMessage.created_at);
 
-    const timeDifference = previousDate
-        ? date.getTime() - previousDate.getTime()
-        : Infinity;
+        sameDay =
+            date.getFullYear() === previousDate.getFullYear() &&
+            date.getMonth() === previousDate.getMonth() &&
+            date.getDate() === previousDate.getDate();
+
+        sameUser =
+            String(previousMessage.user_id) ===
+            String(message.user_id);
+
+        timeDifference =
+            date.getTime() - previousDate.getTime();
+    }
 
     /*
-     * Messages are grouped when the same person sends them
-     * within 5 minutes of each other.
+     * Same person + same day + within five minutes.
      */
     const grouped =
+        !isFirstMessage &&
         sameDay &&
         sameUser &&
+        timeDifference >= 0 &&
         timeDifference <= 5 * 60 * 1000;
 
     /*
-     * A longer gap during the same day gets a small time divider.
-     * Here we use 2 hours.
+     * Long inactivity period.
      */
     const longGap =
+        !isFirstMessage &&
         sameDay &&
         timeDifference >= 2 * 60 * 60 * 1000;
 
@@ -1702,9 +1723,13 @@ function renderMessage(
     let divider = "";
 
     /*
-     * New calendar day
+     * ONLY show the day divider when the actual
+     * calendar day changed.
      */
-    if (!sameDay) {
+    if (
+        isFirstMessage ||
+        !sameDay
+    ) {
         divider = `
             <div class="message-day-divider">
                 <span>${escapeHtml(dayLabel)}</span>
@@ -1713,7 +1738,8 @@ function renderMessage(
     }
 
     /*
-     * Long period of inactivity during the same day
+     * Otherwise, only show a small time divider
+     * after a very long period.
      */
     else if (longGap) {
         divider = `
@@ -1724,8 +1750,11 @@ function renderMessage(
     }
 
     /*
+     * -------------------------
      * YOUR MESSAGE
+     * -------------------------
      */
+
     if (isOwnMessage) {
         return `
             ${divider}
@@ -1738,12 +1767,14 @@ function renderMessage(
                 "
                 data-message-id="${escapeHtml(message.id)}"
             >
+
                 <div class="message-body">
 
                     ${
                         !grouped
                             ? `
                                 <div class="message-meta message-own-meta">
+
                                     <span class="message-author">
                                         you
                                     </span>
@@ -1761,23 +1792,28 @@ function renderMessage(
                                             `
                                             : ""
                                     }
+
                                 </div>
                             `
                             : ""
                     }
 
                     <div class="message-bubble message-own-bubble">
-                        ${escapeHtml(message.content)}
+                        ${escapeHtml(cleanContent)}
                     </div>
 
                 </div>
+
             </article>
         `;
     }
 
     /*
+     * -------------------------
      * SOMEONE ELSE'S MESSAGE
+     * -------------------------
      */
+
     const avatar = profile?.avatar_url
         ? `
             <img
@@ -1871,7 +1907,7 @@ function renderMessage(
                 }
 
                 <div class="message-bubble message-other-bubble">
-                    ${escapeHtml(message.content)}
+                    ${escapeHtml(cleanContent)}
                 </div>
 
             </div>
@@ -1948,40 +1984,7 @@ function setupMessageComposer() {
             sendButton.disabled = false;
         }
 
-        const messagesList = document.getElementById("messages-list");
-
-        if (messagesList) {
-            const emptyState = messagesList.querySelector(".messages-empty");
-
-            if (emptyState) {
-                messagesList.innerHTML = "";
-            }
-
-            let profile = null;
-
-            const {
-                data: profileData
-            } = await supabaseClient
-                .from("profiles")
-                .select(`
-                    id,
-                    display_name,
-                    username,
-                    avatar_url,
-                    is_staff
-                `)
-                .eq("id", user.id)
-                .maybeSingle();
-
-            profile = profileData;
-
-               messagesList.insertAdjacentHTML(
-                   "beforeend",
-                   renderMessage(message, profile)
-               );
-
-               scrollMessagesToBottom();
-           }
+         await loadMessages(currentSpace.id);
 
         input.focus();
     });
