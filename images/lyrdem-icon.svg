@@ -1,0 +1,28 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="path-1-inside-1_166_2" fill="white">
+<rect x="118" y="118" width="964" height="964" rx="48"/>
+</mask>
+<rect x="118" y="118" width="964" height="964" rx="48" stroke="url(#paint0_linear_166_2)" stroke-width="284" mask="url(#path-1-inside-1_166_2)"/>
+<mask id="path-2-inside-2_166_2" fill="white">
+<rect x="357" y="363" width="478" height="180" rx="48"/>
+</mask>
+<rect x="357" y="363" width="478" height="180" rx="48" stroke="url(#paint1_linear_166_2)" stroke-width="180" mask="url(#path-2-inside-2_166_2)"/>
+<mask id="path-3-inside-3_166_2" fill="white">
+<rect x="357" y="649" width="478" height="180" rx="48"/>
+</mask>
+<rect x="357" y="649" width="478" height="180" rx="48" stroke="url(#paint2_linear_166_2)" stroke-width="180" mask="url(#path-3-inside-3_166_2)"/>
+<defs>
+<linearGradient id="paint0_linear_166_2" x1="600" y1="118" x2="600" y2="1082" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="#636BD8"/>
+</linearGradient>
+<linearGradient id="paint1_linear_166_2" x1="596" y1="363" x2="596" y2="543" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="#636BD8"/>
+</linearGradient>
+<linearGradient id="paint2_linear_166_2" x1="596" y1="649" x2="596" y2="829" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="#636BD8"/>
+</linearGradient>
+</defs>
+</svg>
