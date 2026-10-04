@@ -1703,3 +1703,757 @@ footer div {
     }
 
 }
+
+/* ============================================================
+   NEMAWASHI MUSIC SPACE
+============================================================ */
+
+.music-space-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(0,0,0,.07);
+    background: rgba(255,255,255,.72);
+    backdrop-filter: blur(18px);
+}
+
+.music-space-project {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-width: 0;
+}
+
+.music-project-icon {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: #111;
+    color: white;
+    font-size: 20px;
+}
+
+.music-project-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.music-project-label {
+    font-size: 9px;
+    letter-spacing: .14em;
+    opacity: .45;
+    font-weight: 700;
+}
+
+.music-project-copy strong {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.music-project-copy small {
+    margin-top: 2px;
+    opacity: .5;
+    font-size: 11px;
+}
+
+.music-action-button {
+    border: 0;
+    border-radius: 12px;
+    padding: 11px 15px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    transition: transform .2s ease, opacity .2s ease;
+}
+
+.music-action-button:hover {
+    transform: translateY(-1px);
+}
+
+.music-action-button.primary {
+    background: #111;
+    color: #fff;
+}
+
+
+/* ============================================================
+   SETUP OVERLAY
+============================================================ */
+
+.music-call-setup {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity .28s ease, visibility .28s ease;
+}
+
+.music-call-setup.visible {
+    visibility: visible;
+    opacity: 1;
+}
+
+.music-call-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(12,12,15,.48);
+    backdrop-filter: blur(12px);
+}
+
+.music-call-window {
+    position: relative;
+    width: min(680px, 100%);
+    max-height: min(760px, calc(100vh - 48px));
+    overflow: auto;
+    border-radius: 28px;
+    background: #fff;
+    box-shadow: 0 30px 90px rgba(0,0,0,.22);
+    padding: 34px;
+    transform: translateY(18px) scale(.98);
+    transition: transform .32s cubic-bezier(.22,1,.36,1);
+}
+
+.music-call-setup.visible .music-call-window {
+    transform: translateY(0) scale(1);
+}
+
+.music-call-close {
+    position: absolute;
+    top: 17px;
+    right: 19px;
+    width: 35px;
+    height: 35px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0,0,0,.055);
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+}
+
+.music-call-progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 30px;
+}
+
+.music-call-progress span {
+    height: 3px;
+    flex: 1;
+    border-radius: 10px;
+    background: rgba(0,0,0,.08);
+    transition: background .3s ease;
+}
+
+.music-call-progress span.active,
+.music-call-progress span.completed {
+    background: #111;
+}
+
+.music-call-question {
+    min-height: 390px;
+    animation: musicQuestionEnter .34s cubic-bezier(.22,1,.36,1);
+}
+
+@keyframes musicQuestionEnter {
+    from {
+        opacity: 0;
+        transform: translateX(28px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.question-leaving-next {
+    animation: musicQuestionLeaveNext .26s ease forwards;
+}
+
+.question-leaving-previous {
+    animation: musicQuestionLeavePrevious .26s ease forwards;
+}
+
+@keyframes musicQuestionLeaveNext {
+    to {
+        opacity: 0;
+        transform: translateX(-28px);
+    }
+}
+
+@keyframes musicQuestionLeavePrevious {
+    to {
+        opacity: 0;
+        transform: translateX(28px);
+    }
+}
+
+.music-step-heading {
+    margin-bottom: 28px;
+}
+
+.music-step-number {
+    display: block;
+    margin-bottom: 9px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .15em;
+    opacity: .4;
+}
+
+.music-step-heading h2 {
+    margin: 0;
+    font-size: clamp(25px, 4vw, 34px);
+    line-height: 1.1;
+    letter-spacing: -.035em;
+}
+
+.music-step-heading p {
+    max-width: 500px;
+    margin: 11px 0 0;
+    color: rgba(0,0,0,.52);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+/* ============================================================
+   INVITES
+============================================================ */
+
+.music-invite-search input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 13px;
+    padding: 13px 15px;
+    outline: none;
+    font: inherit;
+    background: #fafafa;
+}
+
+.music-invite-search input:focus {
+    border-color: rgba(0,0,0,.3);
+}
+
+.music-invite-list {
+    margin-top: 12px;
+    max-height: 245px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.music-person-option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 13px;
+    background: transparent;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+    gap: 11px;
+    font: inherit;
+}
+
+.music-person-option:hover {
+    background: rgba(0,0,0,.035);
+}
+
+.music-person-option.selected {
+    background: rgba(0,0,0,.055);
+    border-color: rgba(0,0,0,.08);
+}
+
+.music-person-option img,
+.music-person-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eee;
+    font-size: 13px;
+}
+
+.music-person-option > span:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.music-person-option small {
+    margin-top: 2px;
+    opacity: .45;
+}
+
+.music-person-check {
+    width: 24px;
+    text-align: center;
+    font-weight: 800;
+}
+
+
+/* ============================================================
+   DAW
+============================================================ */
+
+.music-select-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    opacity: .45;
+}
+
+.music-large-select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 14px;
+    background: #fafafa;
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+
+/* ============================================================
+   CHOICES
+============================================================ */
+
+.music-choice-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.music-choice-card {
+    min-height: 145px;
+    padding: 18px;
+    text-align: left;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 18px;
+    background: #fafafa;
+    cursor: pointer;
+    font: inherit;
+    transition: .22s ease;
+}
+
+.music-choice-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0,0,0,.18);
+}
+
+.music-choice-card.selected {
+    border-color: #111;
+    background: #111;
+    color: #fff;
+}
+
+.music-choice-icon {
+    display: block;
+    margin-bottom: 25px;
+    font-size: 21px;
+}
+
+.music-choice-card strong,
+.music-choice-card small {
+    display: block;
+}
+
+.music-choice-card strong {
+    font-size: 13px;
+}
+
+.music-choice-card small {
+    margin-top: 5px;
+    line-height: 1.45;
+    opacity: .55;
+}
+
+.music-choice-card.selected small {
+    opacity: .65;
+}
+
+.music-open-options {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 17px;
+    background: #f6f6f6;
+}
+
+.music-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 11px 4px;
+}
+
+.music-toggle-row + .music-toggle-row {
+    border-top: 1px solid rgba(0,0,0,.07);
+}
+
+.music-toggle-row span {
+    display: flex;
+    flex-direction: column;
+}
+
+.music-toggle-row strong {
+    font-size: 12px;
+}
+
+.music-toggle-row small {
+    margin-top: 3px;
+    opacity: .48;
+    font-size: 11px;
+}
+
+.music-toggle-row input {
+    width: 18px;
+    height: 18px;
+}
+
+
+/* ============================================================
+   ANNOUNCEMENTS
+============================================================ */
+
+.music-announcement-options {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.music-announcement-option {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    padding: 13px;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 15px;
+    background: #fafafa;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+}
+
+.music-announcement-option.selected {
+    border-color: #111;
+    background: #111;
+    color: #fff;
+}
+
+.music-announcement-icon {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(0,0,0,.07);
+    font-weight: 800;
+}
+
+.music-announcement-option.selected
+.music-announcement-icon {
+    background: rgba(255,255,255,.12);
+}
+
+.music-announcement-option > span:nth-child(2) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.music-announcement-option small {
+    margin-top: 3px;
+    opacity: .5;
+}
+
+
+/* ============================================================
+   YOUTUBE
+============================================================ */
+
+.youtube-collaborator-card {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 14px;
+    padding: 14px;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 17px;
+    background: #fafafa;
+}
+
+.youtube-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    background: #111;
+    color: #fff;
+}
+
+.youtube-collaborator-card > div:nth-child(2) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.youtube-collaborator-card span {
+    font-size: 8px;
+    letter-spacing: .13em;
+    opacity: .45;
+    font-weight: 800;
+}
+
+.youtube-collaborator-card strong {
+    margin-top: 3px;
+    font-size: 13px;
+}
+
+.youtube-collaborator-card small {
+    margin-top: 2px;
+    opacity: .5;
+}
+
+.youtube-check {
+    font-weight: 800;
+}
+
+.youtube-premiere-toggle {
+    margin-top: 13px;
+    padding: 14px;
+    border-radius: 15px;
+    background: #f6f6f6;
+}
+
+
+/* ============================================================
+   REVIEW
+============================================================ */
+
+.music-review {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+
+.music-review > div {
+    padding: 14px;
+    border-radius: 14px;
+    background: #f6f6f6;
+}
+
+.music-review span,
+.music-review strong {
+    display: block;
+}
+
+.music-review span {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .13em;
+    opacity: .42;
+}
+
+.music-review strong {
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+.music-review-notice {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 12px;
+    padding: 14px;
+    border-radius: 15px;
+    background: #111;
+    color: #fff;
+}
+
+.music-review-notice strong {
+    font-size: 12px;
+}
+
+.music-review-notice span {
+    font-size: 11px;
+    opacity: .65;
+}
+
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+
+.music-call-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0,0,0,.07);
+}
+
+.music-call-back,
+.music-call-next {
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.music-call-back {
+    background: transparent;
+}
+
+.music-call-back:disabled {
+    opacity: .2;
+    cursor: default;
+}
+
+.music-call-next {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #111;
+    color: #fff;
+}
+
+.music-call-next span {
+    font-size: 16px;
+}
+
+
+/* ============================================================
+   CALL STARTED
+============================================================ */
+
+.music-call-live-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin: 10px 14px;
+    padding: 13px 15px;
+    border-radius: 15px;
+    background: #111;
+    color: #fff;
+}
+
+.music-call-live-banner > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.music-call-live-banner > div > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.music-call-live-banner strong {
+    font-size: 12px;
+}
+
+.music-call-live-banner small {
+    margin-top: 2px;
+    opacity: .55;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    animation: musicLivePulse 1.4s infinite;
+}
+
+@keyframes musicLivePulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .3;
+    }
+}
+
+.music-call-live-banner button {
+    border: 0;
+    border-radius: 10px;
+    padding: 9px 12px;
+    background: #fff;
+    color: #111;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 650px) {
+
+    .music-space-controls {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .music-space-actions {
+        width: 100%;
+    }
+
+    .music-action-button {
+        width: 100%;
+    }
+
+    .music-call-window {
+        padding: 25px 20px;
+        border-radius: 22px;
+    }
+
+    .music-choice-grid,
+    .music-review {
+        grid-template-columns: 1fr;
+    }
+
+    .music-call-question {
+        min-height: 430px;
+    }
+
+}
