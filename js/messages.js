@@ -5125,77 +5125,74 @@ function closeMusicCallSetup() {
    START CALL
 ============================================================ */
 
-function startMusicCall() {
+async function startMusicCall() {
+    const setup = document.querySelector(".music-call-setup");
 
-    /*
-     * This first version creates the complete client-side
-     * call configuration.
-     *
-     * Supabase/Nemawashi Business/YouTube creation will be
-     * connected next.
-     */
+    if (!setup) return;
 
-    const callConfiguration = {
+    const projectName =
+        currentSpace?.name ||
+        "Untitled Music Project";
 
-        spaceId:
-            currentSpace?.id || null,
+    const callId =
+        "music-call-" +
+        Date.now() +
+        "-" +
+        Math.random().toString(36).slice(2, 8);
 
-        projectId:
-            currentSpace?.project_id || null,
+    // Make sure the official Hrmnx collaborator can never be removed.
+    const callConfig = {
+        id: callId,
+        projectName: projectName,
 
-        host:
-            "current-user",
+        invitees: [...musicCallState.invitees],
 
-        invitees:
-            [...musicCallState.invitees],
+        daw: musicCallState.daw || "Not specified",
 
-        daw:
-            musicCallState.daw,
+        openSpace: musicCallState.openSpace,
+        visitors: musicCallState.visitors,
+        visitorChat: musicCallState.visitorChat,
 
-        openSpace:
-            musicCallState.openSpace,
+        announcements: {
+            kiki: !!musicCallState.announcements.kiki,
+            serashio: !!musicCallState.announcements.serashio,
+            links: !!musicCallState.announcements.links
+        },
 
-        visitors:
-            musicCallState.visitors,
+        livestream: !!musicCallState.livestream,
+        youtubePremiere: !!musicCallState.youtubePremiere,
 
-        visitorChat:
-            musicCallState.visitorChat,
+        youtubeCollaborator: {
+            ...NEMAWASHI_MUSIC_CONFIG.youtubeCollaborator
+        },
 
-        announcements:
-            {
-                ...musicCallState.announcements
-            },
-
-        livestream:
-            musicCallState.livestream,
-
-        youtubePremiere:
-            musicCallState.youtubePremiere,
-
-        youtubeCollaborator:
-            {
-                ...NEMAWASHI_MUSIC_CONFIG
-                    .youtubeCollaborator
-            }
-
+        createdAt: new Date().toISOString()
     };
 
+    // Store temporarily so the room can access it.
+    window.activeNemawashiMusicCall = callConfig;
 
-    console.log(
-        "NEMAWASHI MUSIC CALL:",
-        callConfiguration
-    );
+    setup.innerHTML = `
+        <div class="music-call-setup-header">
+            <div class="music-call-setup-kicker">
+                MUSIC SPACE
+            </div>
 
+            <div class="music-call-setup-title">
+                Creating your music call…
+            </div>
 
-    closeMusicCallSetup();
+            <div class="music-call-setup-description">
+                Preparing the collaboration room for
+                ${escapeMusicHTML(projectName)}.
+            </div>
+        </div>
+    `;
 
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    showMusicCallStarted(
-        callConfiguration
-    );
-
+    openMusicCallRoom(callConfig);
 }
-
 
 /* ============================================================
    CALL STARTED UI
@@ -5267,5 +5264,909 @@ function showMusicCallStarted(
     spaceChat.prepend(
         banner
     );
+
+}
+
+/* =========================================================
+   NEMAWASHI MUSIC CALL ROOM
+   ========================================================= */
+
+function escapeMusicHTML(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+/* ---------------------------------------------------------
+   OPEN CALL ROOM
+   --------------------------------------------------------- */
+
+function openMusicCallRoom(callConfig) {
+
+    const placeholder =
+        document.querySelector(".space-placeholder");
+
+    const chat =
+        document.querySelector(".space-chat");
+
+    const target = placeholder || chat;
+
+    if (!target) {
+        console.error(
+            "Nemawashi Music Space: Could not find space container."
+        );
+        return;
+    }
+
+    target.innerHTML = createMusicCallRoomHTML(callConfig);
+
+    target.classList.add("music-room-active");
+
+    setupMusicCallRoom(callConfig);
+}
+
+
+/* ---------------------------------------------------------
+   ROOM HTML
+   --------------------------------------------------------- */
+
+function createMusicCallRoomHTML(callConfig) {
+
+    const participantCount =
+        1 + (callConfig.invitees?.length || 0);
+
+    const openLabel =
+        callConfig.openSpace
+            ? "Open Space"
+            : "Private Space";
+
+    return `
+        <div class="music-call-window">
+
+            <!-- HEADER -->
+
+            <div class="music-call-header">
+
+                <div class="music-call-header-left">
+
+                    <div class="music-call-header-title">
+
+                        <span class="music-call-live-dot"></span>
+
+                        <span>
+                            ${escapeMusicHTML(callConfig.projectName)}
+                        </span>
+
+                    </div>
+
+                    <div class="music-call-header-meta">
+
+                        ${escapeMusicHTML(callConfig.daw)}
+                        ·
+                        ${participantCount}
+                        participant${participantCount === 1 ? "" : "s"}
+                        ·
+                        ${openLabel}
+
+                    </div>
+
+                </div>
+
+
+                <div class="music-call-header-actions">
+
+                    ${
+                        callConfig.livestream
+                            ? `
+                                <button
+                                    class="music-action-button"
+                                    id="music-live-button"
+                                    type="button"
+                                >
+                                    ● Live
+                                </button>
+                              `
+                            : ""
+                    }
+
+                    <button
+                        class="music-action-button secondary"
+                        id="music-leave-call"
+                        type="button"
+                    >
+                        Leave call
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- MAIN STAGE -->
+
+            <div class="music-call-stage">
+
+                <!-- PROJECT -->
+
+                <div class="music-project-panel">
+
+                    <div class="music-project-panel-label">
+                        Current project
+                    </div>
+
+                    <div class="music-project-panel-title">
+                        ${escapeMusicHTML(callConfig.projectName)}
+                    </div>
+
+                    <div class="music-project-panel-daw">
+                        ${escapeMusicHTML(callConfig.daw)}
+                    </div>
+
+                </div>
+
+
+                <!-- ANNOUNCEMENTS -->
+
+                <div class="music-announcement-bar">
+
+                    ${
+                        callConfig.announcements.kiki
+                            ? `
+                                <button
+                                    class="music-announcement-button"
+                                    data-announcement="kiki"
+                                    type="button"
+                                >
+                                    KiKi
+                                </button>
+                              `
+                            : ""
+                    }
+
+                    ${
+                        callConfig.announcements.serashio
+                            ? `
+                                <button
+                                    class="music-announcement-button"
+                                    data-announcement="serashio"
+                                    type="button"
+                                >
+                                    Serashio
+                                </button>
+                              `
+                            : ""
+                    }
+
+                    ${
+                        callConfig.announcements.links
+                            ? `
+                                <button
+                                    class="music-announcement-button"
+                                    data-announcement="links"
+                                    type="button"
+                                >
+                                    Links
+                                </button>
+                              `
+                            : ""
+                    }
+
+                </div>
+
+
+                ${
+                    callConfig.livestream
+                        ? `
+                            <div class="music-live-banner">
+
+                                <span class="music-live-banner-dot"></span>
+
+                                <span>
+                                    YouTube livestream ready
+                                    ·
+                                    ${escapeMusicHTML(
+                                        callConfig.youtubeCollaborator.handle
+                                    )}
+                                </span>
+
+                            </div>
+                          `
+                        : ""
+                }
+
+
+                <!-- CHAT TABS -->
+
+                <div class="music-chat-tabs">
+
+                    <button
+                        type="button"
+                        class="music-chat-tab active"
+                        data-chat-tab="participants"
+                    >
+                        Nemawashi Chat
+                    </button>
+
+                    ${
+                        callConfig.openSpace &&
+                        callConfig.visitorChat
+                            ? `
+                                <button
+                                    type="button"
+                                    class="music-chat-tab"
+                                    data-chat-tab="visitors"
+                                >
+                                    Visitor Chat
+                                </button>
+                              `
+                            : ""
+                    }
+
+                </div>
+
+
+                <!-- CHAT -->
+
+                <div class="music-chat-area">
+
+                    <div
+                        class="music-chat-messages"
+                        id="music-chat-messages"
+                    ></div>
+
+
+                    <div class="music-chat-composer">
+
+                        <input
+                            id="music-chat-input"
+                            class="music-chat-input"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="Write a message..."
+                        />
+
+                        <button
+                            id="music-chat-send"
+                            class="music-chat-send"
+                            type="button"
+                            aria-label="Send message"
+                        >
+                            ➤
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PARTICIPANTS -->
+
+            <aside class="music-participants-panel">
+
+                <div class="music-participants-header">
+
+                    <div class="music-participants-title">
+                        Participants
+                    </div>
+
+                    <div class="music-participants-count">
+                        ${participantCount} in this call
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="music-participants-list"
+                    id="music-participants-list"
+                ></div>
+
+
+                ${
+                    callConfig.openSpace
+                        ? `
+                            <div class="music-participants-header">
+
+                                <div class="music-participants-title">
+                                    Open Space
+                                </div>
+
+                                <div class="music-participants-count">
+                                    Visitors can enter this room
+                                </div>
+
+                            </div>
+                          `
+                        : ""
+                }
+
+            </aside>
+
+        </div>
+    `;
+}
+
+
+/* ---------------------------------------------------------
+   INITIALIZE ROOM
+   --------------------------------------------------------- */
+
+function setupMusicCallRoom(callConfig) {
+
+    populateMusicParticipants(callConfig);
+
+    setupMusicChat(callConfig);
+
+    setupMusicChatTabs(callConfig);
+
+    setupMusicAnnouncementButtons(callConfig);
+
+    setupMusicLeaveButton();
+
+    setupMusicLiveButton(callConfig);
+
+    showMusicWelcomeMessage(callConfig);
+}
+
+
+/* ---------------------------------------------------------
+   PARTICIPANTS
+   --------------------------------------------------------- */
+
+function populateMusicParticipants(callConfig) {
+
+    const container =
+        document.getElementById("music-participants-list");
+
+    if (!container) return;
+
+    const participants = [
+        {
+            name: "You",
+            role: "Host",
+            avatar: null,
+            online: true
+        }
+    ];
+
+    if (Array.isArray(callConfig.invitees)) {
+
+        callConfig.invitees.forEach(person => {
+
+            participants.push({
+                name:
+                    person.display_name ||
+                    person.username ||
+                    "Invited user",
+
+                role: "Invited collaborator",
+
+                avatar:
+                    person.avatar_url || null,
+
+                online: false
+            });
+
+        });
+
+    }
+
+    container.innerHTML = participants
+        .map(person => {
+
+            const avatar = person.avatar
+                ? `
+                    <img
+                        class="music-participant-avatar"
+                        src="${escapeMusicHTML(person.avatar)}"
+                        alt=""
+                    >
+                  `
+                : `
+                    <div
+                        class="music-participant-avatar"
+                        style="
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            font-size:11px;
+                        "
+                    >
+                        ${escapeMusicHTML(
+                            person.name.charAt(0).toUpperCase()
+                        )}
+                    </div>
+                  `;
+
+            return `
+                <div class="music-participant">
+
+                    ${avatar}
+
+                    <div class="music-participant-info">
+
+                        <div class="music-participant-name">
+                            ${escapeMusicHTML(person.name)}
+                        </div>
+
+                        <div class="music-participant-role">
+                            ${escapeMusicHTML(person.role)}
+                        </div>
+
+                    </div>
+
+                    <span
+                        class="
+                            music-participant-status
+                            ${person.online ? "" : "offline"}
+                        "
+                    ></span>
+
+                </div>
+            `;
+
+        })
+        .join("");
+}
+
+
+/* ---------------------------------------------------------
+   CHAT
+   --------------------------------------------------------- */
+
+const musicChatState = {
+    activeTab: "participants",
+
+    participants: [],
+
+    visitors: []
+};
+
+
+function setupMusicChat(callConfig) {
+
+    const input =
+        document.getElementById("music-chat-input");
+
+    const send =
+        document.getElementById("music-chat-send");
+
+    if (!input || !send) return;
+
+
+    send.addEventListener("click", () => {
+
+        sendMusicChatMessage(callConfig);
+
+    });
+
+
+    input.addEventListener("keydown", event => {
+
+        if (event.key === "Enter") {
+
+            event.preventDefault();
+
+            sendMusicChatMessage(callConfig);
+
+        }
+
+    });
+}
+
+
+function sendMusicChatMessage(callConfig) {
+
+    const input =
+        document.getElementById("music-chat-input");
+
+    if (!input) return;
+
+    const text =
+        input.value.trim();
+
+    if (!text) return;
+
+
+    const message = {
+        id: Date.now(),
+
+        author: "You",
+
+        body: text,
+
+        timestamp: new Date(),
+
+        chat:
+            musicChatState.activeTab
+    };
+
+
+    if (musicChatState.activeTab === "visitors") {
+
+        musicChatState.visitors.push(message);
+
+    } else {
+
+        musicChatState.participants.push(message);
+
+    }
+
+
+    input.value = "";
+
+    renderMusicChatMessages();
+}
+
+
+function renderMusicChatMessages() {
+
+    const container =
+        document.getElementById("music-chat-messages");
+
+    if (!container) return;
+
+
+    const messages =
+        musicChatState.activeTab === "visitors"
+            ? musicChatState.visitors
+            : musicChatState.participants;
+
+
+    if (!messages.length) {
+
+        container.innerHTML = `
+            <div
+                style="
+                    padding:30px 10px;
+                    text-align:center;
+                    font-size:12px;
+                    opacity:.4;
+                "
+            >
+                No messages yet.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML = messages
+        .map(message => {
+
+            return `
+                <div
+                    class="
+                        music-chat-message
+                        ${message.author === "You" ? "host" : ""}
+                    "
+                >
+
+                    <div class="music-chat-message-author">
+                        ${escapeMusicHTML(message.author)}
+                    </div>
+
+                    <div class="music-chat-message-body">
+                        ${escapeMusicHTML(message.body)}
+                    </div>
+
+                </div>
+            `;
+
+        })
+        .join("");
+
+
+    container.scrollTop =
+        container.scrollHeight;
+}
+
+
+/* ---------------------------------------------------------
+   CHAT TABS
+   --------------------------------------------------------- */
+
+function setupMusicChatTabs(callConfig) {
+
+    document
+        .querySelectorAll(".music-chat-tab")
+        .forEach(button => {
+
+            button.addEventListener("click", () => {
+
+                const tab =
+                    button.dataset.chatTab;
+
+                musicChatState.activeTab =
+                    tab;
+
+                document
+                    .querySelectorAll(".music-chat-tab")
+                    .forEach(other => {
+
+                        other.classList.toggle(
+                            "active",
+                            other === button
+                        );
+
+                    });
+
+                renderMusicChatMessages();
+
+            });
+
+        });
+
+
+    renderMusicChatMessages();
+}
+
+
+/* ---------------------------------------------------------
+   WELCOME MESSAGE
+   --------------------------------------------------------- */
+
+function showMusicWelcomeMessage(callConfig) {
+
+    musicChatState.participants = [
+
+        {
+            id: "welcome",
+
+            author: "Nemawashi",
+
+            body:
+                `Music Call started for "${callConfig.projectName}".`,
+
+            timestamp: new Date(),
+
+            chat: "participants"
+        },
+
+        {
+            id: "daw",
+
+            author: "Nemawashi",
+
+            body:
+                `Project DAW: ${callConfig.daw}`,
+
+            timestamp: new Date(),
+
+            chat: "participants"
+        }
+
+    ];
+
+    renderMusicChatMessages();
+}
+
+
+/* ---------------------------------------------------------
+   ANNOUNCEMENTS
+   --------------------------------------------------------- */
+
+function setupMusicAnnouncementButtons(callConfig) {
+
+    document
+        .querySelectorAll(".music-announcement-button")
+        .forEach(button => {
+
+            button.addEventListener("click", () => {
+
+                const type =
+                    button.dataset.announcement;
+
+                openMusicAnnouncement(type);
+
+            });
+
+        });
+}
+
+
+function openMusicAnnouncement(type) {
+
+    const names = {
+
+        kiki: "KiKi",
+
+        serashio: "Serashio",
+
+        links: "Links"
+
+    };
+
+    const name =
+        names[type] || "Announcement";
+
+
+    musicChatState.participants.push({
+
+        id: Date.now(),
+
+        author: "Nemawashi",
+
+        body:
+            `${name} announcement panel opened.`,
+
+        timestamp: new Date(),
+
+        chat: "participants"
+
+    });
+
+
+    musicChatState.activeTab =
+        "participants";
+
+
+    document
+        .querySelectorAll(".music-chat-tab")
+        .forEach(button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.chatTab === "participants"
+            );
+
+        });
+
+
+    renderMusicChatMessages();
+}
+
+
+/* ---------------------------------------------------------
+   YOUTUBE LIVE
+   --------------------------------------------------------- */
+
+function setupMusicLiveButton(callConfig) {
+
+    const button =
+        document.getElementById("music-live-button");
+
+    if (!button) return;
+
+
+    button.addEventListener("click", () => {
+
+        startMusicYouTubeLivestream(callConfig);
+
+    });
+}
+
+
+function startMusicYouTubeLivestream(callConfig) {
+
+    /*
+     * YouTube API integration will be connected later.
+     *
+     * The official Hrmnx channel is ALWAYS included
+     * as a required collaborator.
+     */
+
+    const collaborator =
+        callConfig.youtubeCollaborator;
+
+
+    musicChatState.participants.push({
+
+        id: Date.now(),
+
+        author: "Nemawashi",
+
+        body:
+            `YouTube livestream prepared with required collaborator ${collaborator.handle}.`,
+
+        timestamp: new Date(),
+
+        chat: "participants"
+
+    });
+
+
+    renderMusicChatMessages();
+
+    alert(
+        "YouTube livestream integration is the next backend step."
+    );
+}
+
+
+/* ---------------------------------------------------------
+   LEAVE CALL
+   --------------------------------------------------------- */
+
+function setupMusicLeaveButton() {
+
+    const button =
+        document.getElementById("music-leave-call");
+
+    if (!button) return;
+
+
+    button.addEventListener("click", () => {
+
+        leaveMusicCall();
+
+    });
+}
+
+
+function leaveMusicCall() {
+
+    window.activeNemawashiMusicCall = null;
+
+    musicChatState.participants = [];
+
+    musicChatState.visitors = [];
+
+    musicChatState.activeTab =
+        "participants";
+
+
+    const target =
+        document.querySelector(".space-placeholder") ||
+        document.querySelector(".space-chat");
+
+
+    if (!target) return;
+
+
+    target.innerHTML = `
+
+        <div
+            style="
+                width:100%;
+                min-height:400px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                text-align:center;
+                opacity:.55;
+            "
+        >
+
+            <div>
+
+                <div
+                    style="
+                        font-size:32px;
+                        margin-bottom:10px;
+                    "
+                >
+                    ♫
+                </div>
+
+                <div
+                    style="
+                        font-size:16px;
+                        font-weight:700;
+                    "
+                >
+                    Music Space
+                </div>
+
+                <div
+                    style="
+                        margin-top:5px;
+                        font-size:13px;
+                    "
+                >
+                    Start a new call to begin collaborating.
+                </div>
+
+            </div>
+
+        </div>
+    `;
 
 }
