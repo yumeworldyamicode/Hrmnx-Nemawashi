@@ -3483,6 +3483,14 @@ let musicCallState = {
 
     step: 0,
 
+    projectName: "",
+    bpm: "",
+    key: "",
+    timeSignature: "4/4",
+    projectType: "Song",
+    description: "",
+    referenceLink: "",
+
     invitees: [],
 
     daw: "",
@@ -3579,6 +3587,14 @@ async function openMusicCallSetup() {
     musicCallState = {
 
         step: 0,
+
+        projectName: "",
+        bpm: "",
+        key: "",
+        timeSignature: "4/4",
+        projectType: "Song",
+        description: "",
+        referenceLink: "",
 
         invitees: [],
 
@@ -4974,6 +4990,252 @@ function setupMusicStepInteractions() {
 
     }
 
+}
+
+function renderMusicProjectStep() {
+    return `
+        <div class="music-question">
+
+            <div class="music-call-setup-kicker">
+                MUSIC PROJECT
+            </div>
+
+            <div class="music-call-setup-title">
+                What are you working on?
+            </div>
+
+            <div class="music-call-setup-description">
+                Set the basic information for this music project.
+                Everyone in the call will be able to see these details.
+            </div>
+
+            <div style="margin-top:24px;">
+
+                <label style="
+                    display:block;
+                    font-size:12px;
+                    font-weight:700;
+                    margin-bottom:7px;
+                ">
+                    Project name
+                </label>
+
+                <input
+                    id="music-project-name"
+                    type="text"
+                    class="music-invite-search"
+                    placeholder="e.g. Twin Stars"
+                    value="${escapeMusicHTML(musicCallState.projectName)}"
+                />
+
+            </div>
+
+            <div style="
+                display:grid;
+                grid-template-columns:repeat(2, minmax(0, 1fr));
+                gap:12px;
+                margin-top:15px;
+            ">
+
+                <div>
+
+                    <label style="
+                        display:block;
+                        font-size:12px;
+                        font-weight:700;
+                        margin-bottom:7px;
+                    ">
+                        BPM
+                    </label>
+
+                    <input
+                        id="music-project-bpm"
+                        type="number"
+                        min="20"
+                        max="400"
+                        class="music-invite-search"
+                        placeholder="128"
+                        value="${escapeMusicHTML(musicCallState.bpm)}"
+                    />
+
+                </div>
+
+                <div>
+
+                    <label style="
+                        display:block;
+                        font-size:12px;
+                        font-weight:700;
+                        margin-bottom:7px;
+                    ">
+                        Key
+                    </label>
+
+                    <select
+                        id="music-project-key"
+                        class="music-daw-select"
+                    >
+
+                        ${[
+                            "C",
+                            "C♯ / D♭",
+                            "D",
+                            "D♯ / E♭",
+                            "E",
+                            "F",
+                            "F♯ / G♭",
+                            "G",
+                            "G♯ / A♭",
+                            "A",
+                            "A♯ / B♭",
+                            "B"
+                        ].map(key => `
+                            <option
+                                value="${escapeMusicHTML(key)}"
+                                ${musicCallState.key === key ? "selected" : ""}
+                            >
+                                ${escapeMusicHTML(key)}
+                            </option>
+                        `).join("")}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div style="
+                display:grid;
+                grid-template-columns:repeat(2, minmax(0, 1fr));
+                gap:12px;
+                margin-top:15px;
+            ">
+
+                <div>
+
+                    <label style="
+                        display:block;
+                        font-size:12px;
+                        font-weight:700;
+                        margin-bottom:7px;
+                    ">
+                        Time signature
+                    </label>
+
+                    <select
+                        id="music-project-time-signature"
+                        class="music-daw-select"
+                    >
+
+                        ${[
+                            "4/4",
+                            "3/4",
+                            "6/8",
+                            "2/4",
+                            "5/4",
+                            "7/8",
+                            "9/8",
+                            "12/8"
+                        ].map(signature => `
+                            <option
+                                value="${signature}"
+                                ${musicCallState.timeSignature === signature ? "selected" : ""}
+                            >
+                                ${signature}
+                            </option>
+                        `).join("")}
+
+                    </select>
+
+                </div>
+
+                <div>
+
+                    <label style="
+                        display:block;
+                        font-size:12px;
+                        font-weight:700;
+                        margin-bottom:7px;
+                    ">
+                        Project type
+                    </label>
+
+                    <select
+                        id="music-project-type"
+                        class="music-daw-select"
+                    >
+
+                        ${[
+                            "Song",
+                            "Beat",
+                            "Album",
+                            "EP",
+                            "OST",
+                            "Remix",
+                            "Demo",
+                            "Other"
+                        ].map(type => `
+                            <option
+                                value="${type}"
+                                ${musicCallState.projectType === type ? "selected" : ""}
+                            >
+                                ${type}
+                            </option>
+                        `).join("")}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div style="margin-top:15px;">
+
+                <label style="
+                    display:block;
+                    font-size:12px;
+                    font-weight:700;
+                    margin-bottom:7px;
+                ">
+                    Description / notes
+                </label>
+
+                <textarea
+                    id="music-project-description"
+                    class="music-invite-search"
+                    rows="4"
+                    placeholder="What are you working on?"
+                    style="resize:vertical;"
+                >${escapeMusicHTML(musicCallState.description)}</textarea>
+
+            </div>
+
+            <div style="margin-top:15px;">
+
+                <label style="
+                    display:block;
+                    font-size:12px;
+                    font-weight:700;
+                    margin-bottom:7px;
+                ">
+                    Reference / demo link
+                    <span style="opacity:.4;">
+                        optional
+                    </span>
+                </label>
+
+                <input
+                    id="music-project-reference"
+                    type="url"
+                    class="music-invite-search"
+                    placeholder="https://..."
+                    value="${escapeMusicHTML(musicCallState.referenceLink)}"
+                />
+
+            </div>
+
+        </div>
+    `;
 }
 
 
