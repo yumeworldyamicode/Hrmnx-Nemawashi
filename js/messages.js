@@ -5670,87 +5670,225 @@ function closeMusicCallSetup() {
 ============================================================ */
 
 async function startMusicCall() {
-    const setup = document.querySelector(".music-call-setup");
 
-    if (!setup) return;
+    const setup =
+        document.querySelector(".music-call-setup");
 
-    const projectName =
-        musicCallState.projectName ||
-        currentSpace?.name ||
-        "Untitled Music Project";
+    if (!setup) {
+        console.error(
+            "Nemawashi Music Space: setup element not found."
+        );
+        return;
+    }
 
-    const callId =
-        "music-call-" +
-        Date.now() +
-        "-" +
-        Math.random().toString(36).slice(2, 8);
+    try {
 
-    // Make sure the official Hrmnx collaborator can never be removed.
-    const callConfig = {
-        id: callId,
-        projectName: projectName,
+        /*
+         * Safely determine the project name.
+         */
+        const projectName =
+            musicCallState.projectName ||
+            (
+                typeof currentSpace !== "undefined" &&
+                currentSpace &&
+                currentSpace.name
+            ) ||
+            "Untitled Music Project";
 
-        project: {
-            name: projectName,
-            bpm: musicCallState.bpm || "",
-            key: musicCallState.key || "C",
-            timeSignature:
-                musicCallState.timeSignature || "4/4",
-            type:
-                musicCallState.projectType || "Song",
-            description:
-                musicCallState.description || "",
-            referenceLink:
-                musicCallState.referenceLink || ""
-        },
 
-        invitees: [...musicCallState.invitees],
+        /*
+         * Create a unique call ID.
+         */
+        const callId =
+            "music-call-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .slice(2, 8);
 
-        daw: musicCallState.daw || "Not specified",
 
-        openSpace: musicCallState.openSpace,
-        visitors: musicCallState.visitors,
-        visitorChat: musicCallState.visitorChat,
+        /*
+         * Build the call configuration.
+         */
+        const callConfig = {
 
-        announcements: {
-            kiki: !!musicCallState.announcements.kiki,
-            serashio: !!musicCallState.announcements.serashio,
-            links: !!musicCallState.announcements.links
-        },
+            id: callId,
 
-        livestream: !!musicCallState.livestream,
-        youtubePremiere: !!musicCallState.youtubePremiere,
+            projectName: projectName,
 
-        youtubeCollaborator: {
-            ...NEMAWASHI_MUSIC_CONFIG.youtubeCollaborator
-        },
+            project: {
 
-        createdAt: new Date().toISOString()
-    };
+                name: projectName,
 
-    // Store temporarily so the room can access it.
-    window.activeNemawashiMusicCall = callConfig;
+                bpm:
+                    musicCallState.bpm || "",
 
-    setup.innerHTML = `
-        <div class="music-call-setup-header">
-            <div class="music-call-setup-kicker">
-                MUSIC SPACE
+                key:
+                    musicCallState.key || "C",
+
+                timeSignature:
+                    musicCallState.timeSignature || "4/4",
+
+                type:
+                    musicCallState.projectType || "Song",
+
+                description:
+                    musicCallState.description || "",
+
+                referenceLink:
+                    musicCallState.referenceLink || ""
+
+            },
+
+            invitees:
+                Array.isArray(musicCallState.invitees)
+                    ? [...musicCallState.invitees]
+                    : [],
+
+            daw:
+                musicCallState.daw ||
+                "Not specified",
+
+            openSpace:
+                !!musicCallState.openSpace,
+
+            visitors:
+                !!musicCallState.visitors,
+
+            visitorChat:
+                !!musicCallState.visitorChat,
+
+            announcements: {
+
+                kiki:
+                    !!musicCallState.announcements?.kiki,
+
+                serashio:
+                    !!musicCallState.announcements?.serashio,
+
+                links:
+                    !!musicCallState.announcements?.links
+
+            },
+
+            livestream:
+                !!musicCallState.livestream,
+
+            youtubePremiere:
+                !!musicCallState.youtubePremiere,
+
+            youtubeCollaborator:
+                NEMAWASHI_MUSIC_CONFIG &&
+                NEMAWASHI_MUSIC_CONFIG.youtubeCollaborator
+                    ? {
+                        ...NEMAWASHI_MUSIC_CONFIG
+                            .youtubeCollaborator
+                    }
+                    : {
+                        name: "Hrmnx Entertainment",
+                        handle: "@harmoniajp",
+                        role: "Official Hrmnx YouTube collaborator"
+                    },
+
+            createdAt:
+                new Date().toISOString()
+
+        };
+
+
+        /*
+         * Save the active call globally.
+         */
+        window.activeNemawashiMusicCall =
+            callConfig;
+
+
+        /*
+         * Show the temporary loading state.
+         */
+        setup.innerHTML = `
+
+            <div class="music-call-setup-header">
+
+                <div class="music-call-setup-kicker">
+                    MUSIC SPACE
+                </div>
+
+                <div class="music-call-setup-title">
+                    Creating your music call…
+                </div>
+
+                <div class="music-call-setup-description">
+                    Preparing the collaboration room for
+                    ${escapeMusicHTML(projectName)}.
+                </div>
+
             </div>
 
-            <div class="music-call-setup-title">
-                Creating your music call…
+        `;
+
+
+        /*
+         * Small transition delay.
+         */
+        await new Promise(resolve => {
+
+            setTimeout(resolve, 500);
+
+        });
+
+
+        /*
+         * Open the actual room.
+         */
+        openMusicCallRoom(callConfig);
+
+
+    } catch (error) {
+
+        console.error(
+            "Nemawashi Music Space: Failed to start call:",
+            error
+        );
+
+
+        /*
+         * Do not let the entire website die.
+         * Show the error inside the Music Space instead.
+         */
+        setup.innerHTML = `
+
+            <div class="music-call-setup-header">
+
+                <div class="music-call-setup-kicker">
+                    MUSIC SPACE
+                </div>
+
+                <div class="music-call-setup-title">
+                    Something went wrong
+                </div>
+
+                <div class="music-call-setup-description">
+                    The music call could not be started.
+                    Check the browser console for the exact error.
+                </div>
+
+                <button
+                    type="button"
+                    class="music-action-button secondary"
+                    style="margin-top:20px;"
+                    onclick="renderMusicCallSetup()"
+                >
+                    Back
+                </button>
+
             </div>
 
-            <div class="music-call-setup-description">
-                Preparing the collaboration room for
-                ${escapeMusicHTML(projectName)}.
-            </div>
-        </div>
-    `;
+        `;
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    }
 
-    openMusicCallRoom(callConfig);
 }
 
 /* ============================================================
@@ -5846,28 +5984,141 @@ function escapeMusicHTML(value) {
 
 function openMusicCallRoom(callConfig) {
 
-    const placeholder =
-        document.querySelector(".space-placeholder");
+    try {
 
-    const chat =
-        document.querySelector(".space-chat");
+        const placeholder =
+            document.querySelector(
+                ".space-placeholder"
+            );
 
-    const target = placeholder || chat;
+        const chat =
+            document.querySelector(
+                ".space-chat"
+            );
 
-    if (!target) {
-        console.error(
-            "Nemawashi Music Space: Could not find space container."
+        const target =
+            placeholder || chat;
+
+
+        if (!target) {
+
+            console.error(
+                "Nemawashi Music Space: Could not find space container."
+            );
+
+            return;
+        }
+
+
+        /*
+         * Generate the room before replacing
+         * anything on the page.
+         */
+        const roomHTML =
+            createMusicCallRoomHTML(
+                callConfig
+            );
+
+
+        if (!roomHTML) {
+
+            throw new Error(
+                "createMusicCallRoomHTML() returned empty content."
+            );
+
+        }
+
+
+        /*
+         * Replace only the Music Space container.
+         */
+        target.innerHTML =
+            roomHTML;
+
+
+        target.classList.add(
+            "music-room-active"
         );
-        return;
+
+
+        /*
+         * Initialize the room controls.
+         */
+        setupMusicCallRoom(
+            callConfig
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Nemawashi Music Space: Failed to open call room:",
+            error
+        );
+
+
+        const target =
+            document.querySelector(
+                ".space-placeholder"
+            ) ||
+            document.querySelector(
+                ".space-chat"
+            );
+
+
+        if (target) {
+
+            target.innerHTML = `
+
+                <div
+                    style="
+                        width:100%;
+                        min-height:400px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        text-align:center;
+                        padding:30px;
+                        box-sizing:border-box;
+                    "
+                >
+
+                    <div>
+
+                        <div
+                            style="
+                                font-size:32px;
+                                margin-bottom:12px;
+                            "
+                        >
+                            ♫
+                        </div>
+
+                        <strong>
+                            Music call could not be opened
+                        </strong>
+
+                        <div
+                            style="
+                                margin-top:8px;
+                                font-size:12px;
+                                opacity:.5;
+                            "
+                        >
+                            Check the browser console for the exact error.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+
     }
 
-    target.innerHTML = createMusicCallRoomHTML(callConfig);
-
-    target.classList.add("music-room-active");
-
-    setupMusicCallRoom(callConfig);
 }
-
 
 /* ---------------------------------------------------------
    ROOM HTML
