@@ -3492,3 +3492,616 @@ button {
     }
 
 }
+
+/* ============================================================
+   NEMAWASHI MUSIC CALL — COMPLETE ROOM LAYOUT
+============================================================ */
+
+.music-room-active {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+
+.music-room-active > .music-call-window {
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 0;
+    background: #f5f5f5;
+    color: #111;
+    box-shadow: none;
+    transform: none;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ------------------------------------------------------------
+   CALL HEADER
+------------------------------------------------------------ */
+
+.music-room-active .music-call-header {
+    flex: 0 0 auto;
+    min-height: 66px;
+    box-sizing: border-box;
+}
+
+
+.music-room-active .music-call-header-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+
+.music-room-active .music-call-header-title > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.music-room-active .music-call-header-meta {
+    white-space: nowrap;
+}
+
+
+/* ------------------------------------------------------------
+   MAIN CALL STAGE
+------------------------------------------------------------ */
+
+.music-room-active .music-call-stage {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 245px;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    background: #f5f5f5;
+    overflow: hidden;
+}
+
+
+/* ------------------------------------------------------------
+   PROJECT
+------------------------------------------------------------ */
+
+.music-room-active .music-project-panel {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+
+.music-room-active .music-project-panel-title {
+    overflow-wrap: anywhere;
+}
+
+
+.music-room-active .music-project-description {
+    max-width: 900px;
+    overflow-wrap: anywhere;
+}
+
+
+/* ------------------------------------------------------------
+   ANNOUNCEMENTS
+------------------------------------------------------------ */
+
+.music-room-active .music-announcement-bar {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 10px 15px;
+    margin: 0;
+    background: #fafafa;
+    border-bottom: 1px solid rgba(0,0,0,.07);
+}
+
+
+.music-room-active .music-announcement-button {
+    min-height: 38px;
+    padding: 9px 12px;
+}
+
+
+/* ------------------------------------------------------------
+   YOUTUBE COLLABORATOR
+------------------------------------------------------------ */
+
+.music-room-active .youtube-collaborator-card {
+    margin: 10px 15px;
+}
+
+
+/* ------------------------------------------------------------
+   CHAT
+------------------------------------------------------------ */
+
+.music-room-active .music-chat-area {
+    grid-column: 1;
+    grid-row: 3;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+
+.music-room-active .music-chat-tabs {
+    flex: 0 0 auto;
+}
+
+
+.music-room-active .music-chat-messages {
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+.music-room-active .music-chat-composer {
+    flex: 0 0 auto;
+}
+
+
+/* ------------------------------------------------------------
+   PARTICIPANTS
+------------------------------------------------------------ */
+
+.music-room-active .music-participants-panel {
+    grid-column: 2;
+    grid-row: 2 / 4;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+
+.music-room-active .music-participants-list {
+    min-width: 0;
+}
+
+
+.music-room-active .music-participant {
+    min-width: 0;
+}
+
+
+.music-room-active .music-participant-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* ------------------------------------------------------------
+   CHAT MESSAGE
+------------------------------------------------------------ */
+
+.music-room-active .music-chat-message {
+    width: fit-content;
+    max-width: 78%;
+    box-sizing: border-box;
+}
+
+
+.music-room-active .music-chat-message.host {
+    margin-left: auto;
+}
+
+
+/* ------------------------------------------------------------
+   SCROLLBARS
+------------------------------------------------------------ */
+
+.music-room-active .music-chat-messages,
+.music-room-active .music-participants-panel {
+    scrollbar-width: thin;
+}
+
+
+.music-room-active .music-chat-messages::-webkit-scrollbar,
+.music-room-active .music-participants-panel::-webkit-scrollbar {
+    width: 7px;
+}
+
+
+.music-room-active .music-chat-messages::-webkit-scrollbar-track,
+.music-room-active .music-participants-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.music-room-active .music-chat-messages::-webkit-scrollbar-thumb,
+.music-room-active .music-participants-panel::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,.16);
+    border-radius: 999px;
+}
+
+
+/* ------------------------------------------------------------
+   RESPONSIVE CALL
+------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+
+    .music-room-active .music-call-stage {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto minmax(360px, 1fr) auto;
+        overflow: visible;
+    }
+
+
+    .music-room-active .music-announcement-bar {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+
+    .music-room-active .music-chat-area {
+        grid-column: 1;
+        grid-row: 3;
+        min-height: 360px;
+    }
+
+
+    .music-room-active .music-participants-panel {
+        grid-column: 1;
+        grid-row: 4;
+        border-left: 0;
+        border-top: 1px solid rgba(0,0,0,.07);
+        max-height: 240px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .music-room-active .music-call-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+
+    .music-room-active .music-call-header-actions {
+        width: 100%;
+    }
+
+
+    .music-room-active .music-call-header-actions
+    .music-action-button {
+        flex: 1;
+    }
+
+
+    .music-room-active .music-project-panel {
+        padding: 17px;
+    }
+
+
+    .music-room-active .music-announcement-bar {
+        overflow-x: auto;
+    }
+
+
+    .music-room-active .music-announcement-options {
+        grid-template-columns: 1fr;
+    }
+
+
+    .music-room-active .music-chat-message {
+        max-width: 88%;
+    }
+
+}
+
+/* ============================================================
+   NEMAWASHI MUSIC SPACE
+   PROJECT DETAILS FIELDS
+   ============================================================ */
+
+/* Project details form */
+
+.music-project-details {
+    width: 100%;
+    margin-top: 24px;
+}
+
+.music-project-field {
+    width: 100%;
+    margin-top: 15px;
+}
+
+.music-project-field:first-child {
+    margin-top: 0;
+}
+
+.music-project-field-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.music-project-field-label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--messages-text);
+}
+
+.music-project-field-label span {
+    margin-left: 4px;
+    font-weight: 500;
+    opacity: 0.4;
+}
+
+
+/* ============================================================
+   TEXT / NUMBER / URL INPUTS
+   ============================================================ */
+
+.music-project-input,
+.music-project-textarea,
+.music-project-select {
+    width: 100%;
+    min-height: 42px;
+    padding: 11px 13px;
+    border: 1px solid var(--messages-border);
+    border-radius: 11px;
+    background: var(--messages-surface);
+    color: var(--messages-text);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1.4;
+    outline: none;
+    box-sizing: border-box;
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+}
+
+.music-project-input::placeholder,
+.music-project-textarea::placeholder {
+    color: var(--messages-muted);
+    opacity: 0.55;
+}
+
+.music-project-input:hover,
+.music-project-textarea:hover,
+.music-project-select:hover {
+    border-color: #d8d8e3;
+}
+
+.music-project-input:focus,
+.music-project-textarea:focus,
+.music-project-select:focus {
+    border-color: var(--messages-accent);
+    box-shadow:
+        0 0 0 3px var(--messages-accent-soft);
+    background: #fff;
+}
+
+
+/* ============================================================
+   PROJECT NAME
+   ============================================================ */
+
+#music-project-name {
+    min-height: 46px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+
+/* ============================================================
+   BPM
+   ============================================================ */
+
+#music-project-bpm {
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* Remove browser number arrows where possible */
+
+#music-project-bpm::-webkit-inner-spin-button,
+#music-project-bpm::-webkit-outer-spin-button {
+    margin: 0;
+}
+
+#music-project-bpm {
+    -moz-appearance: textfield;
+}
+
+
+/* ============================================================
+   KEY / TIME SIGNATURE / PROJECT TYPE
+   ============================================================ */
+
+#music-project-key,
+#music-project-time-signature,
+#music-project-type {
+    cursor: pointer;
+}
+
+.music-project-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 36px;
+
+    background-image:
+        linear-gradient(
+            45deg,
+            transparent 50%,
+            currentColor 50%
+        ),
+        linear-gradient(
+            135deg,
+            currentColor 50%,
+            transparent 50%
+        );
+
+    background-position:
+        calc(100% - 17px) 18px,
+        calc(100% - 12px) 18px;
+
+    background-size:
+        5px 5px,
+        5px 5px;
+
+    background-repeat: no-repeat;
+
+    color: var(--messages-text);
+}
+
+
+/* ============================================================
+   DESCRIPTION / NOTES
+   ============================================================ */
+
+#music-project-description {
+    min-height: 105px;
+    resize: vertical;
+    line-height: 1.55;
+    font-size: 12px;
+}
+
+
+/* ============================================================
+   REFERENCE / DEMO LINK
+   ============================================================ */
+
+#music-project-reference {
+    font-size: 12px;
+}
+
+
+/* ============================================================
+   PROJECT DETAILS GROUP
+   ============================================================ */
+
+.music-project-details-section {
+    padding: 16px;
+    margin-top: 18px;
+    border: 1px solid var(--messages-border);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.music-project-details-section-title {
+    margin-bottom: 13px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.45;
+}
+
+
+/* ============================================================
+   REVIEW VALUES
+   ============================================================ */
+
+.music-review-project {
+    width: 100%;
+}
+
+.music-review-project-name {
+    margin-bottom: 18px;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.music-review-project-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.music-review-project-detail {
+    padding: 12px;
+    border: 1px solid var(--messages-border);
+    border-radius: 11px;
+    background: var(--messages-surface);
+}
+
+.music-review-project-detail-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.4;
+}
+
+.music-review-project-detail-value {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    .music-project-field-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .music-project-field-row .music-project-field {
+        margin-top: 15px;
+    }
+
+    .music-project-field-row
+    .music-project-field:first-child {
+        margin-top: 0;
+    }
+
+    .music-project-input,
+    .music-project-textarea,
+    .music-project-select {
+        min-height: 44px;
+    }
+
+    #music-project-description {
+        min-height: 95px;
+    }
+
+    .music-review-project-details {
+        grid-template-columns: 1fr;
+    }
+
+}
