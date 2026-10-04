@@ -3355,3 +3355,140 @@ button {
     font-size: 9px;
     opacity: 0.45;
 }
+
+/* ------------------------------------------------------------
+   PROJECT / QUESTION WRAPPER
+------------------------------------------------------------ */
+
+.music-question {
+    width: 100%;
+}
+
+
+/* ------------------------------------------------------------
+   MUSIC SPACE SETUP / CREATION SCREEN
+------------------------------------------------------------ */
+
+.music-call-setup-header {
+    width: 100%;
+    min-height: 390px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    box-sizing: border-box;
+}
+
+.music-call-setup-kicker {
+    margin-bottom: 10px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    opacity: 0.45;
+}
+
+.music-call-setup-title {
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+}
+
+.music-call-setup-description {
+    max-width: 430px;
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: 0.52;
+}
+
+
+/* ------------------------------------------------------------
+   PARTICIPANT ONLINE STATUS
+------------------------------------------------------------ */
+
+.music-participant-status {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+    border-radius: 50%;
+    background: #34c759;
+    box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.12);
+}
+
+.music-participant-status.offline {
+    background: #b8b8c0;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+
+/* ------------------------------------------------------------
+   MUSIC CHAT MESSAGE
+------------------------------------------------------------ */
+
+.music-chat-message {
+    width: fit-content;
+    max-width: 78%;
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: #f1f1f5;
+    box-sizing: border-box;
+}
+
+.music-chat-message + .music-chat-message {
+    margin-top: 8px;
+}
+
+.music-chat-message.host {
+    margin-left: auto;
+    background: #111;
+    color: #fff;
+}
+
+.music-chat-message-author {
+    margin-bottom: 3px;
+    font-size: 10px;
+    font-weight: 800;
+    opacity: 0.55;
+}
+
+.music-chat-message.host .music-chat-message-author {
+    opacity: 0.65;
+}
+
+.music-chat-message-body {
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+
+/* ------------------------------------------------------------
+   MOBILE
+------------------------------------------------------------ */
+
+@media (max-width: 700px) {
+
+    .music-call-setup-header {
+        min-height: 300px;
+        padding: 24px 18px;
+    }
+
+    .music-call-setup-title {
+        font-size: 25px;
+    }
+
+    .music-call-setup-description {
+        max-width: 320px;
+        font-size: 12px;
+    }
+
+    .music-chat-message {
+        max-width: 88%;
+    }
+
+}
