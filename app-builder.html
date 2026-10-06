@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nemawashi — App Builder</title>
+    <link rel="stylesheet" href="app-builder.css">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div>
+                <span class="eyebrow">NEMAWASHI</span>
+                <h1>App Builder</h1>
+            </div>
+            <a class="back-link" href="messages.html">← Back to Nemawashi</a>
+        </header>
+
+        <main class="content">
+            <section class="hero">
+                <div>
+                    <span class="eyebrow">ADMINISTRATION</span>
+                    <h2>Build an App for the Nemawashi ecosystem.</h2>
+                    <p>Create and configure Apps, starting with the Hrmnx Shop.</p>
+                </div>
+                <button id="create-app-button" class="primary-button">+ Create App</button>
+            </section>
+
+            <div id="notice" class="notice" hidden></div>
+
+            <section class="apps-section">
+                <div class="section-heading">
+                    <div>
+                        <span class="eyebrow">YOUR APPS</span>
+                        <h2>Applications</h2>
+                    </div>
+                    <button id="refresh-button" class="secondary-button">Refresh</button>
+                </div>
+                <div id="apps-grid" class="apps-grid">
+                    <div class="loading-card">Loading Apps…</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <dialog id="create-dialog">
+        <form id="create-app-form" method="dialog">
+            <button type="button" id="close-dialog" class="dialog-close" aria-label="Close">×</button>
+
+            <span class="eyebrow">NEW APP</span>
+            <h2>Create an App</h2>
+            <p class="dialog-description">Create the application record and its default Nemawashi Spaces.</p>
+
+            <label>
+                App type
+                <select id="app-type" name="app_type" required>
+                    <option value="shop">Hrmnx Shop</option>
+                    <option value="standard">Standard App</option>
+                </select>
+            </label>
+
+            <label>
+                App name
+                <input id="app-name" name="name" type="text" value="Hrmnx Shop" required>
+            </label>
+
+            <label>
+                App slug
+                <input id="app-slug" name="slug" type="text" value="shop" required pattern="[a-z0-9-]+">
+                <small>Used for the App URL and internal identifier.</small>
+            </label>
+
+            <label>
+                Description
+                <textarea id="app-description" name="description" rows="3">Hrmnx Entertainment official artist shop.</textarea>
+            </label>
+
+            <label>
+                Website URL
+                <input id="app-website" name="website_url" type="url" value="https://shop.hrmnx.site">
+            </label>
+
+            <div class="form-grid">
+                <label>
+                    Background
+                    <input id="background-color" name="background_color" type="color" value="#0b0b0d">
+                </label>
+                <label>
+                    Primary
+                    <input id="primary-color" name="primary_color" type="color" value="#ffffff">
+                </label>
+                <label>
+                    Secondary
+                    <input id="secondary-color" name="secondary_color" type="color" value="#777777">
+                </label>
+                <label>
+                    Accent
+                    <input id="accent-color" name="accent_color" type="color" value="#ffffff">
+                </label>
+                <label>
+                    Text
+                    <input id="text-color" name="text_color" type="color" value="#ffffff">
+                </label>
+            </div>
+
+            <label class="checkbox-label">
+                <input id="is-active" name="is_active" type="checkbox" checked>
+                Make App active immediately
+            </label>
+
+            <div class="dialog-actions">
+                <button type="button" id="cancel-button" class="secondary-button">Cancel</button>
+                <button type="submit" class="primary-button">Create App</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="supabase.js"></script>
+    <script src="app-builder.js"></script>
+</body>
+</html>
