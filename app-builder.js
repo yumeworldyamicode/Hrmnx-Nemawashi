@@ -221,58 +221,58 @@ form.addEventListener("submit", async event => {
 });
 
 async function createShopSpaces(app) {
-    const spaces = [
-        {
-            slug: "general",
-            name: "General Space",
-            space_type: "General Space",
-            description: "General administration and information for the Hrmnx Shop.",
-            position: 0
-        },
-        {
-            slug: "artists",
-            name: "Artists",
-            space_type: "Creative Space",
-            description: "Manage artists and their storefront identities.",
-            position: 1
-        },
-        {
-            slug: "releases",
-            name: "Releases",
-            space_type: "Creative Space",
-            description: "Manage albums and releases.",
-            position: 2
-        },
-        {
-            slug: "products",
-            name: "Products",
-            space_type: "Creative Space",
-            description: "Manage vinyl and CD products and their ElasticStage links.",
-            position: 3
-        },
-        {
-            slug: "themes",
-            name: "Themes",
-            space_type: "Creative Space",
-            description: "Create and manage artist storefront themes.",
-            position: 4
-        },
-        {
-            slug: "website",
-            name: "Website Builder",
-            space_type: "App Creating Space",
-            description: "Manage the Shop website structure and visual configuration.",
-            position: 5
-        },
-        {
-            slug: "files",
-            name: "Files",
-            space_type: "Creative Space",
-            description: "Shop images, artwork, branding and other assets.",
-            position: 6
-        }
-    ];
-
+const defaultSpaces = [
+    {
+        slug: "general",
+        name: "General Space",
+        space_type: "general",
+        description: "General discussions and information for the app.",
+        position: 0
+    },
+    {
+        slug: "artists",
+        name: "Artists",
+        space_type: "creative",
+        description: "Manage and discuss artists.",
+        position: 1
+    },
+    {
+        slug: "releases",
+        name: "Releases",
+        space_type: "creative",
+        description: "Manage releases and release information.",
+        position: 2
+    },
+    {
+        slug: "products",
+        name: "Products",
+        space_type: "creative",
+        description: "Manage products and storefront items.",
+        position: 3
+    },
+    {
+        slug: "themes",
+        name: "Themes",
+        space_type: "creative",
+        description: "Create and manage artist storefront themes.",
+        position: 4
+    },
+    {
+        slug: "website",
+        name: "Website Builder",
+        space_type: "app_creating",
+        description: "Configure and customize the public website.",
+        position: 5
+    },
+    {
+        slug: "files",
+        name: "Files",
+        space_type: "creative",
+        description: "Manage images, artwork, logos and other assets.",
+        position: 6
+    }
+];
+   
     const rows = spaces.map(space => ({
         app_id: app.id,
         project_id: null,
