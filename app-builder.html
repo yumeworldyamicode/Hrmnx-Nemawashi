@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>根回し - App Builder</title>
+    <link rel="stylesheet" href="app-builder.css">
+    <link rel="icon" type="image/x-icon" href="images/nemawashi-favicon.ico">
+        <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@700&display=swap"
+        rel="stylesheet"
+    >
+</head>
+<body>
+    <div id="toast" class="toast"></div>
+
+    <!-- =========================
+         APP BUILDER DASHBOARD
+    ========================== -->
+    <main id="dashboardView" class="view dashboard-view">
+        <header class="dashboard-topbar">
+            <div class="brand">
+                <img src="images/nemawashi-favicon.ico" alt="Nemawashi" class="brand-icon">
+                <div>
+                    <div class="brand-jp">根回し</div>
+                    <div class="brand-sub">APP BUILDER</div>
+                </div>
+            </div>
+
+            <div class="dashboard-actions">
+                <button id="createAppBtn" class="button secondary">＋ Create App</button>
+                <button id="createWebsiteBtn" class="button primary">＋ Create Website</button>
+                <button id="refreshDashboardBtn" class="icon-button" title="Refresh">↻</button>
+            </div>
+        </header>
+
+        <section class="dashboard-hero">
+            <div>
+                <p class="eyebrow">NEMAWASHI CREATOR</p>
+                <h1>Build your digital space.</h1>
+                <p class="hero-copy">
+                    Create and manage Hrmnx apps and websites from one place.
+                    Websites can be designed visually, saved automatically, previewed and published.
+                </p>
+            </div>
+            <div class="hero-mark">
+                <span>根</span>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">APPLICATIONS</p>
+                    <h2>My Apps</h2>
+                </div>
+                <span id="appsCount" class="count-label">0 apps</span>
+            </div>
+            <div id="appsGrid" class="resource-grid"></div>
+            <div id="appsEmpty" class="empty-state hidden">
+                <div class="empty-icon">＋</div>
+                <h3>No apps yet</h3>
+                <p>Create an app to start building your Nemawashi ecosystem.</p>
+                <button class="button primary" id="emptyCreateAppBtn">Create your first app</button>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">WEBSITES</p>
+                    <h2>My Websites</h2>
+                </div>
+                <span id="websitesCount" class="count-label">0 websites</span>
+            </div>
+            <div id="websitesGrid" class="resource-grid"></div>
+            <div id="websitesEmpty" class="empty-state hidden">
+                <div class="empty-icon">⌁</div>
+                <h3>No websites yet</h3>
+                <p>Start with a blank canvas or create a simple starter website.</p>
+                <button class="button primary" id="emptyCreateWebsiteBtn">Create your first website</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- =========================
+         VISUAL WEBSITE EDITOR
+    ========================== -->
+    <main id="editorView" class="view editor-view hidden">
+        <header class="editor-topbar">
+            <div class="editor-left">
+                <button id="backToDashboardBtn" class="icon-button" title="Back to App Builder">←</button>
+                <div class="editor-brand">
+                    <img src="images/nemawashi-favicon.ico" alt="" class="brand-icon small">
+                    <div>
+                        <strong id="editorWebsiteName">Website</strong>
+                        <span id="saveStatus">Saved</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="editor-center">
+                <div class="device-switcher">
+                    <button class="device-button active" data-device="desktop">Desktop</button>
+                    <button class="device-button" data-device="tablet">Tablet</button>
+                    <button class="device-button" data-device="mobile">Mobile</button>
+                </div>
+            </div>
+
+            <div class="editor-right">
+                <button id="undoBtn" class="icon-button" title="Undo">↶</button>
+                <button id="redoBtn" class="icon-button" title="Redo">↷</button>
+                <button id="previewBtn" class="button secondary">Preview</button>
+                <button id="publishBtn" class="button primary">Publish</button>
+            </div>
+        </header>
+
+        <div class="editor-layout">
+            <aside class="editor-sidebar left-sidebar">
+                <div class="sidebar-header">
+                    <span>Pages</span>
+                    <button id="addPageBtn" class="small-plus">＋</button>
+                </div>
+                <div id="pagesList" class="pages-list"></div>
+
+                <div class="sidebar-divider"></div>
+
+                <div class="sidebar-header">
+                    <span>Components</span>
+                </div>
+                <div id="componentList" class="component-list"></div>
+
+                <div class="sidebar-divider"></div>
+
+                <button id="themeBtn" class="sidebar-action">◐ Theme</button>
+                <button id="siteSettingsBtn" class="sidebar-action">⚙ Site settings</button>
+            </aside>
+
+            <section class="canvas-area">
+                <div class="canvas-toolbar">
+                    <span id="canvasPageName">Home</span>
+                    <span id="canvasHint">Drag components into the page</span>
+                </div>
+
+                <div id="canvasViewport" class="canvas-viewport">
+                    <div id="websiteCanvas" class="website-canvas"></div>
+                </div>
+            </section>
+
+            <aside class="editor-sidebar right-sidebar">
+                <div class="sidebar-header">
+                    <span>Properties</span>
+                </div>
+                <div id="propertiesPanel" class="properties-panel">
+                    <div class="properties-empty">
+                        <div class="properties-empty-icon">◇</div>
+                        <h3>Select something</h3>
+                        <p>Choose a component on the canvas to edit its content and appearance.</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- =========================
+         CREATE APP MODAL
+    ========================== -->
+    <div id="appModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <button class="modal-close" data-close-modal="appModal">×</button>
+            <p class="eyebrow">NEMAWASHI APP</p>
+            <h2>Create an app</h2>
+            <p class="modal-description">Create a new app for the Nemawashi ecosystem.</p>
+
+            <form id="appForm">
+                <label>
+                    App name
+                    <input id="appName" required placeholder="e.g. Hrmnx Shop">
+                </label>
+                <label>
+                    App slug
+                    <input id="appSlug" required placeholder="e.g. hrmnx-shop">
+                </label>
+                <label>
+                    App type
+                    <select id="appType">
+                        <option value="standard">Standard</option>
+                        <option value="shop">Shop</option>
+                    </select>
+                </label>
+                <label>
+                    Description
+                    <textarea id="appDescription" rows="3" placeholder="What is this app for?"></textarea>
+                </label>
+                <div class="modal-actions">
+                    <button type="button" class="button secondary" data-close-modal="appModal">Cancel</button>
+                    <button type="submit" class="button primary">Create App</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================
+         CREATE WEBSITE MODAL
+    ========================== -->
+    <div id="websiteModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <button class="modal-close" data-close-modal="websiteModal">×</button>
+            <p class="eyebrow">NEMAWASHI WEBSITE BUILDER</p>
+            <h2>Create a website</h2>
+            <p class="modal-description">Start with a blank website or a ready-to-edit starter layout.</p>
+
+            <form id="websiteForm">
+                <label>
+                    Website name
+                    <input id="websiteName" required placeholder="e.g. Hrmnx Entertainment">
+                </label>
+                <label>
+                    Website slug
+                    <input id="websiteSlug" required placeholder="e.g. hrmnx-entertainment">
+                </label>
+                <label>
+                    Starting layout
+                    <select id="websiteStarter">
+                        <option value="starter">Starter — Hero + content + CTA</option>
+                        <option value="blank">Blank — Empty canvas</option>
+                    </select>
+                </label>
+                <label>
+                    Description
+                    <textarea id="websiteDescription" rows="3" placeholder="Describe the website"></textarea>
+                </label>
+                <div class="modal-actions">
+                    <button type="button" class="button secondary" data-close-modal="websiteModal">Cancel</button>
+                    <button type="submit" class="button primary">Create Website</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================
+         PAGE MODAL
+    ========================== -->
+    <div id="pageModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <button class="modal-close" data-close-modal="pageModal">×</button>
+            <p class="eyebrow">WEBSITE PAGE</p>
+            <h2>Add a page</h2>
+
+            <form id="pageForm">
+                <label>
+                    Page name
+                    <input id="pageName" required placeholder="e.g. About">
+                </label>
+                <label>
+                    URL slug
+                    <input id="pageSlug" required placeholder="e.g. about">
+                </label>
+                <div class="modal-actions">
+                    <button type="button" class="button secondary" data-close-modal="pageModal">Cancel</button>
+                    <button type="submit" class="button primary">Add Page</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================
+         THEME MODAL
+    ========================== -->
+    <div id="themeModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <button class="modal-close" data-close-modal="themeModal">×</button>
+            <p class="eyebrow">SITE THEME</p>
+            <h2>Theme</h2>
+            <form id="themeForm">
+                <label>
+                    Primary color
+                    <input id="themePrimary" type="color" value="#8f6cff">
+                </label>
+                <label>
+                    Background
+                    <input id="themeBackground" type="color" value="#0a0a0d">
+                </label>
+                <label>
+                    Text
+                    <input id="themeText" type="color" value="#ffffff">
+                </label>
+                <label>
+                    Accent
+                    <input id="themeAccent" type="color" value="#c7b8ff">
+                </label>
+                <div class="modal-actions">
+                    <button type="button" class="button secondary" data-close-modal="themeModal">Cancel</button>
+                    <button type="submit" class="button primary">Save Theme</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================
+         SITE SETTINGS MODAL
+    ========================== -->
+    <div id="siteSettingsModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <button class="modal-close" data-close-modal="siteSettingsModal">×</button>
+            <p class="eyebrow">WEBSITE SETTINGS</p>
+            <h2>Site settings</h2>
+            <form id="siteSettingsForm">
+                <label>
+                    Website name
+                    <input id="settingsWebsiteName" required>
+                </label>
+                <label>
+                    Description
+                    <textarea id="settingsWebsiteDescription" rows="3"></textarea>
+                </label>
+                <label>
+                    Favicon URL
+                    <input id="settingsFavicon" placeholder="https://...">
+                </label>
+                <label>
+                    Domain
+                    <input id="settingsDomain" placeholder="example.hrmnx.site">
+                </label>
+                <div class="modal-actions">
+                    <button type="button" class="button secondary" data-close-modal="siteSettingsModal">Cancel</button>
+                    <button type="submit" class="button primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================
+         PREVIEW
+    ========================== -->
+    <div id="previewOverlay" class="preview-overlay hidden">
+        <header class="preview-topbar">
+            <strong id="previewTitle">Preview</strong>
+            <div>
+                <button id="previewDeviceBtn" class="button secondary">Desktop</button>
+                <button id="closePreviewBtn" class="button primary">Close preview</button>
+            </div>
+        </header>
+        <div id="previewFrameWrap" class="preview-frame-wrap">
+            <iframe id="previewFrame" title="Website preview"></iframe>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="app-builder.js"></script>
+</body>
+</html>
