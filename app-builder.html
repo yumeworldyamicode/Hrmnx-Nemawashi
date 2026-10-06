@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nemawashi Website Builder</title>
+    <link rel="stylesheet" href="app-builder.css">
+</head>
+<body>
+    <div id="app" class="builder-shell">
+        <header class="topbar">
+            <div class="brand">
+                <button id="backButton" class="icon-button" title="Back">←</button>
+                <div>
+                    <div class="eyebrow">NEMAWASHI</div>
+                    <div id="siteName" class="site-name">Website Builder</div>
+                </div>
+            </div>
+
+            <div class="device-switcher">
+                <button class="device-button active" data-device="desktop">Desktop</button>
+                <button class="device-button" data-device="tablet">Tablet</button>
+                <button class="device-button" data-device="mobile">Mobile</button>
+            </div>
+
+            <div class="top-actions">
+                <span id="saveStatus" class="save-status">Ready</span>
+                <button id="previewButton" class="ghost-button">Preview</button>
+                <button id="publishButton" class="primary-button">Publish</button>
+            </div>
+        </header>
+
+        <main class="builder-main">
+            <aside class="left-panel">
+                <div class="panel-tabs">
+                    <button class="panel-tab active" data-left-tab="pages">Pages</button>
+                    <button class="panel-tab" data-left-tab="add">Add</button>
+                </div>
+
+                <section id="pagesPanel" class="left-content">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="section-kicker">SITE</span>
+                            <h2>Pages</h2>
+                        </div>
+                        <button id="addPageButton" class="small-add">+</button>
+                    </div>
+                    <div id="pageList" class="page-list"></div>
+                </section>
+
+                <section id="addPanel" class="left-content hidden">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="section-kicker">COMPONENTS</span>
+                            <h2>Add</h2>
+                        </div>
+                    </div>
+                    <div id="componentList" class="component-list"></div>
+                </section>
+            </aside>
+
+            <section class="canvas-area">
+                <div class="canvas-toolbar">
+                    <div id="pageBreadcrumb">Home</div>
+                    <div class="canvas-toolbar-actions">
+                        <button id="undoButton" class="toolbar-button" disabled>↶</button>
+                        <button id="redoButton" class="toolbar-button" disabled>↷</button>
+                    </div>
+                </div>
+
+                <div id="canvasViewport" class="canvas-viewport desktop">
+                    <div id="siteCanvas" class="site-canvas"></div>
+                </div>
+            </section>
+
+            <aside class="right-panel">
+                <div class="right-panel-header">
+                    <span class="section-kicker">DESIGN</span>
+                    <h2 id="propertiesTitle">Select an element</h2>
+                </div>
+                <div id="propertiesPanel" class="properties-panel">
+                    <div class="empty-properties">
+                        <div class="empty-icon">✦</div>
+                        <strong>Nothing selected</strong>
+                        <p>Select an element on the canvas to edit it.</p>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <div id="welcomeOverlay" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-logo">N</div>
+            <span class="section-kicker">NEMAWASHI WEBSITE BUILDER</span>
+            <h1>Create a website</h1>
+            <p>Build your site visually. You can change everything later.</p>
+
+            <label>
+                Website name
+                <input id="newWebsiteName" type="text" placeholder="My Website">
+            </label>
+
+            <label>
+                Website slug
+                <input id="newWebsiteSlug" type="text" placeholder="my-website">
+            </label>
+
+            <button id="createWebsiteButton" class="primary-button full">Create Website</button>
+            <button id="openExistingButton" class="text-button">Open existing website</button>
+        </div>
+    </div>
+
+    <div id="pageModal" class="modal-overlay hidden">
+        <div class="modal-card small">
+            <span class="section-kicker">NEW PAGE</span>
+            <h2>Add a page</h2>
+            <label>
+                Page name
+                <input id="newPageName" type="text" placeholder="About">
+            </label>
+            <div class="modal-actions">
+                <button id="cancelPageButton" class="ghost-button">Cancel</button>
+                <button id="createPageButton" class="primary-button">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="previewOverlay" class="preview-overlay hidden">
+        <div class="preview-topbar">
+            <span>Preview</span>
+            <button id="closePreviewButton" class="ghost-button">Close preview</button>
+        </div>
+        <iframe id="previewFrame" title="Website preview"></iframe>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="app-builder.js"></script>
+</body>
+</html>
