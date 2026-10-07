@@ -2720,3 +2720,156 @@ function getDefaultTheme(siteType = "standard") {
         announcement:{enabled:false,text:"",link:"",background:"#8f6cff",color:"#ffffff"},ads:{enabled:false,placement:"footer",rotation:"auto"},footer:{enabled:true,year:String(new Date().getFullYear()),company:"Hrmnx Entertainment",alignment:"center",text:""},logo:null,favicon:null
     };
 }
+
+
+/* =========================================================
+   GITHUB CODE GENERATION / PUBLISHING
+   Generates a real /app/<slug>/ website from the current
+   visual-builder data. GitHub credentials stay server-side
+   in the Cloudflare Worker.
+   ========================================================= */
+
+const GITHUB_PUBLISH_ENDPOINT = "/api/github/publish";
+
+function nmSlug(value) {
+    return String(value || "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "website";
+}
+
+function nmEscapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function nmElementHTML(element) {
+    const s = element?.settings || {};
+    switch (element?.type) {
+        case "hero":
+            return `<section class="hero"><div><h1>${nmEscapeHtml(s.title || "Your headline")}</h1><p>${nmEscapeHtml(s.text || "Your website starts here.")}</p>${s.buttonText ? `<a class="cta-button" href="${nmEscapeHtml(s.buttonUrl || "#")}">${nmEscapeHtml(s.buttonText)}</a>` : ""}</div></section>`;
+        case "heading":
+            return `<section class="section heading"><h2>${nmEscapeHtml(s.text || "Heading")}</h2></section>`;
+        case "text":
+            return `<section class="section text"><p>${nmEscapeHtml(s.text || "Text")}</p></section>`;
+        case "button":
+            return `<section class="section"><a class="cta-button" href="${nmEscapeHtml(s.url || "#")}">${nmEscapeHtml(s.text || "Button")}</a></section>`;
+        case "image":
+            return s.url ? `<section class="section"><img class="content-image" src="${nmEscapeHtml(s.url)}" alt="${nmEscapeHtml(s.alt || "")}"></section>` : "";
+        case "custom":
+            return String(s.html || "");
+        case "spacer":
+            return `<div style="height:${Number(s.height)||80}px"></div>`;
+        default:
+            return "";
+    }
+}
+
+function nmBuildGeneratedCSS(theme = {}) {
+    const bg = theme.backgroundGradient || theme.background || "#ffffff";
+    const text = theme.text || "#111111";
+    const primary = theme.primary || "#8f6cff";
+    const heading = theme.heading || text;
+    const radius = Number(theme.borderRadius ?? 12);
+    const font = String(theme.font || "Inter").replaceAll('"', "");
+    return `*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:${bg};color:${text};font-family:"${font}",system-ui,-apple-system,sans-serif;font-size:${Number(theme.bodySize)||16}px;line-height:1.6}.site-nav{position:sticky;top:0;z-index:20;background:rgba(0,0,0,.05);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,.1)}.nav-inner{max-width:1440px;margin:auto;min-height:72px;padding:0 6%;display:flex;align-items:center;justify-content:space-between}.brand-link{font-weight:800;color:inherit;text-decoration:none}.nav-links{display:flex;gap:22px}.nav-links a{color:inherit;text-decoration:none}.announcement{padding:10px 18px;text-align:center}.hero{min-height:460px;padding:90px 8%;display:flex;align-items:center;background:${bg}.hero h1{margin:0 0 20px;max-width:900px;font-size:${Number(theme.headingSize)||56}px;line-height:1;color:${heading}}.hero p{max-width:720px}.section{max-width:1200px;margin:auto;padding:55px 6%}.heading h2{font-size:38px;color:${heading}}.content-image{max-width:100%;height:auto;border-radius:${radius}px;display:block}.cta-button{display:inline-block;margin-top:18px;padding:13px 22px;border-radius:${radius}px;background:${primary};color:${theme.buttonText||"#fff"};text-decoration:none;font-weight:700}.custom-code{width:100%}footer{padding:35px 6%;text-align:center;border-top:1px solid rgba(0,0,0,.1)}@media(max-width:700px){.nav-links{gap:10px;font-size:13px}.hero h1{font-size:40px}}`;
+}
+
+function nmBuildGeneratedJS() {
+    return `document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const t=document.querySelector(a.getAttribute('href'));if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}}));`;
+}
+
+function nmBuildGeneratedHTML(site, page, sections, theme) {
+    const slug = nmSlug(site.slug || site.name);
+    const isHome = !!page.is_homepage;
+    const filename = isHome ? "index.html" : (nmSlug(page.slug || page.name) + ".html");
+    const nav = `<header class="site-nav"><div class="nav-inner"><a class="brand-link" href="/app/${slug}/">${nmEscapeHtml(site.name)}</a><nav class="nav-links"><a href="/app/${slug}/">Home</a></nav></div></header>`;
+    const announcement = theme.announcement?.enabled ? `<div class="announcement" style="background:${nmEscapeHtml(theme.announcement.background||theme.primary||"#8f6cff")};color:${nmEscapeHtml(theme.announcement.color||"#fff")}">${nmEscapeHtml(theme.announcement.text||"")}</div>` : "";
+    const body = sections.map(nmElementHTML).join("\\n");
+    const footer = theme.footer?.enabled !== false ? `<footer>${nmEscapeHtml(theme.footer?.text || "© " + new Date().getFullYear() + " " + (theme.footer?.company || "Hrmnx Entertainment"))}</footer>` : "";
+    return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${nmEscapeHtml(page.name || site.name)}</title><link rel="stylesheet" href="style.css"></head><body>${announcement}${nav}<main>${body}</main>${footer}<script src="script.js"></script></body></html>`;
+}
+
+async function nmCollectGeneratedFiles() {
+    if (!currentWebsite) throw new Error("No website is open.");
+    const { data: pages, error: pageError } = await supabaseClient.from("website_pages").select("*").eq("website_id", currentWebsite.id).order("position");
+    if (pageError) throw pageError;
+
+    const files = {};
+    const theme = currentTheme || {};
+    files["style.css"] = nmBuildGeneratedCSS(theme);
+    files["script.js"] = nmBuildGeneratedJS();
+
+    for (const page of (pages || [])) {
+        const { data: sections, error } = await supabaseClient.from("website_sections").select("*").eq("page_id", page.id).order("position");
+        if (error) throw error;
+        const elements = [];
+        for (const section of (sections || [])) {
+            const { data: sectionElements, error: elementError } = await supabaseClient.from("website_elements").select("*").eq("section_id", section.id).order("position");
+            if (elementError) throw elementError;
+            elements.push(...(sectionElements || []));
+        }
+        const filename = page.is_homepage ? "index.html" : `${nmSlug(page.slug || page.name)}.html`;
+        files[filename] = nmBuildGeneratedHTML(currentWebsite, page, elements, theme);
+    }
+
+    if (!files["index.html"]) {
+        const fallbackPage = { name: currentWebsite.name, slug: "home", is_homepage: true };
+        files["index.html"] = nmBuildGeneratedHTML(currentWebsite, fallbackPage, [], theme);
+    }
+
+    return { slug: nmSlug(currentWebsite.slug || currentWebsite.name), files };
+}
+
+async function generateWebsiteCode() {
+    try {
+        const result = await nmCollectGeneratedFiles();
+        window.__nmGeneratedWebsite = result;
+        toast("Generated " + Object.keys(result.files).length + " website files.");
+        console.log("Nemawashi generated website:", result);
+        return result;
+    } catch (error) {
+        console.error(error);
+        showError(error.message || "Could not generate website code.");
+        return null;
+    }
+}
+
+async function publishWebsiteToGitHub() {
+    try {
+        const result = await nmCollectGeneratedFiles();
+        const response = await fetch(GITHUB_PUBLISH_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                repository: "yumeworldyamicode/Hrmnx-Nemawashi",
+                basePath: "app/" + result.slug,
+                files: result.files,
+                message: "Publish website: " + (currentWebsite.name || result.slug)
+            })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "GitHub publish failed.");
+        toast("Published to GitHub: /app/" + result.slug + "/");
+        window.open("/app/" + result.slug + "/", "_blank");
+    } catch (error) {
+        console.error(error);
+        showError(error.message || "Could not publish website to GitHub.");
+    }
+}
+
+function bindGitHubPublisherUI() {
+    const generate = document.getElementById("generateCodeBtn");
+    const publish = document.getElementById("publishGithubBtn");
+    if (generate) generate.onclick = generateWebsiteCode;
+    if (publish) publish.onclick = publishWebsiteToGitHub;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(bindGitHubPublisherUI, 0);
+});
