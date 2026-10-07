@@ -1298,3 +1298,13 @@ button {
 .left-sidebar .sidebar-actions .sidebar-action {
     display: block;
 }
+
+
+/* GitHub publishing controls */
+.github-action{
+    border-color:rgba(114,223,164,.35);
+}
+.github-action:hover{
+    border-color:rgba(114,223,164,.75);
+    background:rgba(114,223,164,.08);
+}
