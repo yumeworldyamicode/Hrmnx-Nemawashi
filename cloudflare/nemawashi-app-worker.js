@@ -10,9 +10,25 @@ export default {
       return servePublishedApp(request, env);
     }
 
-    return fetch(request);
+    return fetchFromGitHubPages(request, env);
   }
 };
+
+
+async function fetchFromGitHubPages(request, env) {
+  const incoming = new URL(request.url);
+  const origin = new URL(env.GITHUB_PAGES_ORIGIN || "https://yumeworldyamicode.github.io/Hrmnx-Nemawashi/");
+  const base = origin.pathname.replace(/\/+$/, "");
+  const target = new URL(origin.origin + base + (incoming.pathname || "/"));
+  target.search = incoming.search;
+
+  return fetch(new Request(target.toString(), {
+    method: request.method,
+    headers: request.headers,
+    body: ["GET", "HEAD"].includes(request.method) ? undefined : request.body,
+    redirect: "follow"
+  }));
+}
 
 async function servePublishedApp(request, env) {
   const incoming = new URL(request.url);
