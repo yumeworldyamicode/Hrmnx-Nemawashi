@@ -1,0 +1,7 @@
+name = "nemawashi-app-router"
+main = "nemawashi-app-worker.js"
+compatibility_date = "2026-10-07"
+
+[vars]
+GITHUB_PAGES_ORIGIN = "https://yumeworldyamicode.github.io/Hrmnx-Nemawashi/"
+GITHUB_BRANCH = "main"
