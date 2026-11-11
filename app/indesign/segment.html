@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111218">
+<title>Shared music section - indesign</title>
+<style>
+:root{color-scheme:dark;--bg:#111218;--panel:#1b1d25;--line:#ffffff20;--text:#f7f7fa;--muted:#a6a8b5;--accent:#9ba9ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#252b48 0,transparent 55%),var(--bg);color:var(--text);font-family:Helvetica,Arial,sans-serif}
+main{width:min(680px,calc(100% - 32px));margin:0 auto;padding:38px 0}
+.brand{font-size:11px;letter-spacing:1.8px;text-transform:lowercase;color:#d7d9e5}.brand b{color:#fff}.brand span{color:var(--accent)}
+.card{margin-top:72px;background:#ffffff08;border:1px solid var(--line);padding:clamp(24px,5vw,42px);box-shadow:0 30px 100px #0005;backdrop-filter:blur(20px)}
+.eyebrow{font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700}.card h1{font-size:clamp(28px,6vw,44px);letter-spacing:-1.8px;line-height:1.05;margin:13px 0}.project{font-size:13px;color:var(--muted)}.idea{font-size:16px;line-height:1.65;margin:30px 0;padding-left:15px;border-left:2px solid var(--accent);white-space:pre-wrap}
+.range{font-size:11px;color:var(--muted);margin:0 0 12px}.player{padding:17px;background:#ffffff0c;border:1px solid var(--line)}.controls{display:flex;align-items:center;gap:12px}.controls button{width:42px;height:42px;border:0;background:var(--accent);color:#111218;font-size:15px;cursor:pointer}.controls input{flex:1;min-width:0;accent-color:var(--accent)}.controls span{font-size:10px;min-width:98px;text-align:right;font-variant-numeric:tabular-nums}
+.note{font-size:11px;line-height:1.6;color:var(--muted);margin-top:18px}.state{text-align:center;padding:90px 10px;color:var(--muted)}.state h1{font-size:27px;color:#fff}
+@media(max-width:520px){.card{margin-top:42px}.controls{gap:8px}.controls span{min-width:82px;font-size:9px}}
+</style>
+</head>
+<body>
+<main>
+<div class="brand"><b>powered by indesign<span>.</span></b> · NEMAWASHI PRIVATE SHARE</div>
+<section class="card" id="share-app"><div class="state">Loading shared section…</div></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../js/supabase.js?v=2"></script>
+<script>
+(async()=>{
+const app=document.getElementById("share-app"),id=new URLSearchParams(location.search).get("id");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=t=>{t=Math.max(0,Math.floor(Number(t)||0));return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");};
+const fail=message=>{app.innerHTML='<div class="state"><h1>Could not open this section</h1><p>'+esc(message)+'</p></div>';};
+try{
+ if(!id)throw new Error("This share link is incomplete.");
+ const client=window.supabaseClient;
+ const {data:{user},error:authError}=await client.auth.getUser();
+ if(authError||!user){location.href="../../login.html?next="+encodeURIComponent(location.pathname+location.search);return;}
+ const {data:share,error}=await client.from("indesign_shared_segments").select("id,sender_id,recipient_id,project_name,section_name,idea_text,start_seconds,end_seconds,audio_path,created_at").eq("id",id).maybeSingle();
+ if(error)throw error;if(!share)throw new Error("This private share is unavailable or your account does not have access.");
+ const {data:file,error:fileError}=await client.storage.from("indesign-message-audio").createSignedUrl(share.audio_path,3600);
+ if(fileError)throw fileError;
+ const start=Number(share.start_seconds),end=Number(share.end_seconds);
+ app.innerHTML='<p class="eyebrow">PRIVATE MUSIC SECTION</p><h1>'+esc(share.project_name)+'</h1><div class="project">'+esc(share.section_name)+' · shared with you through Nemawashi</div><p class="idea">'+esc(share.idea_text)+'</p><p class="range">PLAYBACK RANGE · '+fmt(start)+' — '+fmt(end)+'</p><div class="player"><div class="controls"><button type="button" id="segment-play" aria-label="Play section">▶</button><input type="range" id="segment-seek" min="0" max="1000" value="0" aria-label="Seek within shared section"><span id="segment-time">'+fmt(start)+' / '+fmt(end)+'</span></div><audio id="segment-audio" src="'+esc(file.signedUrl)+'" preload="metadata" hidden></audio></div><p class="note">This audio is private to the people in this conversation. Playback is limited to the selected section of the original production.</p>';
+ const audio=document.getElementById("segment-audio"),play=document.getElementById("segment-play"),seek=document.getElementById("segment-seek"),time=document.getElementById("segment-time");
+ audio.addEventListener("loadedmetadata",()=>{audio.currentTime=start;time.textContent=fmt(start)+" / "+fmt(end);});
+ play.addEventListener("click",()=>{if(audio.paused){if(audio.currentTime<start||audio.currentTime>=end)audio.currentTime=start;audio.play().catch(()=>{});}else audio.pause();});
+ audio.addEventListener("play",()=>play.textContent="Ⅱ");audio.addEventListener("pause",()=>play.textContent="▶");
+ audio.addEventListener("timeupdate",()=>{if(audio.currentTime>=end){audio.pause();audio.currentTime=end;}const progress=Math.max(0,Math.min(1,(audio.currentTime-start)/(end-start)));seek.value=Math.round(progress*1000);time.textContent=fmt(audio.currentTime)+" / "+fmt(end);});
+ seek.addEventListener("input",()=>{audio.currentTime=start+(end-start)*(Number(seek.value)/1000);});
+}catch(error){console.error(error);fail(error.message||"Please try again later.");}
+})();
+</script>
+</body>
+</html>
