@@ -18,9 +18,9 @@ Create OAuth apps for Figma, Adobe and Canva in their respective developer
 portals. Use this exact callback URL for each provider, replacing the provider
 name at the end:
 
-- Figma: `https://bftgnubawqwvpbqkldpm.supabase.co/functions/v1/indesign-oauth-callback?provider=figma`
-- Adobe: `https://bftgnubawqwvpbqkldpm.supabase.co/functions/v1/indesign-oauth-callback?provider=adobe`
-- Canva: `https://bftgnubawqwvpbqkldpm.supabase.co/functions/v1/indesign-oauth-callback?provider=canva`
+- Figma: `https://bftgnubawqwvpbqkldpm.supabase.co/functions/v1/indesign-oauth-callback`
+- Adobe: `https://bftgnubawqwvpbqkldpm.supabase.co/functions/v1/indesign-oauth-callback`
+- Canva: `https://bftgnubawqwvpbqkldpm.supabase.co/functions/v1/indesign-oauth-callback`
 
 Copy each provider's client ID, client secret and approved scopes from its
 developer portal. Scope availability depends on the provider app and the APIs
