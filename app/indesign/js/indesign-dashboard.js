@@ -207,7 +207,7 @@
         const layerHTML = objects.map(o => '<button class="mood-layer' + (selectedMoodObject && selectedMoodObject.type === o.type && selectedMoodObject.index === o.index ? ' active' : '') + '" data-select-mood-object="' + o.type + ':' + o.index + '"><span>' + escapeHTML(o.type === "reference" ? (o.item.title || "Image") : o.type === "note" ? (o.item.text || "Note").slice(0, 25) : o.item.color) + '</span><small>' + (o.type === "reference" ? "Image" : o.type === "note" ? "Note" : "Color") + '</small></button>').join("");
         const palette = data.palette.map(c => '<button class="mood-sidebar-color" data-remove-mood-color="' + data.palette.indexOf(c) + '"><i style="background:' + escapeHTML(c.color || c) + '"></i><span>' + escapeHTML(c.color || c) + '</span></button>').join("");
         content.innerHTML = '<div class="mood-workspace">' +
-          '<header class="mood-topbar"><button class="mood-back" id="back-to-projects" title="Back to projects">←</button><div class="mood-doc-title"><strong>' + escapeHTML(activeProject.name) + '</strong><small>MOODBOARD</small></div><button class="mood-purpose-button" id="edit-mood-purpose">' + escapeHTML(data.purpose || "Add a purpose…") + '</button><span class="mood-save-state" id="mood-save-state">All changes saved locally</span><button class="mood-top-action" id="save-moodboard-button">Save</button><div class="mood-export-wrap"><button class="mood-top-action" id="mood-export-toggle">Export ↓</button><div class="mood-export-menu" id="mood-export-menu"><button data-export-moodboard="png">Download PNG</button><button data-export-moodboard="json">Download JSON</button><button data-export-project="' + escapeHTML(activeProject.id) + '">Download .in</button></div></div></header>' +
+          '<header class="mood-topbar"><button class="mood-back" id="back-to-projects" title="Back to projects">←</button><div class="mood-doc-title"><strong>' + escapeHTML(activeProject.name) + '</strong><small>MOODBOARD</small></div><button class="mood-purpose-button" id="edit-mood-purpose">' + escapeHTML(data.purpose || "Add a purpose…") + '</button><span class="mood-save-state" id="mood-save-state">Unsaved changes</span><button class="mood-top-action" id="save-moodboard-button">Save</button><div class="mood-export-wrap"><button class="mood-top-action" id="mood-export-toggle">Export ↓</button><div class="mood-export-menu" id="mood-export-menu"><button data-export-moodboard="png">Download PNG</button><button data-export-moodboard="json">Download JSON</button><button data-export-project="' + escapeHTML(activeProject.id) + '">Download .in</button></div></div></header>' +
           '<div class="mood-toolstrip"><button class="active" data-mood-tool="select" title="Select">↖</button><button data-mood-tool="pan" title="Pan">✋</button><i></i><button data-add-mood-ref title="Add image">▧</button><button data-add-mood-note title="Add note">T</button><button data-add-mood-color title="Add color">◉</button><button data-connect-mood-refs title="Connect two selected images" ' + (selectedMoodRefs.length === 2 ? '' : 'disabled') + '>⌁</button><span class="mood-tool-hint">Select objects to move them · Drag empty space to pan · Scroll to zoom</span></div>' +
           '<div class="mood-workarea"><aside class="mood-left-panel"><div class="mood-panel-heading">LAYERS <span>' + objects.length + '</span></div><div class="mood-layer-list">' + (layerHTML || '<p class="mood-panel-empty">Your objects will appear here.</p>') + '</div><div class="mood-panel-heading mood-panel-subhead">COLOR PALETTE <button data-add-mood-color>＋</button></div><div class="mood-sidebar-palette">' + (palette || '<p class="mood-panel-empty">No colors yet.</p>') + '</div><div class="mood-panel-heading mood-panel-subhead">CONNECTIONS <span>' + data.connections.length + '</span></div><div class="mood-connection-list">' + data.connections.map((p,i) => '<div><span>' + escapeHTML(data.references[p[0]]?.title || "Image " + (p[0]+1)) + ' ↔ ' + escapeHTML(data.references[p[1]]?.title || "Image " + (p[1]+1)) + '</span><button data-delete-mood-connection="' + i + '">×</button></div>').join("") + '</div></aside>' +
           '<main class="mood-canvas-viewport" id="mood-canvas-viewport"><div class="mood-canvas-world" id="mood-canvas-world" style="transform:translate(' + moodViewport.x + 'px,' + moodViewport.y + 'px) scale(' + moodViewport.zoom + ')"><svg class="mood-connection-svg" id="mood-connection-svg">' + connectionLines + '</svg>' + objects.map(moodObjectHTML).join("") + '</div></main>' +
@@ -270,6 +270,8 @@
                 item.x = Math.round(moodPointer.x + dx); item.y = Math.round(moodPointer.y + dy);
                 const node = world.querySelector('[data-mood-object="' + moodPointer.type + ':' + moodPointer.index + '"]');
                 if (node) { node.style.left = item.x + "px"; node.style.top = item.y + "px"; }
+                const saveState = document.getElementById("mood-save-state");
+                if (saveState) saveState.textContent = "Unsaved changes";
                 updateMoodConnections();
             }
         });
@@ -346,6 +348,14 @@
         ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#111"; ctx.font = "600 34px Arial"; ctx.fillText(activeProject.name, 64, 68);
         if (d.purpose) { ctx.fillStyle = "#777"; ctx.font = "18px Arial"; ctx.fillText(d.purpose.slice(0, 110), 64, 102); }
+        d.connections.forEach(pair => {
+            const a = d.references[pair[0]], b = d.references[pair[1]];
+            if (!a || !b) return;
+            ctx.beginPath();
+            ctx.moveTo(64 + (Number(a.x || 0) + 115) * .75, 150 + (Number(a.y || 0) + 100) * .75);
+            ctx.lineTo(64 + (Number(b.x || 0) + 115) * .75, 150 + (Number(b.y || 0) + 100) * .75);
+            ctx.strokeStyle = "#748fe8"; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.stroke(); ctx.setLineDash([]);
+        });
         for (const item of d.references) {
             const x = 64 + Number(item.x || 0) * .75, y = 150 + Number(item.y || 0) * .75;
             const img = new Image(); img.crossOrigin = "anonymous";
@@ -382,6 +392,8 @@
         if (error) { console.error(error); notify("Could not save moodboard. Check that the Step 3 migration was run."); return; }
         activeProject = data;
         projects = projects.map(p => p.id === data.id ? data : p);
+        const saveState = document.getElementById("mood-save-state");
+        if (saveState) saveState.textContent = "Saved";
         notify("Moodboard saved.");
     }
     function renderProject(project) {
@@ -391,6 +403,8 @@
         if (project.type === "moodboard") {
             if (!project.content || typeof project.content !== "object") project.content = {};
             selectedMoodRefs = [];
+            selectedMoodObject = null;
+            moodViewport = { x: 0, y: 0, zoom: 1 };
             renderMoodboard();
             return;
         }
