@@ -446,7 +446,7 @@
     let brainstormAudioUrl = null;
     function renderMusicReferences(text) {
         const refs=[]; let match;
-        const timePattern=/\\b(\\d{1,2}:\\d{2})\\s*(?:to|-)\\s*(\\d{1,2}:\\d{2})\\b/gi;
+        const timePattern=/\b(\d{1,2}:\d{2})\s*(?:to|-)\s*(\d{1,2}:\d{2})\b/gi;
         while((match=timePattern.exec(text))!==null)refs.push({type:"time",start:match[1],end:match[2]});
         const rulePattern=/\\bRule\\s*(\\d+)(?:\\s*(?:to|-)\\s*Rule?\\s*(\\d+))?\\b/gi;
         while((match=rulePattern.exec(text))!==null)refs.push({type:"rule",start:Number(match[1]),end:match[2]?Number(match[2]):Number(match[1])});
