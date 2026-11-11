@@ -217,3 +217,7 @@ body.dark-theme .mood-layer:hover,body.dark-theme .mood-layer.active,body.dark-t
 body.dark-theme .mood-top-action,body.dark-theme .mood-export-menu,body.dark-theme .mood-panel-button{background:#191919;color:#eee}
 @media(max-width:900px){.mood-workarea{grid-template-columns:165px minmax(0,1fr)}.mood-right-panel{display:none}.mood-tool-hint{display:none}}
 @media(max-width:600px){.mood-workarea{grid-template-columns:125px minmax(0,1fr)}.mood-left-panel{padding:10px 7px}.mood-doc-title{min-width:75px}.mood-purpose-button{display:none}.mood-save-state{display:none}.mood-topbar{gap:7px;padding:0 8px}}
+
+
+.mood-object-remove{position:absolute;right:5px;top:31px;width:22px;height:22px;border:1px solid #ddd;background:#fff;color:#a33;font-size:14px;line-height:1;cursor:pointer;opacity:0}
+.mood-canvas-object:hover .mood-object-remove,.mood-canvas-object.selected .mood-object-remove{opacity:1}
