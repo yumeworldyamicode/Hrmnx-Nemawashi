@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       return json(503, { error: provider.toUpperCase() + " is not configured yet. Add its client ID and scopes to Supabase Edge Function secrets." });
     }
 
-    const redirectUri = supabaseUrl + "/functions/v1/indesign-oauth-callback?provider=" + provider;
+    const redirectUri = supabaseUrl + "/functions/v1/indesign-oauth-callback";
     const state = randomBase64Url(32);
     const stateHash = await sha256Base64Url(state);
     const verifier = config.usePkce ? randomBase64Url(64) : null;
