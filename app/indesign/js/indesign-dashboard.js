@@ -342,7 +342,11 @@
     }
     async function exportMoodboardPNG() {
         const d = moodboardData(), canvas = document.createElement("canvas");
-        canvas.width = 1800; canvas.height = 1200;
+        const allObjects = [...d.references, ...d.notes, ...d.palette];
+        const maxX = Math.max(0, ...allObjects.map(item => Number(item.x || 0) + 320));
+        const maxY = Math.max(0, ...allObjects.map(item => Number(item.y || 0) + 300));
+        canvas.width = Math.min(4096, Math.max(1800, Math.ceil(128 + maxX * .75)));
+        canvas.height = Math.min(4096, Math.max(1200, Math.ceil(180 + maxY * .75)));
         const ctx = canvas.getContext("2d");
         ctx.fillStyle = "#f1f2f5"; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -376,7 +380,7 @@
             ctx.fillStyle = "#222"; ctx.font = "16px Arial"; ctx.fillText((item.text || "").slice(0, 100), x + 12, y + 28, 195);
         }
         d.palette.forEach(item => {
-            const color = item.color || item, x = 64 + Number(item.x || 0) * .75, y = 1030;
+            const color = item.color || item, x = 64 + Number(item.x || 0) * .75, y = 150 + Number(item.y || 0) * .75;
             ctx.fillStyle = color; ctx.fillRect(x, y, 54, 54);
             ctx.fillStyle = "#333"; ctx.font = "12px Arial"; ctx.fillText(color, x, y + 72);
         });
@@ -465,7 +469,7 @@
         projects.unshift(data); notify("Project created."); renderProject(data);
     }
     async function renameProject(id) {
-        const project = projects.find(p => p.id === id);
+        const project = activeProject?.id === id ? activeProject : projects.find(p => p.id === id);
         if (!project) return;
         const name = window.prompt("New project name:", project.name);
         if (!name || !name.trim() || name.trim() === project.name) return;
