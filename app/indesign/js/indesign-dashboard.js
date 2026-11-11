@@ -125,7 +125,8 @@
             const rect = stage.getBoundingClientRect();
             boardDrag = { index, pointerX: event.clientX, pointerY: event.clientY, x: Number(item.x || 0), y: Number(item.y || 0) };
             object.setPointerCapture?.(event.pointerId);
-            redrawBoard();
+            stage.querySelectorAll(".board-object").forEach(node => node.classList.toggle("selected", node === object));
+            document.querySelectorAll(".board-layer").forEach((node, layerIndex) => node.classList.toggle("active", layerIndex === index));
             event.preventDefault();
         });
         stage.addEventListener("pointermove", event => {
