@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const provider = body.provider as Provider;
-    if (!(provider in providerConfig)) return json(400, { error: "This provider is not available for OAuth yet." });
+    if (!provider || !(provider in providerConfig)) return json(400, { error: "This provider is not available for OAuth yet." });
 
     const config = providerConfig[provider];
     const clientId = Deno.env.get(config.clientEnv);
