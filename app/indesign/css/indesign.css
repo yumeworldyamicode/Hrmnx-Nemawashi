@@ -291,3 +291,31 @@ body.dark-theme .brainstorm-mode-switch button.active{background:#333;color:#fff
 body.dark-theme .brainstorm-idea{background:#202024}
 @media(max-width:850px){.brainstorm-body{grid-template-columns:190px minmax(0,1fr)}.brainstorm-section-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.brainstorm-body{grid-template-columns:1fr}.brainstorm-sidebar{max-height:230px;border-right:0;border-bottom:1px solid var(--line)}.brainstorm-topbar{gap:6px;padding:0 8px}.brainstorm-mode-switch{margin-left:0}.brainstorm-topbar .mood-save-state{display:none}.brainstorm-topbar .mood-top-action{padding:0 7px}}
+
+
+/* Step 6A — native music package converters */
+.music-tools-overlay{z-index:11000}
+.music-tools-dialog{width:min(760px,100%);max-height:min(88vh,900px);overflow:auto;background:var(--bg);border:1px solid var(--line);color:var(--text);box-shadow:0 25px 90px #0004;transform:translateY(14px) scale(.985);transition:transform .22s ease}
+.music-tools-overlay.visible .music-tools-dialog{transform:translateY(0) scale(1)}
+.music-tools-dialog>header{display:flex;align-items:center;justify-content:space-between;padding:19px 22px;border-bottom:1px solid var(--line)}
+.music-tools-dialog>header>div{display:grid;gap:4px}.music-tools-brand{font-size:13px;font-weight:800}.music-tools-brand span{color:var(--accent)}.music-tools-dialog header small{font-size:8px;letter-spacing:1.2px;color:var(--muted)}
+.music-tools-dialog header>button{width:28px;height:28px;border:0;background:var(--surface);font-size:19px;cursor:pointer}
+.music-tools-dialog nav{display:flex;gap:4px;padding:10px 22px;border-bottom:1px solid var(--line)}
+.music-tools-dialog nav button{padding:9px 12px;border:1px solid transparent;background:transparent;color:var(--muted);font-size:10px;font-weight:700;cursor:pointer}
+.music-tools-dialog nav button.active{background:var(--surface);border-color:var(--line);color:var(--text)}
+.music-tools-content{padding:22px}
+.music-tool-intro h2{font-size:23px;letter-spacing:-1px;margin:0 0 6px}.music-tool-intro p{font-size:11px;color:var(--muted);margin:0 0 20px}
+.music-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.music-tool-field{display:block;min-width:0;margin:0 0 13px;font-size:9px;font-weight:700;color:var(--muted)}
+.music-tool-field input,.music-tool-field textarea,.music-tool-field select{display:block;width:100%;margin-top:6px;padding:10px 11px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:11px Helvetica,Arial,sans-serif;outline:none}
+.music-tool-field textarea{resize:vertical;line-height:1.55}.music-tool-field input:focus,.music-tool-field textarea:focus,.music-tool-field select:focus{border-color:var(--accent)}
+.music-tool-upload{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 18px}
+.music-tool-upload label{padding:13px;border:1px dashed var(--line);font-size:10px;font-weight:700;color:var(--muted)}
+.music-tool-upload input{display:block;width:100%;margin-top:9px;font-size:10px}
+.music-tool-wide{margin-top:4px}
+.music-tool-actions{display:flex;justify-content:flex-end;align-items:center;gap:9px;margin-top:17px;padding-top:16px;border-top:1px solid var(--line)}
+.music-tool-import{position:relative;padding:9px 12px;border:1px solid var(--line);font-size:10px;font-weight:700;cursor:pointer}.music-tool-import input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.music-tool-primary{padding:10px 15px;border:1px solid #111;background:#111;color:#fff;font-size:10px;font-weight:700;cursor:pointer}
+.music-tool-note{min-height:18px;margin:12px 0 0;font-size:9px;line-height:1.5;color:var(--muted)}
+body.dark-theme .music-tool-primary{background:#748fe8;border-color:#748fe8}
+@media(max-width:600px){.music-tools-content{padding:15px}.music-tool-grid,.music-tool-upload{grid-template-columns:1fr}.music-tools-dialog nav{padding:8px 12px}}
