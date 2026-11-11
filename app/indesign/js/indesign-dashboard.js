@@ -236,18 +236,22 @@
         }, { passive: false });
         viewport.addEventListener("pointerdown", event => {
             const object = event.target.closest("[data-mood-object]");
-            if (object && !event.target.closest("button")) {
+            if (object && !event.target.closest("button") && !viewport.classList.contains("pan-tool")) {
                 const [type, rawIndex] = object.dataset.moodObject.split(":");
                 const index = Number(rawIndex);
                 selectedMoodObject = { type, index };
-                if (type === "reference") selectedMoodRefs = selectedMoodRefs.includes(index) ? selectedMoodRefs : selectedMoodRefs.concat(index).slice(-2);
+                if (type === "reference") selectedMoodRefs = selectedMoodRefs.includes(index) ? selectedMoodRefs.filter(i => i !== index) : selectedMoodRefs.concat(index).slice(-2);
                 const item = type === "reference" ? moodboardData().references[index] : type === "note" ? moodboardData().notes[index] : moodboardData().palette[index];
                 moodPointer = { mode: "object", type, index, startX: event.clientX, startY: event.clientY, x: Number(item.x || 0), y: Number(item.y || 0), pointerId: event.pointerId };
                 object.setPointerCapture(event.pointerId);
                 document.querySelectorAll(".mood-canvas-object").forEach(n => n.classList.toggle("selected", n === object));
+                const connect = document.querySelector("[data-connect-mood-refs]");
+                if (connect) connect.disabled = selectedMoodRefs.length !== 2;
+                const details = document.getElementById("mood-selection-details");
+                if (details) details.textContent = type === "reference" ? (item.title || "Image reference") : type === "note" ? (item.text || "Note") : (item.color || item);
                 event.preventDefault(); return;
             }
-            if (!object) {
+            if (!object || viewport.classList.contains("pan-tool")) {
                 moodPointer = { mode: "pan", startX: event.clientX, startY: event.clientY, x: moodViewport.x, y: moodViewport.y, pointerId: event.pointerId };
                 viewport.setPointerCapture(event.pointerId);
                 viewport.classList.add("is-panning");
