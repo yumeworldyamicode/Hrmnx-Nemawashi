@@ -427,6 +427,7 @@ body.dark-theme .dem-sync-player audio{color-scheme:dark}
 /* Integration brand marks */
 .integration-icon{overflow:hidden;background:#fff!important}
 .integration-icon img{display:block;width:23px;height:23px;object-fit:contain}
+.integration-logo-fallback{font-size:11px;font-weight:800;letter-spacing:-.3px;color:#171717;line-height:1;text-align:center}
 .dark-theme .integration-icon{background:#fff!important}
 .integration-exchange{margin-top:48px;border-top:1px solid var(--line);padding-top:34px}
 .integration-exchange-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
