@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     const stateHash = base64(new Uint8Array(stateBytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
     const { data: stateRow, error: stateError } = await admin
       .from("indesign_oauth_states").select("*").eq("state_hash", stateHash)
-      .eq("provider", provider).gt("expires_at", new Date().toISOString()).maybeSingle();
+      .gt("expires_at", new Date().toISOString()).maybeSingle();
     if (stateError || !stateRow) return html("Session expired", "The authorisation session expired or could not be verified. Start the connection again from indesign.");
 
     await admin.from("indesign_oauth_states").delete().eq("id", stateRow.id);
