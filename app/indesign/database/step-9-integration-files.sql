@@ -42,10 +42,6 @@ create policy "Employees can view their own integration assets"
       select 1 from public.indesign_projects p
       where p.id = project_id and p.owner_id = auth.uid()
     )
-    and exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.is_staff = true
-    )
   );
 
 drop policy if exists "Employees can add assets to their own projects"
@@ -58,10 +54,6 @@ create policy "Employees can add assets to their own projects"
     and exists (
       select 1 from public.indesign_projects p
       where p.id = project_id and p.owner_id = auth.uid()
-    )
-    and exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.is_staff = true
     )
   );
 
@@ -93,10 +85,6 @@ create policy "Employees can upload integration assets to their project folders"
       select 1 from public.indesign_projects p
       where p.id::text = (storage.foldername(name))[2]
         and p.owner_id = auth.uid()
-    )
-    and exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.is_staff = true
     )
   );
 
