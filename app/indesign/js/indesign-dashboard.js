@@ -17,6 +17,33 @@
     function escapeHTML(value) {
         return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     }
+    function showDialog(options = {}) {
+        return new Promise(resolve => {
+            const kind = options.kind || "prompt";
+            const isConfirm = kind === "confirm";
+            const isSelect = kind === "select";
+            const isTextarea = kind === "textarea";
+            const value = options.value ?? "";
+            const overlay = document.createElement("div");
+            overlay.className = "indesign-dialog-overlay";
+            overlay.innerHTML = '<section class="indesign-dialog" role="dialog" aria-modal="true" aria-labelledby="indesign-dialog-title">' +
+              '<div class="indesign-dialog-top"><span class="indesign-dialog-mark">indesign<span>.</span></span><button type="button" class="indesign-dialog-close" data-dialog-cancel aria-label="Close">×</button></div>' +
+              '<h2 id="indesign-dialog-title">' + escapeHTML(options.title || "A quick question") + '</h2>' +
+              (options.message ? '<p class="indesign-dialog-message">' + escapeHTML(options.message) + '</p>' : '') +
+              (isConfirm ? '' : (isSelect ? '<label class="indesign-dialog-label">' + escapeHTML(options.label || "Choose an option") + '<select class="indesign-dialog-input" id="indesign-dialog-value">' + (options.options || []).map(o => '<option value="' + escapeHTML(o.value) + '"' + (o.value === value ? " selected" : "") + '>' + escapeHTML(o.label) + '</option>').join("") + '</select></label>' : '<label class="indesign-dialog-label">' + escapeHTML(options.label || "Your answer") + (isTextarea ? '<textarea class="indesign-dialog-input" id="indesign-dialog-value" rows="4" placeholder="' + escapeHTML(options.placeholder || "") + '">' + escapeHTML(value) + '</textarea>' : '<input class="indesign-dialog-input" id="indesign-dialog-value" type="' + escapeHTML(options.inputType || "text") + '" value="' + escapeHTML(value) + '" placeholder="' + escapeHTML(options.placeholder || "") + '" autocomplete="off">') + '</label>')) +
+              '<div class="indesign-dialog-actions"><button type="button" class="indesign-dialog-cancel" data-dialog-cancel>' + escapeHTML(options.cancelLabel || "Cancel") + '</button><button type="button" class="indesign-dialog-submit">' + escapeHTML(options.confirmLabel || (isConfirm ? "Continue" : "Save")) + '</button></div></section>';
+            const finish = result => { overlay.classList.remove("visible"); window.setTimeout(() => overlay.remove(), 180); document.removeEventListener("keydown", onKey); resolve(result); };
+            const submit = () => { const field = overlay.querySelector("#indesign-dialog-value"); finish(isConfirm ? true : field ? field.value : ""); };
+            const onKey = event => { if (event.key === "Escape") finish(isConfirm ? false : null); if (event.key === "Enter" && !isTextarea && !isConfirm) { event.preventDefault(); submit(); } };
+            overlay.addEventListener("click", event => { if (event.target === overlay || event.target.closest("[data-dialog-cancel]")) finish(isConfirm ? false : null); if (event.target.closest(".indesign-dialog-submit")) submit(); });
+            document.addEventListener("keydown", onKey);
+            document.body.appendChild(overlay);
+            requestAnimationFrame(() => { overlay.classList.add("visible"); overlay.querySelector("#indesign-dialog-value")?.focus(); });
+        });
+    }
+    const ask = (title, value = "", placeholder = "") => showDialog({ title, value, placeholder, label: " " });
+    const confirmAction = (title, message, confirmLabel = "Continue") => showDialog({ kind: "confirm", title, message, confirmLabel });
+
     function displayName() {
         return employee?.profile?.display_name || employee?.profile?.username ||
             employee?.user?.email?.split("@")[0] || "Your account";
@@ -141,11 +168,11 @@
         const stopDrag = () => { if (boardDrag) { boardDrag = null; redrawBoard(); } };
         stage.addEventListener("pointerup", stopDrag);
         stage.addEventListener("pointercancel", stopDrag);
-        stage.addEventListener("dblclick", event => {
+        stage.addEventListener("dblclick", async event => {
             const object = event.target.closest(".board-text");
             if (!object) return;
             const item = boardElements()[Number(object.dataset.boardElement)];
-            const value = window.prompt("Edit text:", item.text || "");
+            const value = await ask("Edit text", item.text || "");
             if (value !== null) { item.text = value; redrawBoard(); }
         });
     }
@@ -286,48 +313,48 @@
             return a && b ? '<line x1="' + (Number(a.x || 0)+115) + '" y1="' + (Number(a.y || 0)+100) + '" x2="' + (Number(b.x || 0)+115) + '" y2="' + (Number(b.y || 0)+100) + '" />' : "";
         }).join("");
     }
-    function addMoodReference() {
-        const value = window.prompt("Paste an image URL (https://):");
+    async function addMoodReference() {
+        const value = await ask("Add image reference", "", "Paste an HTTPS image URL");
         if (!value) return;
         let src;
         try { const url = new URL(value); if (url.protocol !== "https:") throw new Error("https required"); src = url.href; }
         catch (_) { notify("Please enter a valid HTTPS image URL."); return; }
-        const titleValue = window.prompt("Give this reference a name:", "New reference");
+        const titleValue = await ask("Name this reference", "New reference");
         if (titleValue === null) return;
-        const notes = window.prompt("What should you remember about it?", "") ;
+        const notes = await showDialog({ kind: "textarea", title: "Add a note", value: "", placeholder: "What should you remember about this reference?" });
         moodboardData().references.push({ src, title: titleValue.trim() || "Untitled reference", notes: notes || "", x: 100 + moodboardData().references.length * 34, y: 100 + moodboardData().references.length * 34 });
         renderMoodboard();
     }
-    function editMoodReference(index) {
+    async function editMoodReference(index) {
         const item = moodboardData().references[index];
         if (!item) return;
-        const titleValue = window.prompt("Reference name:", item.title || "");
+        const titleValue = await ask("Edit reference name", item.title || "");
         if (titleValue === null) return;
-        const notes = window.prompt("Notes:", item.notes || "");
+        const notes = await showDialog({ kind: "textarea", title: "Edit reference notes", value: item.notes || "" });
         if (notes === null) return;
         item.title = titleValue.trim();
         item.notes = notes;
         renderMoodboard();
     }
-    function addMoodColor() {
-        const value = window.prompt("Enter a hex color (for example #748fe8):", "#748fe8");
+    async function addMoodColor() {
+        const value = await ask("Add a palette color", "#748fe8", "Hex color, e.g. #748fe8");
         if (!value) return;
         if (!/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim())) { notify("Enter a valid 3- or 6-digit hex color."); return; }
         moodboardData().palette.push({ color: value.trim().toLowerCase(), x: 120 + moodboardData().palette.length * 35, y: 760 });
         renderMoodboard();
     }
-    function addMoodNote() {
-        const value = window.prompt("Write a note for your moodboard:", "New idea");
+    async function addMoodNote() {
+        const value = await showDialog({ kind: "textarea", title: "New moodboard note", value: "New idea", placeholder: "Write your idea…" });
         if (value === null) return;
         const notes = moodboardData().notes;
         notes.push({ text: value, x: 140 + notes.length * 35, y: 430 + notes.length * 35 });
         selectedMoodObject = { type: "note", index: notes.length - 1 };
         renderMoodboard();
     }
-    function editMoodNote(index) {
+    async function editMoodNote(index) {
         const item = moodboardData().notes[index];
         if (!item) return;
-        const value = window.prompt("Edit note:", item.text || "");
+        const value = await showDialog({ kind: "textarea", title: "Edit note", value: item.text || "" });
         if (value !== null) { item.text = value; renderMoodboard(); }
     }
     function exportMoodboardJSON() {
@@ -441,15 +468,15 @@
         projects = projects.map(p => p.id === data.id ? data : p);
         notify("Board saved.");
     }
-    function addBoardElement(kind) {
+    async function addBoardElement(kind) {
         if (!activeProject || activeProject.type !== "board") return;
         const item = { kind, x: 70 + boardElements().length * 18, y: 65 + boardElements().length * 18, color: kind === "shape" ? "#748fe8" : "#111111" };
         if (kind === "text") {
-            const value = window.prompt("Text for your board:", "Your idea");
+            const value = await showDialog({ kind: "textarea", title: "Add text to board", value: "Your idea" });
             if (value === null) return;
             item.text = value;
         } else if (kind === "image") {
-            const value = window.prompt("Paste an image URL (https://):");
+            const value = await ask("Add an image", "", "Paste an HTTPS image URL");
             if (!value) return;
             try { const url = new URL(value); if (url.protocol !== "https:") throw new Error("https required"); item.src = url.href; }
             catch (_) { notify("Please enter a valid HTTPS image URL."); return; }
@@ -460,7 +487,7 @@
         redrawBoard();
     }
     async function createProject(type) {
-        const name = window.prompt("Name your " + (typeLabels[type] || "project").toLowerCase() + ":");
+        const name = await ask("Name your " + (typeLabels[type] || "project").toLowerCase());
         if (!name || !name.trim()) return;
         const { data, error } = await window.supabaseClient.from(table).insert({
             owner_id: employee.user.id, name: name.trim(), type, description: "", content: type === "moodboard" ? { purpose: "", references: [], connections: [], palette: [] } : { elements: [] }
@@ -471,7 +498,7 @@
     async function renameProject(id) {
         const project = activeProject?.id === id ? activeProject : projects.find(p => p.id === id);
         if (!project) return;
-        const name = window.prompt("New project name:", project.name);
+        const name = await ask("Rename project", project.name);
         if (!name || !name.trim() || name.trim() === project.name) return;
         const { data, error } = await window.supabaseClient.from(table).update({name:name.trim()}).eq("id",id).select().single();
         if (error) { console.error(error); notify("Could not rename project."); return; }
