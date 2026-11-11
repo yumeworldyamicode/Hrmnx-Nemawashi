@@ -1,6 +1,17 @@
 (function(){
 "use strict";
 
+const logoUrls = {
+  figma:"https://cdn.simpleicons.org/figma",
+  adobe:"https://cdn.simpleicons.org/adobe",
+  canva:"https://cdn.simpleicons.org/canva",
+  penpot:"https://cdn.simpleicons.org/penpot",
+  ableton_live:"https://cdn.simpleicons.org/abletonlive",
+  fl_studio:"https://cdn.simpleicons.org/flstudio",
+  logic_pro:"https://cdn.simpleicons.org/logicpro",
+  studio_one:"https://cdn.simpleicons.org/presonus"
+};
+
 const providers = [
   {id:"figma",category:"Design",name:"Figma",kind:"Cloud design",method:"Figma OAuth and REST API",transport:"Cloud API",capabilities:["Browse design files","Import frames and image references","Read supported file metadata and comments"],phase:"Cloud API adapter"},
   {id:"adobe",category:"Design",name:"Adobe Creative Cloud",kind:"Creative suite",method:"Adobe OAuth and supported Creative Cloud APIs",transport:"Cloud API + file exchange",capabilities:["Browse supported cloud assets","Import artwork and references","Export compatible assets"],phase:"API and file adapter"},
@@ -93,12 +104,12 @@ function render(filter="All",refresh=true){
     '<div class="integration-grid">'+list.map(p=>card(p,providers.indexOf(p))).join("")+'</div>'+
     '<div class="integration-note"><strong>Shared integration foundation</strong>'+
     '<p>Cloud design services will use secure account authorisation. Desktop DAWs will begin with supported project and audio file exchange. Each provider uses the same connection registry, project-linking model and sync history.</p>'+
-    '<span>'+(connectionSchemaUnavailable?"The integration database is not ready yet. Run database/step-8-integrations.sql in the Supabase SQL Editor.":connectionStateLoaded?"Connection status is read from your employee account. No OAuth tokens are exposed to this page.":"Checking your integration connection records…")+'</span></div>';
+    '<span>'+(connectionSchemaUnavailable?"The integration database is not ready yet. Run database/step-8-integrations.sql in the Supabase SQL Editor.":connectionStateLoaded?"Connection status is read from your employee account. No OAuth tokens are exposed to this page.":"Checking your integration connection records…")+'</span></div>'+(window.indesignFileExchange ? window.indesignFileExchange.markup() : '');
   if(refresh && !connectionStateLoaded && !connectionSchemaUnavailable){
     loadConnections().then(()=>{
       const host=document.getElementById("dashboard-content");
       const pageTitle=document.getElementById("page-title");
-      if(host && pageTitle && pageTitle.textContent==="Integrations") host.innerHTML=render(activeFilter,false);
+      if(host && pageTitle && pageTitle.textContent==="Integrations"){host.innerHTML=render(activeFilter,false);window.indesignFileExchange?.init();}
     });
   }
   return html;
@@ -130,7 +141,7 @@ document.addEventListener("click",e=>{
   const filter=e.target.closest("[data-integration-filter]");
   if(filter){
     const host=document.getElementById("dashboard-content");
-    if(host)host.innerHTML=render(filter.dataset.integrationFilter,false);
+    if(host){host.innerHTML=render(filter.dataset.integrationFilter,false);window.indesignFileExchange?.init();}
     return;
   }
   const detail=e.target.closest("[data-integration]");
@@ -142,7 +153,7 @@ window.indesignIntegrations={
   refresh:async()=>{
     await loadConnections();
     const host=document.getElementById("dashboard-content");
-    if(host)host.innerHTML=render(activeFilter,false);
+    if(host){host.innerHTML=render(activeFilter,false);window.indesignFileExchange?.init();}
   },
   providers:providers.map(({id,category,name,kind,transport,capabilities})=>({id,category,name,kind,transport,capabilities:[...capabilities]}))
 };
