@@ -82,7 +82,7 @@ async function loadConnections(){
 function card(item,index){
   const status = statusFor(item.id);
   return '<article class="integration-card" data-provider="'+escapeHTML(item.id)+'">'+
-    '<div class="integration-card-top"><span class="integration-icon"><span class="integration-logo-fallback" hidden>'+escapeHTML(logoFallbacks[item.id]||item.name)+'</span><img src="'+logoUrls[item.id]+'" alt="'+escapeHTML(item.name)+' logo" loading="lazy" onerror="this.hidden=true;this.previousElementSibling.hidden=false"></span>'+
+    '<div class="integration-card-top"><span class="integration-icon"><span class="integration-logo-fallback" hidden>'+escapeHTML(logoFallbacks[item.id]||item.name)+'</span><img src="'+logoUrls[item.id]+'" alt="'+escapeHTML(item.name)+' logo" loading="lazy"></span>'+
     '<span class="integration-status" data-status="'+status.state+'">'+status.label+'</span></div>'+
     '<p class="integration-category">'+item.category+' / '+escapeHTML(item.kind)+'</p>'+
     '<h3>'+escapeHTML(item.name)+'</h3>'+
@@ -140,6 +140,15 @@ function showDetails(index){
     if(e.target===overlay||e.target.closest("[data-close-integration-details]"))overlay.remove();
   });
 }
+
+document.addEventListener("error",e=>{
+  const image=e.target;
+  if(image instanceof HTMLImageElement && image.matches(".integration-icon img")){
+    image.hidden=true;
+    const fallback=image.previousElementSibling;
+    if(fallback)fallback.hidden=false;
+  }
+},true);
 
 document.addEventListener("click",e=>{
   const filter=e.target.closest("[data-integration-filter]");
