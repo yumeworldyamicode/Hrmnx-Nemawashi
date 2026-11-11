@@ -223,6 +223,7 @@
     }
     function renderMoodboard() {
         const data = moodboardData();
+        document.body.classList.remove("indesign-brainstorm-fullscreen");
         document.body.classList.add("moodboard-fullscreen");
         title.textContent = activeProject.name;
         const objects = moodObjectList();
@@ -441,6 +442,7 @@
         return data[data.mode];
     }
     function renderBrainstorm() {
+        document.body.classList.remove("moodboard-fullscreen");
         document.body.classList.add("indesign-brainstorm-fullscreen");
         const data = brainstormData(), mode = data.mode, part = activeBrainstormPart();
         const music = mode === "music";
@@ -507,7 +509,7 @@
     }
     function renderProject(project) {
         activeProject = project;
-        document.body.classList.remove("moodboard-fullscreen");
+        document.body.classList.remove("moodboard-fullscreen", "indesign-brainstorm-fullscreen");
         title.textContent = project.name;
         if (project.type === "moodboard") {
             if (!project.content || typeof project.content !== "object") project.content = {};
@@ -616,7 +618,7 @@
     async function showView(view) {
         document.querySelectorAll(".nav-item").forEach(button=>button.classList.toggle("active",button.dataset.view===view));
         activeProject=null;
-        document.body.classList.remove("moodboard-fullscreen");
+        document.body.classList.remove("moodboard-fullscreen", "indesign-brainstorm-fullscreen");
         if(view==="projects") { try { await loadProjects(); renderProjects(); } catch(e) { console.error(e); notify("Could not load projects. Check the database setup."); } }
         else if(view==="messages") renderMessages();
         else if(view==="account") renderAccount();
@@ -665,6 +667,22 @@
         if(moodTool){document.querySelectorAll("[data-mood-tool]").forEach(b=>b.classList.toggle("active",b===moodTool));document.getElementById("mood-canvas-viewport")?.classList.toggle("pan-tool",moodTool.dataset.moodTool==="pan");return;}
         if(event.target.closest("[data-add-mood-color]")){await addMoodColor();return;}
         if(event.target.closest("#save-moodboard-button")){saveMoodboard();return;}
+        if(event.target.closest("#save-brainstorm-button")){saveBrainstorm();return;}
+        const brainstormMode=event.target.closest("[data-brainstorm-mode]");
+        if(brainstormMode){brainstormData().mode=brainstormMode.dataset.brainstormMode;renderBrainstorm();return;}
+        const brainstormField=event.target.closest("[data-edit-brainstorm-field]");
+        if(brainstormField){await editBrainstormField(brainstormField.dataset.editBrainstormField);return;}
+        if(event.target.closest("#add-brainstorm-section")){await addBrainstormSection();return;}
+        const brainstormAddIdea=event.target.closest("[data-add-brainstorm-idea]");
+        if(brainstormAddIdea){await addBrainstormIdea(Number(brainstormAddIdea.dataset.addBrainstormIdea));return;}
+        const brainstormEditIdea=event.target.closest("[data-edit-brainstorm-idea]");
+        if(brainstormEditIdea){const [sectionIndex,itemIndex]=brainstormEditIdea.dataset.editBrainstormIdea.split(":").map(Number);await editBrainstormIdea(sectionIndex,itemIndex);return;}
+        const brainstormDeleteIdea=event.target.closest("[data-delete-brainstorm-idea]");
+        if(brainstormDeleteIdea){const [sectionIndex,itemIndex]=brainstormDeleteIdea.dataset.deleteBrainstormIdea.split(":").map(Number);activeBrainstormPart().sections[sectionIndex]?.items.splice(itemIndex,1);renderBrainstorm();return;}
+        const brainstormDeleteSection=event.target.closest("[data-delete-brainstorm-section]");
+        if(brainstormDeleteSection){const index=Number(brainstormDeleteSection.dataset.deleteBrainstormSection);const ok=await confirmAction("Delete section?","This removes the section and all ideas inside it.","Delete section");if(ok){activeBrainstormPart().sections.splice(index,1);renderBrainstorm();}return;}
+        const brainstormMoveSection=event.target.closest("[data-move-brainstorm-section]");
+        if(brainstormMoveSection){const [index,delta]=brainstormMoveSection.dataset.moveBrainstormSection.split(":").map(Number);const sections=activeBrainstormPart().sections;const target=index+delta;if(target>=0&&target<sections.length){[sections[index],sections[target]]=[sections[target],sections[index]];renderBrainstorm();}return;}
         if(event.target.closest("#edit-mood-purpose")){
             const value=await showDialog({ kind:"textarea", title:"Moodboard purpose", value:moodboardData().purpose, placeholder:"Describe the direction of this moodboard…" });
             if(value!==null){moodboardData().purpose=value;renderMoodboard();}
@@ -703,6 +721,8 @@
     });
     document.addEventListener("change",event=>{
         if(event.target.id==="import-project-file" && event.target.files?.[0]) importProject(event.target.files[0]);
+        const sectionTitle=event.target.closest("[data-brainstorm-section-title]");
+        if(sectionTitle){const section=activeBrainstormPart()?.sections[Number(sectionTitle.dataset.brainstormSectionTitle)];if(section){section.title=sectionTitle.value.trim()||"Untitled section";const state=document.getElementById("brainstorm-save-state");if(state)state.textContent="Unsaved changes";}}
     });
     document.addEventListener("DOMContentLoaded",async()=>{
         if(localStorage.getItem("indesign-theme")==="dark") document.body.classList.add("dark-theme");
