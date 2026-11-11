@@ -35,7 +35,7 @@
     }
     async function loadProjects() {
         const { data, error } = await window.supabaseClient.from(table)
-            .select("id, owner_id, name, type, description, created_at, updated_at")
+            .select("id, owner_id, name, type, description, content, created_at, updated_at")
             .order("updated_at", { ascending: false });
         if (error) throw error;
         projects = data || [];
@@ -88,18 +88,121 @@
         const theme = document.body.classList.contains("dark-theme") ? "dark" : "light";
         content.innerHTML = `<p class="eyebrow">PERSONAL SETTINGS</p><h2 style="font-size:48px;letter-spacing:-3px">Your account.</h2><div style="max-width:560px;margin-top:35px;border-top:1px solid var(--line);padding-top:24px"><p><strong>${escapeHTML(displayName())}</strong></p><p class="muted">${escapeHTML(employee.user.email || "")}</p><div class="section-heading"><h3>Appearance</h3></div><label style="font-size:13px;font-weight:700">App theme</label><div style="display:flex;gap:10px;margin-top:12px"><button class="button ${theme === "light" ? "button-dark" : "button-outline"}" data-theme="light">Light</button><button class="button ${theme === "dark" ? "button-dark" : "button-outline"}" data-theme="dark">Dark</button></div><div class="section-heading"><h3>Session</h3></div><button class="button button-dark" id="sign-out-button">Sign out</button></div>`;
     }
+    function boardElements() {
+        return Array.isArray(activeProject?.content?.elements) ? activeProject.content.elements : [];
+    }
+    function boardElementHTML(item, index) {
+        const style = "left:" + Number(item.x || 0) + "px;top:" + Number(item.y || 0) + "px;color:" + escapeHTML(item.color || "#111111") + ";";
+        const selected = selectedBoardElement === index ? " selected" : "";
+        if (item.kind === "shape") return '<div class="board-object board-shape' + selected + '" data-board-element="' + index + '" style="' + style + 'background:' + escapeHTML(item.color || "#748fe8") + '"></div>';
+        if (item.kind === "image") return '<div class="board-object board-image' + selected + '" data-board-element="' + index + '" style="' + style + '"><img src="' + escapeHTML(item.src || "") + '" alt="' + escapeHTML(item.label || "Board image") + '"><span>' + escapeHTML(item.label || "Image") + '</span></div>';
+        return '<div class="board-object board-text' + selected + '" data-board-element="' + index + '" style="' + style + '">' + escapeHTML(item.text || "Double-click to edit") + '</div>';
+    }
+    let selectedBoardElement = null;
+    let boardDrag = null;
+    function redrawBoard() {
+        const stage = document.getElementById("board-stage");
+        const layers = document.getElementById("board-layers");
+        if (!stage || !layers) return;
+        stage.innerHTML = boardElements().map(boardElementHTML).join("");
+        layers.innerHTML = boardElements().map((item, i) =>
+            '<button class="board-layer' + (selectedBoardElement === i ? " active" : "") + '" data-select-board-element="' + i + '"><span>' +
+            escapeHTML(item.kind === "shape" ? "▰ Shape" : item.kind === "image" ? "▧ " + (item.label || "Image") : "T " + (item.text || "Text").slice(0, 24)) +
+            '</span><small>' + (i + 1) + '</small></button>'
+        ).join("") || '<p class="muted board-no-layers">Your layers will appear here.</p>';
+        const status = document.getElementById("board-status");
+        if (status) status.textContent = boardElements().length + " OBJECTS";
+    }
+    function bindBoardInteractions() {
+        const stage = document.getElementById("board-stage");
+        if (!stage) return;
+        stage.addEventListener("pointerdown", event => {
+            const object = event.target.closest("[data-board-element]");
+            if (!object) { selectedBoardElement = null; redrawBoard(); return; }
+            const index = Number(object.dataset.boardElement);
+            selectedBoardElement = index;
+            const item = boardElements()[index];
+            const rect = stage.getBoundingClientRect();
+            boardDrag = { index, pointerX: event.clientX, pointerY: event.clientY, x: Number(item.x || 0), y: Number(item.y || 0) };
+            object.setPointerCapture?.(event.pointerId);
+            redrawBoard();
+            event.preventDefault();
+        });
+        stage.addEventListener("pointermove", event => {
+            if (!boardDrag) return;
+            const item = boardElements()[boardDrag.index];
+            if (!item) return;
+            item.x = Math.max(0, Math.round(boardDrag.x + event.clientX - boardDrag.pointerX));
+            item.y = Math.max(0, Math.round(boardDrag.y + event.clientY - boardDrag.pointerY));
+            const object = stage.querySelector('[data-board-element="' + boardDrag.index + '"]');
+            if (object) { object.style.left = item.x + "px"; object.style.top = item.y + "px"; }
+        });
+        const stopDrag = () => { if (boardDrag) { boardDrag = null; redrawBoard(); } };
+        stage.addEventListener("pointerup", stopDrag);
+        stage.addEventListener("pointercancel", stopDrag);
+        stage.addEventListener("dblclick", event => {
+            const object = event.target.closest(".board-text");
+            if (!object) return;
+            const item = boardElements()[Number(object.dataset.boardElement)];
+            const value = window.prompt("Edit text:", item.text || "");
+            if (value !== null) { item.text = value; redrawBoard(); }
+        });
+    }
     function renderProject(project) {
         activeProject = project;
         title.textContent = project.name;
-        content.innerHTML = `<button class="text-button" id="back-to-projects">← All projects</button>
-          <div class="project-detail-head"><div><p class="eyebrow">${escapeHTML(typeLabels[project.type] || "PROJECT")}</p><h2>${escapeHTML(project.name)}</h2><p class="muted">${escapeHTML(project.description || "Your project workspace is ready.")}</p></div><div class="project-toolbar"><button class="button button-outline" data-rename-project="${escapeHTML(project.id)}">Rename</button><button class="button button-dark" data-export-project="${escapeHTML(project.id)}">Export .in</button></div></div>
-          <div class="project-workspace-placeholder"><span>${project.type === "moodboard" ? "▦" : project.type === "brainstorm" ? "✳" : "⌗"}</span><strong>${escapeHTML(typeLabels[project.type] || "Project")} workspace</strong><p>The project is saved. Its dedicated editor is coming in the next build stage.</p></div>`;
+        if (project.type !== "board") {
+            content.innerHTML = '<button class="text-button" id="back-to-projects">← All projects</button>' +
+              '<div class="project-detail-head"><div><p class="eyebrow">' + escapeHTML(typeLabels[project.type] || "PROJECT") + '</p><h2>' + escapeHTML(project.name) + '</h2><p class="muted">' + escapeHTML(project.description || "Your project workspace is ready.") + '</p></div><div class="project-toolbar"><button class="button button-outline" data-rename-project="' + escapeHTML(project.id) + '">Rename</button><button class="button button-dark" data-export-project="' + escapeHTML(project.id) + '">Export .in</button></div></div>' +
+              '<div class="project-workspace-placeholder"><span>' + (project.type === "moodboard" ? "▦" : "✳") + '</span><strong>' + escapeHTML(typeLabels[project.type] || "Project") + ' workspace</strong><p>This project type will receive its dedicated editor in a later stage.</p></div>';
+            return;
+        }
+        if (!project.content || !Array.isArray(project.content.elements)) project.content = { elements: [] };
+        content.innerHTML = '<button class="text-button" id="back-to-projects">← All projects</button>' +
+          '<div class="board-topline"><div><p class="eyebrow">REGULAR BOARD</p><h2>' + escapeHTML(project.name) + '</h2></div><div class="project-toolbar"><button class="button button-outline" data-rename-project="' + escapeHTML(project.id) + '">Rename</button><button class="button button-dark" id="save-board-button">Save board</button><button class="button button-outline" data-export-project="' + escapeHTML(project.id) + '">Export .in</button></div></div>' +
+          '<div class="board-toolbar"><button data-add-board="text">＋ Text</button><button data-add-board="shape">＋ Shape</button><button data-add-board="image">＋ Image URL</button><span id="board-status">0 OBJECTS</span></div>' +
+          '<div class="board-editor"><aside class="board-inspector"><div class="board-panel-title">LAYERS</div><div id="board-layers"></div><div class="board-hint">Drag objects to move them. Double-click text to edit it.</div></aside><div class="board-canvas-wrap"><div class="board-stage" id="board-stage"></div></div></div>';
+        selectedBoardElement = null;
+        redrawBoard();
+        bindBoardInteractions();
+    }
+    async function saveBoard() {
+        if (!activeProject || activeProject.type !== "board") return;
+        const payload = { elements: boardElements().map(item => ({
+            kind: item.kind, x: Number(item.x || 0), y: Number(item.y || 0),
+            color: item.color || "#111111", text: item.text || "",
+            src: item.src || "", label: item.label || ""
+        })) };
+        const { data, error } = await window.supabaseClient.from(table)
+            .update({ content: payload }).eq("id", activeProject.id).select().single();
+        if (error) { console.error(error); notify("Could not save board. Run the Step 3 SQL migration first."); return; }
+        activeProject = data;
+        projects = projects.map(p => p.id === data.id ? data : p);
+        notify("Board saved.");
+    }
+    function addBoardElement(kind) {
+        if (!activeProject || activeProject.type !== "board") return;
+        const item = { kind, x: 70 + boardElements().length * 18, y: 65 + boardElements().length * 18, color: kind === "shape" ? "#748fe8" : "#111111" };
+        if (kind === "text") {
+            const value = window.prompt("Text for your board:", "Your idea");
+            if (value === null) return;
+            item.text = value;
+        } else if (kind === "image") {
+            const value = window.prompt("Paste an image URL (https://):");
+            if (!value) return;
+            try { const url = new URL(value); if (url.protocol !== "https:") throw new Error("https required"); item.src = url.href; }
+            catch (_) { notify("Please enter a valid HTTPS image URL."); return; }
+            item.label = "Image";
+        }
+        activeProject.content.elements.push(item);
+        selectedBoardElement = activeProject.content.elements.length - 1;
+        redrawBoard();
     }
     async function createProject(type) {
         const name = window.prompt("Name your " + (typeLabels[type] || "project").toLowerCase() + ":");
         if (!name || !name.trim()) return;
         const { data, error } = await window.supabaseClient.from(table).insert({
-            owner_id: employee.user.id, name: name.trim(), type, description: ""
+            owner_id: employee.user.id, name: name.trim(), type, description: "", content: { elements: [] }
         }).select().single();
         if (error) { console.error(error); notify("Could not create project. Check the indesign database setup."); return; }
         projects.unshift(data); notify("Project created."); renderProject(data);
@@ -136,7 +239,7 @@
             const project=parsed.project;
             if(parsed.format!=="indesign" || !project || !typeLabels[project.type] || typeof project.name!=="string") throw new Error("This is not a valid indesign project file.");
             const {data,error}=await window.supabaseClient.from(table).insert({
-                owner_id:employee.user.id,name:project.name,type:project.type,description:project.description||""
+                owner_id:employee.user.id,name:project.name,type:project.type,description:project.description||"",content:(project.content && Array.isArray(project.content.elements)) ? project.content : {elements:[]}
             }).select().single();
             if(error) throw error;
             projects.unshift(data); notify("Project imported."); renderProject(data);
@@ -171,6 +274,11 @@
         const exp=event.target.closest("[data-export-project]");
         if(exp){exportProject(exp.dataset.exportProject);return;}
         if(event.target.closest("#back-to-projects")){showView("projects");return;}
+        const addBoard = event.target.closest("[data-add-board]");
+        if(addBoard){addBoardElement(addBoard.dataset.addBoard);return;}
+        const layer = event.target.closest("[data-select-board-element]");
+        if(layer){selectedBoardElement=Number(layer.dataset.selectBoardElement);redrawBoard();return;}
+        if(event.target.closest("#save-board-button")){saveBoard();return;}
         if(event.target.closest("#import-project-button")){document.getElementById("import-project-file").click();return;}
         const theme=event.target.closest("[data-theme]");
         if(theme){const dark=theme.dataset.theme==="dark";document.body.classList.toggle("dark-theme",dark);localStorage.setItem("indesign-theme",dark?"dark":"light");renderAccount();return;}
