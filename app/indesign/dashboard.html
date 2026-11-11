@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffffff">
+<title>Home — indesign</title>
+<link rel="stylesheet" href="css/indesign.css">
+</head>
+<body class="app-page">
+<aside class="sidebar">
+<a class="wordmark" href="dashboard.html">indesign<span>.</span></a>
+<div class="sidebar-label">WORKSPACE</div>
+<nav class="main-nav" aria-label="Main navigation">
+<button class="nav-item active" data-view="home"><span>⌂</span>Home</button>
+<button class="nav-item" data-view="projects"><span>▧</span>Projects</button>
+<button class="nav-item" data-view="messages"><span>↗</span>Messages</button>
+</nav>
+<div class="sidebar-bottom">
+<button class="account-button" data-view="account"><span class="avatar" id="sidebar-avatar">I</span><span><strong id="sidebar-name">Your account</strong><small>Account & settings</small></span><span class="account-chevron">···</span></button>
+</div>
+</aside>
+<main class="dashboard-main">
+<header class="dashboard-header"><div><p class="eyebrow">HRMNX / INDESIGN</p><h1 id="page-title">Home</h1></div><div class="header-user"><span class="avatar" id="header-avatar">I</span></div></header>
+<section class="dashboard-content" id="dashboard-content">
+<div class="welcome-row"><div><p class="eyebrow">YOUR CREATIVE WORKSPACE</p><h2>Make room<br>for new ideas.</h2><p class="muted">Start something new or continue where you left off.</p></div><button class="button button-dark" id="create-project-button">＋ Create project</button></div>
+<div class="section-heading"><h3>Start creating</h3><span>CHOOSE A PROJECT TYPE</span></div>
+<div class="project-types">
+<button class="type-card" data-create="moodboard"><span class="type-number">01</span><span class="type-symbol">▦</span><strong>Moodboard</strong><small>Collect references and connect ideas.</small><span class="type-arrow">↗</span></button>
+<button class="type-card" data-create="board"><span class="type-number">02</span><span class="type-symbol">⌗</span><strong>Regular board</strong><small>Design freely on a flexible canvas.</small><span class="type-arrow">↗</span></button>
+<button class="type-card" data-create="brainstorm"><span class="type-number">03</span><span class="type-symbol">✳</span><strong>Brainstorm</strong><small>Develop music or comeback concepts.</small><span class="type-arrow">↗</span></button>
+</div>
+<div class="section-heading recent-heading"><h3>Recent projects</h3><button class="text-button" data-view="projects">View all ↗</button></div>
+<div class="empty-state"><span>＋</span><strong>Your projects will appear here.</strong><p>Create your first project to get started.</p></div>
+</section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../js/supabase.js"></script>
+<script src="js/indesign-auth.js"></script>
+<script src="js/indesign-dashboard.js"></script>
+</body>
+</html>
