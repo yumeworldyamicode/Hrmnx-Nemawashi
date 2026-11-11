@@ -111,23 +111,9 @@ Deno.serve(async (req) => {
     });
     const tokens = await tokenResponse.json().catch(() => ({}));
     if (!tokenResponse.ok || !tokens.access_token) {
-      console.error("Provider token exchange failed:", provider, tokenResponse.status, tokens);
+      console.error("Provider token exchange failed:", provider, tokenResponse.status, tokens.error_description ?? tokens.error ?? "No provider error detail.");
       return html("Connection unsuccessful", "The provider could not complete authorisation. Check its app configuration and try again.");
     }
-
-    const { data: connection, error: connectionError } = await admin
-      .from("indesign_integration_connections")
-      .upsert({
-        user_id: stateRow.user_id,
-        provider,
-        account_label: provider.charAt(0).toUpperCase() + provider.slice(1) + " account",
-        status: "connected",
-        scopes: (Deno.env.get(config.scopesEnv) ?? "").split(/[ ,]+/).filter(Boolean),
-        connected_at: new Date().toISOString(),
-        last_error: null,
-      }, { onConflict: "user_id,provider" })
-      .select("id").single();
-    if (connectionError || !connection) throw connectionError ?? new Error("Could not save provider connection.");
 
     const encrypted = await encryptTokens({
       access_token: tokens.access_token,
@@ -136,6 +122,21 @@ Deno.serve(async (req) => {
       scope: tokens.scope ?? null,
     });
     const expiresAt = tokens.expires_in ? new Date(Date.now() + Number(tokens.expires_in) * 1000).toISOString() : null;
+
+    const { data: connection, error: connectionError } = await admin
+      .from("indesign_integration_connections")
+      .upsert({
+        user_id: stateRow.user_id,
+        provider,
+        account_label: provider.charAt(0).toUpperCase() + provider.slice(1) + " account",
+        status: "pending",
+        scopes: (Deno.env.get(config.scopesEnv) ?? "").split(/[ ,]+/).filter(Boolean),
+        connected_at: new Date().toISOString(),
+        last_error: null,
+      }, { onConflict: "user_id,provider" })
+      .select("id").single();
+    if (connectionError || !connection) throw connectionError ?? new Error("Could not save provider connection.");
+
     const { error: secretError } = await admin.from("indesign_integration_secrets").upsert({
       connection_id: connection.id,
       ...encrypted,
@@ -143,6 +144,10 @@ Deno.serve(async (req) => {
       updated_at: new Date().toISOString(),
     }, { onConflict: "connection_id" });
     if (secretError) throw secretError;
+
+    const { error: connectedError } = await admin.from("indesign_integration_connections")
+      .update({ status: "connected" }).eq("id", connection.id);
+    if (connectedError) throw connectedError;
 
     return html("Account connected", "Your provider account is now securely connected to indesign.", true);
   } catch (error) {
