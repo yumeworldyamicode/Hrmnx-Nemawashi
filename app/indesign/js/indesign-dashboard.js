@@ -475,7 +475,7 @@
                 const track=data.track||{};music.production={title:track.title||"",artist:track.artist||"",bpm:track.bpm||"",key:track.key||"",producers:track.producers||[],credits:track.credits||"",audioName:data.assets?.audio||""};
                 if(brainstormAudioUrl)URL.revokeObjectURL(brainstormAudioUrl);
                 const path=data.assets?.audio?"audio/"+data.assets.audio:"";
-                if(path&&zip.file(path)){const blob=await zip.file(path).async("blob");brainstormAudioUrl=URL.createObjectURL(blob);}
+                if(path&&zip.file(path)){const raw=await zip.file(path).async("blob");const ext=(data.assets.audio.split(".").pop()||"").toLowerCase();const mime={mp3:"audio/mpeg",wav:"audio/wav",m4a:"audio/mp4",aac:"audio/aac",ogg:"audio/ogg",flac:"audio/flac",webm:"audio/webm"}[ext]||"application/octet-stream";const blob=new Blob([raw],{type:mime});brainstormAudioUrl=URL.createObjectURL(blob);}
             }else music.lyrics={artist:data.artist||{},sections:data.sections||[],credits:data.credits||{}};
             const state=document.getElementById("brainstorm-save-state");if(state)state.textContent="Unsaved changes";
             renderBrainstorm();notify("."+kind+" imported into this brainstorm.");
