@@ -337,7 +337,7 @@
     }
     function downloadBlob(blob, name, extension) {
         const url = URL.createObjectURL(blob), a = document.createElement("a");
-        a.href = url; a.download = name.replace(/[^a-z0-9-_ ]/gi, "").trim().replace(/\\s+/g, "-") + extension;
+        a.href = url; a.download = name.replace(/[^a-z0-9-_ ]/gi, "").trim().replace(/\s+/g, "-") + extension;
         document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     async function exportMoodboardPNG() {
