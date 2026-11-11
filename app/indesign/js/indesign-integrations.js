@@ -78,7 +78,7 @@ async function loadConnections(){
 function card(item,index){
   const status = statusFor(item.id);
   return '<article class="integration-card" data-provider="'+escapeHTML(item.id)+'">'+
-    '<div class="integration-card-top"><span class="integration-icon">'+(item.category==="Design"?"✳":"♫")+'</span>'+
+    '<div class="integration-card-top"><span class="integration-icon"><img src="'+logoUrls[item.id]+'" alt="'+escapeHTML(item.name)+' logo" loading="lazy"></span>'+
     '<span class="integration-status" data-status="'+status.state+'">'+status.label+'</span></div>'+
     '<p class="integration-category">'+item.category+' / '+escapeHTML(item.kind)+'</p>'+
     '<h3>'+escapeHTML(item.name)+'</h3>'+
