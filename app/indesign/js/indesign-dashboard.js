@@ -332,7 +332,7 @@
     }
     function exportMoodboardJSON() {
         const project = activeProject;
-        const blob = new Blob([JSON.stringify({ format: "indesign-moodboard", version: 1, project }, null, 2)], { type: "application/json" });
+        const blob = new Blob([JSON.stringify({ format: "indesign", version: 1, project }, null, 2)], { type: "application/json" });
         downloadBlob(blob, project.name, ".json");
     }
     function downloadBlob(blob, name, extension) {
