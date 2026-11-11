@@ -394,3 +394,14 @@ body.dark-theme .indesign-audio-player>button{background:var(--accent);color:#ff
 .indesign-audio-player>span{min-width:80px;text-align:right;font:9px Helvetica,Arial,sans-serif;color:var(--muted);font-variant-numeric:tabular-nums}
 .dem-sync-player audio{display:block;width:100%;height:34px;accent-color:var(--accent);color-scheme:light}
 body.dark-theme .dem-sync-player audio{color-scheme:dark}
+
+
+/* Multilingual lyric package fields */
+.music-tool-language-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.music-tool-language-heading strong{font:700 12px Helvetica,Arial,sans-serif;color:var(--indesign-text,#171923)}
+.l-translation-block{border:1px solid var(--indesign-border,#e2e4eb);padding:12px;margin:10px 0;background:var(--indesign-panel,#fafbfe)}
+.l-translation-head{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.l-translation-head input{flex:1;min-width:0}
+.l-translation-block textarea{width:100%;resize:vertical;min-height:90px;border:1px solid var(--indesign-border,#dfe1e8);background:var(--indesign-surface,#fff);color:inherit;padding:10px;font:12px/1.6 Helvetica,Arial,sans-serif}
+.music-tool-language-heading .music-tool-import,.l-translation-head .music-tool-import{cursor:pointer}
+@media(max-width:600px){.l-translation-head{align-items:stretch;flex-direction:column}}
