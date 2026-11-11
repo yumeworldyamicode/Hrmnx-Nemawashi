@@ -129,7 +129,7 @@ function showDetails(index){
     '<div class="integration-detail-status" data-status="'+status.state+'">'+status.label+(status.account?" · "+escapeHTML(status.account):"")+'</div>'+
     '<h3>Planned capabilities</h3><ul>'+item.capabilities.map(x=>'<li>'+escapeHTML(x)+'</li>').join("")+'</ul>'+
     '<h3>Connection approach</h3><p>'+escapeHTML(item.method)+'</p>'+
-    '<p class="integration-detail-warning">The shared database foundation is being prepared. This provider will only be marked connected after a real authorisation or verified file connection succeeds.</p>'+
+    '<p class="integration-detail-warning">The account/API connection is not active yet. This provider will only be marked connected after a real authorisation or verified connection succeeds.</p>'+
     '<div class="dialog-actions"><button class="button button-dark" data-close-integration-details>Close</button></div></section>';
   document.body.appendChild(overlay);
   overlay.addEventListener("click",e=>{
