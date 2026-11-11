@@ -128,3 +128,92 @@ body.dark-theme .board-canvas-wrap{background-color:#242424;background-image:rad
 body.dark-theme .mood-ref-card,body.dark-theme .mood-color{background:#171717}
 body.dark-theme .mood-ref-select img{background:#242424}
 @media(max-width:800px){.moodboard-lower{grid-template-columns:1fr;gap:5px}.moodboard-tools{flex-wrap:wrap}.moodboard-tools>span{width:100%;margin-left:0}.moodboard-section-head{align-items:flex-start;flex-direction:column}}
+
+
+/* Step 4 — full-page Figma-style moodboard workspace */
+body.moodboard-fullscreen{overflow:hidden}
+body.moodboard-fullscreen .sidebar,
+body.moodboard-fullscreen .dashboard-header{display:none}
+body.moodboard-fullscreen .dashboard-main{margin-left:0;width:100%;height:100vh;min-height:0}
+body.moodboard-fullscreen .dashboard-content{padding:0;max-width:none;width:100%;height:100vh;margin:0;overflow:hidden}
+.mood-workspace{height:100vh;width:100%;display:flex;flex-direction:column;background:var(--bg);font-family:Inter,Helvetica,Arial,sans-serif;font-size:12px;overflow:hidden}
+.mood-topbar{height:48px;flex:0 0 48px;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--bg);z-index:5}
+.mood-back{width:28px;height:28px;border:1px solid var(--line);background:transparent;font-size:17px;cursor:pointer}
+.mood-doc-title{display:flex;flex-direction:column;gap:2px;min-width:130px}
+.mood-doc-title strong{font-size:12px;font-weight:600;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mood-doc-title small{font-size:8px;letter-spacing:1px;color:var(--muted)}
+.mood-purpose-button{border:0;background:transparent;color:var(--muted);font-size:10px;text-align:left;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.mood-save-state{margin-left:auto;color:var(--muted);font-size:9px;white-space:nowrap}
+.mood-top-action{height:28px;padding:0 12px;border:1px solid var(--line);background:var(--bg);font-size:10px;font-weight:600;cursor:pointer}
+.mood-top-action:hover{border-color:var(--accent);color:var(--accent)}
+.mood-export-wrap{position:relative}
+.mood-export-menu{display:none;position:absolute;right:0;top:34px;min-width:145px;padding:5px;background:var(--bg);border:1px solid var(--line);box-shadow:0 8px 25px #00000018;z-index:20}
+.mood-export-menu.visible{display:grid}
+.mood-export-menu button{border:0;background:transparent;text-align:left;padding:9px 10px;font-size:10px;cursor:pointer}
+.mood-export-menu button:hover{background:var(--surface);color:var(--accent)}
+.mood-toolstrip{height:42px;flex:0 0 42px;display:flex;align-items:center;gap:5px;padding:0 12px;border-bottom:1px solid var(--line);background:var(--bg);z-index:4}
+.mood-toolstrip button{width:28px;height:28px;border:0;background:transparent;font-size:14px;cursor:pointer}
+.mood-toolstrip button:hover,.mood-toolstrip button.active{background:var(--surface);color:var(--accent)}
+.mood-toolstrip button:disabled{opacity:.35;cursor:not-allowed}
+.mood-toolstrip i{height:20px;border-left:1px solid var(--line);margin:0 5px}
+.mood-tool-hint{font-size:9px;color:var(--muted);margin-left:8px}
+.mood-workarea{display:grid;grid-template-columns:205px minmax(0,1fr) 215px;min-height:0;flex:1}
+.mood-left-panel,.mood-right-panel{min-width:0;background:var(--bg);overflow:auto;padding:14px 12px}
+.mood-left-panel{border-right:1px solid var(--line)}
+.mood-right-panel{border-left:1px solid var(--line)}
+.mood-panel-heading{display:flex;align-items:center;justify-content:space-between;font-size:9px;font-weight:700;letter-spacing:.75px;color:var(--muted);margin:2px 0 10px}
+.mood-panel-heading span{font-size:9px;font-weight:500;letter-spacing:0}
+.mood-panel-subhead{margin-top:20px}
+.mood-panel-subhead button{border:0;background:transparent;color:var(--accent);font-size:13px;cursor:pointer}
+.mood-layer-list{display:grid;gap:2px}
+.mood-layer{width:100%;height:29px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 7px;border:0;background:transparent;text-align:left;font-size:10px;cursor:pointer}
+.mood-layer span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mood-layer small{font-size:8px;color:var(--muted);white-space:nowrap}
+.mood-layer:hover,.mood-layer.active{background:var(--surface);color:var(--accent)}
+.mood-panel-empty{font-size:9px;line-height:1.5;color:var(--muted)}
+.mood-sidebar-palette{display:grid;gap:4px}
+.mood-sidebar-color{display:flex;align-items:center;gap:7px;padding:4px;border:0;background:transparent;text-align:left;font-size:9px;color:var(--text);cursor:pointer}
+.mood-sidebar-color:hover{background:var(--surface)}
+.mood-sidebar-color i{width:18px;height:18px;border:1px solid #00000018}
+.mood-connection-list{display:grid;gap:5px}
+.mood-connection-list>div{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted)}
+.mood-connection-list span{overflow-wrap:anywhere;flex:1}
+.mood-connection-list button{border:0;background:transparent;color:var(--muted);cursor:pointer}
+.mood-canvas-viewport{position:relative;min-width:0;min-height:0;overflow:hidden;background-color:#f5f5f6;background-image:radial-gradient(#d5d5da .7px,transparent .7px);background-size:16px 16px;touch-action:none;cursor:default}
+.mood-canvas-viewport.is-panning,.mood-canvas-viewport.pan-tool{cursor:grab}
+.mood-canvas-viewport.is-panning{cursor:grabbing}
+.mood-canvas-world{position:absolute;left:0;top:0;width:3000px;height:2200px;transform-origin:0 0;will-change:transform}
+.mood-connection-svg{position:absolute;inset:0;width:3000px;height:2200px;overflow:visible;pointer-events:none;z-index:0}
+.mood-connection-svg line{stroke:#748fe8;stroke-width:2;stroke-dasharray:6 5;opacity:.85}
+.mood-canvas-object{position:absolute;z-index:1;user-select:none;cursor:grab;box-shadow:0 2px 9px #00000012}
+.mood-canvas-object:active{cursor:grabbing}
+.mood-canvas-object.selected{outline:2px solid var(--accent);outline-offset:3px}
+.mood-object-reference{width:230px;background:#fff;color:#111;border:1px solid #e8e8e8}
+.mood-object-reference>img{display:block;width:100%;height:150px;object-fit:cover;background:#eee;pointer-events:none}
+.mood-object-copy{padding:8px 9px 9px}
+.mood-object-copy strong{display:block;font-size:11px;font-weight:600;line-height:1.35}
+.mood-object-copy p{font-size:9px;line-height:1.45;color:#777;margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.mood-object-edit{position:absolute;right:5px;top:5px;width:22px;height:22px;border:1px solid #ddd;background:#fff;color:#333;font-size:14px;line-height:1;cursor:pointer;opacity:0}
+.mood-canvas-object:hover .mood-object-edit,.mood-canvas-object.selected .mood-object-edit{opacity:1}
+.mood-object-note{width:180px;min-height:112px;padding:10px;background:#fff4a8;color:#282516;white-space:pre-wrap;overflow-wrap:anywhere}
+.mood-note-grip{font-size:8px;font-weight:700;letter-spacing:1px;color:#817b51;margin-bottom:8px}
+.mood-note-text{font-size:11px;line-height:1.5}
+.mood-object-color{width:100px;padding:5px;background:#fff;color:#333;border:1px solid #e5e5e5}
+.mood-color-swatch{height:52px;width:100%;margin-bottom:5px}
+.mood-object-color>span{display:block;font-size:9px}
+.mood-field-label{display:block;margin:15px 0 5px;font-size:9px;color:var(--muted)}
+.mood-field-value{font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.mood-purpose-value{color:var(--muted)}
+.mood-panel-button{margin-top:8px;padding:6px 9px;border:1px solid var(--line);background:transparent;font-size:9px;cursor:pointer}
+.mood-panel-button:hover{border-color:var(--accent);color:var(--accent)}
+.mood-panel-divider{border-top:1px solid var(--line);margin:17px 0}
+.mood-selection-details{font-size:10px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+.mood-zoom-controls{display:flex;align-items:center;gap:5px}
+.mood-zoom-controls button{height:25px;min-width:25px;padding:0 7px;border:1px solid var(--line);background:transparent;font-size:10px;cursor:pointer}
+.mood-zoom-controls span{min-width:38px;text-align:center;font-size:9px;color:var(--muted)}
+body.dark-theme .mood-workspace,body.dark-theme .mood-topbar,body.dark-theme .mood-toolstrip,body.dark-theme .mood-left-panel,body.dark-theme .mood-right-panel{background:#151515}
+body.dark-theme .mood-canvas-viewport{background-color:#202024;background-image:radial-gradient(#414148 .7px,transparent .7px)}
+body.dark-theme .mood-layer:hover,body.dark-theme .mood-layer.active,body.dark-theme .mood-toolstrip button:hover,body.dark-theme .mood-toolstrip button.active{background:#252535}
+body.dark-theme .mood-top-action,body.dark-theme .mood-export-menu,body.dark-theme .mood-panel-button{background:#191919;color:#eee}
+@media(max-width:900px){.mood-workarea{grid-template-columns:165px minmax(0,1fr)}.mood-right-panel{display:none}.mood-tool-hint{display:none}}
+@media(max-width:600px){.mood-workarea{grid-template-columns:125px minmax(0,1fr)}.mood-left-panel{padding:10px 7px}.mood-doc-title{min-width:75px}.mood-purpose-button{display:none}.mood-save-state{display:none}.mood-topbar{gap:7px;padding:0 8px}}
