@@ -507,7 +507,7 @@
     }
     async function deleteProject(id) {
         const project = projects.find(p => p.id === id);
-        if (!project || !window.confirm('Delete "' + project.name + '"? This cannot be undone.')) return;
+        if (!project || !(await confirmAction("Delete project?", "“" + project.name + "” will be permanently deleted. This cannot be undone.", "Delete project"))) return;
         const { error } = await window.supabaseClient.from(table).delete().eq("id",id);
         if (error) { console.error(error); notify("Could not delete project."); return; }
         projects = projects.filter(p => p.id !== id); activeProject = null;
@@ -549,9 +549,8 @@
         const create=event.target.closest("[data-create]");
         if(create){createProject(create.dataset.create);return;}
         if(event.target.closest("#create-project-button")) {
-            const type=window.prompt("Choose a project type: moodboard, board, or brainstorm","board");
-            if(type && typeLabels[type.trim().toLowerCase()]) createProject(type.trim().toLowerCase());
-            else if(type) notify("Please enter moodboard, board, or brainstorm.");
+            const type=await showDialog({ kind:"select", title:"Choose a project type", value:"board", options:[{value:"moodboard",label:"Moodboard"},{value:"board",label:"Regular board"},{value:"brainstorm",label:"Brainstorm"}], confirmLabel:"Continue" });
+            if(type && typeLabels[type]) createProject(type);
             return;
         }
         const open=event.target.closest("[data-open-project]");
@@ -564,14 +563,14 @@
         if(exp){exportProject(exp.dataset.exportProject);return;}
         if(event.target.closest("#back-to-projects")){showView("projects");return;}
         const addBoard = event.target.closest("[data-add-board]");
-        if(addBoard){addBoardElement(addBoard.dataset.addBoard);return;}
+        if(addBoard){await addBoardElement(addBoard.dataset.addBoard);return;}
         const layer = event.target.closest("[data-select-board-element]");
         if(layer){selectedBoardElement=Number(layer.dataset.selectBoardElement);redrawBoard();return;}
         if(event.target.closest("#save-board-button")){saveBoard();return;}
-        if(event.target.closest("[data-add-mood-ref]")){addMoodReference();return;}
-        if(event.target.closest("[data-add-mood-note]")){addMoodNote();return;}
+        if(event.target.closest("[data-add-mood-ref]")){await addMoodReference();return;}
+        if(event.target.closest("[data-add-mood-note]")){await addMoodNote();return;}
         const moodNoteEdit=event.target.closest("[data-edit-mood-note]");
-        if(moodNoteEdit){editMoodNote(Number(moodNoteEdit.dataset.editMoodNote));return;}
+        if(moodNoteEdit){await editMoodNote(Number(moodNoteEdit.dataset.editMoodNote));return;}
         const moodNoteDelete=event.target.closest("[data-delete-mood-note]");
         if(moodNoteDelete){moodboardData().notes.splice(Number(moodNoteDelete.dataset.deleteMoodNote),1);selectedMoodObject=null;renderMoodboard();return;}
         if(event.target.closest("#mood-export-toggle")){document.getElementById("mood-export-menu")?.classList.toggle("visible");return;}
@@ -584,10 +583,10 @@
         if(event.target.closest("#mood-zoom-fit")){moodViewport={x:0,y:0,zoom:1};updateMoodTransform();return;}
         const moodTool=event.target.closest("[data-mood-tool]");
         if(moodTool){document.querySelectorAll("[data-mood-tool]").forEach(b=>b.classList.toggle("active",b===moodTool));document.getElementById("mood-canvas-viewport")?.classList.toggle("pan-tool",moodTool.dataset.moodTool==="pan");return;}
-        if(event.target.closest("[data-add-mood-color]")){addMoodColor();return;}
+        if(event.target.closest("[data-add-mood-color]")){await addMoodColor();return;}
         if(event.target.closest("#save-moodboard-button")){saveMoodboard();return;}
         if(event.target.closest("#edit-mood-purpose")){
-            const value=window.prompt("What is the purpose or direction of this moodboard?",moodboardData().purpose);
+            const value=await showDialog({ kind:"textarea", title:"Moodboard purpose", value:moodboardData().purpose, placeholder:"Describe the direction of this moodboard…" });
             if(value!==null){moodboardData().purpose=value;renderMoodboard();}
             return;
         }
@@ -605,7 +604,7 @@
             selectedMoodRefs=[];renderMoodboard();return;
         }
         const moodEdit=event.target.closest("[data-edit-mood-ref]");
-        if(moodEdit){editMoodReference(Number(moodEdit.dataset.editMoodRef));return;}
+        if(moodEdit){await editMoodReference(Number(moodEdit.dataset.editMoodRef));return;}
         const moodDelete=event.target.closest("[data-delete-mood-ref]");
         if(moodDelete){
             const index=Number(moodDelete.dataset.deleteMoodRef);
