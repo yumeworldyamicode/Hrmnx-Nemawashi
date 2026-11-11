@@ -149,9 +149,93 @@
             if (value !== null) { item.text = value; redrawBoard(); }
         });
     }
+    let selectedMoodRefs = [];
+    function moodboardData() {
+        if (!activeProject.content || typeof activeProject.content !== "object") activeProject.content = {};
+        const data = activeProject.content;
+        if (!Array.isArray(data.references)) data.references = [];
+        if (!Array.isArray(data.connections)) data.connections = [];
+        if (!Array.isArray(data.palette)) data.palette = [];
+        if (typeof data.purpose !== "string") data.purpose = "";
+        return data;
+    }
+    function renderMoodboard() {
+        const data = moodboardData();
+        const refs = data.references;
+        const referenceHTML = refs.map((item, index) =>
+            '<article class="mood-ref-card' + (selectedMoodRefs.includes(index) ? ' selected' : '') + '">' +
+              '<button class="mood-ref-select" data-select-mood-ref="' + index + '" aria-pressed="' + selectedMoodRefs.includes(index) + '">' +
+                '<img src="' + escapeHTML(item.src) + '" alt="' + escapeHTML(item.title || "Moodboard reference") + '" loading="lazy">' +
+                '<span class="mood-ref-title">' + escapeHTML(item.title || "Untitled reference") + '</span>' +
+              '</button><div class="mood-ref-notes">' + escapeHTML(item.notes || "No notes yet.") + '</div>' +
+              '<div class="mood-ref-actions"><button data-edit-mood-ref="' + index + '">Edit</button><button data-delete-mood-ref="' + index + '">Remove</button></div>' +
+            '</article>'
+        ).join("");
+        const paletteHTML = data.palette.map((color, index) =>
+            '<button class="mood-color" data-remove-mood-color="' + index + '" title="Remove ' + escapeHTML(color) + '">' +
+            '<i style="background:' + escapeHTML(color) + '"></i><span>' + escapeHTML(color) + '</span></button>'
+        ).join("");
+        const connectionsHTML = data.connections.map((pair, index) => {
+            const a = refs[pair[0]], b = refs[pair[1]];
+            if (!a || !b) return "";
+            return '<div class="mood-connection"><span>' + escapeHTML(a.title || "Reference " + (pair[0] + 1)) + '</span><b>↔</b><span>' + escapeHTML(b.title || "Reference " + (pair[1] + 1)) + '</span><button data-delete-mood-connection="' + index + '" aria-label="Remove connection">×</button></div>';
+        }).join("");
+        content.innerHTML = '<button class="text-button" id="back-to-projects">← All projects</button>' +
+          '<div class="board-topline"><div><p class="eyebrow">MOODBOARD</p><h2>' + escapeHTML(activeProject.name) + '</h2><p class="muted">' + escapeHTML(data.purpose || "Add a purpose to guide this moodboard.") + '</p></div><div class="project-toolbar"><button class="button button-outline" id="edit-mood-purpose">Edit purpose</button><button class="button button-dark" id="save-moodboard-button">Save moodboard</button><button class="button button-outline" data-export-project="' + escapeHTML(activeProject.id) + '">Export .in</button></div></div>' +
+          '<div class="moodboard-tools"><button data-add-mood-ref>＋ Add reference</button><button data-connect-mood-refs ' + (selectedMoodRefs.length === 2 ? '' : 'disabled') + '>Connect selected</button><span>' + refs.length + ' REFERENCES</span></div>' +
+          '<section class="moodboard-section"><div class="moodboard-section-head"><h3>Visual references</h3><p>Select two references to connect them.</p></div>' +
+          '<div class="mood-reference-grid">' + (referenceHTML || '<div class="mood-empty">Add image references to start collecting visual ideas.</div>') + '</div></section>' +
+          '<div class="moodboard-lower"><section class="moodboard-section"><div class="moodboard-section-head"><h3>Color palette</h3><button class="text-button" data-add-mood-color>＋ Add color</button></div><div class="mood-palette">' + (paletteHTML || '<p class="muted">Save colors that define this direction.</p>') + '</div></section>' +
+          '<section class="moodboard-section"><div class="moodboard-section-head"><h3>Connections</h3><p>Relationships between references</p></div><div class="mood-connections">' + (connectionsHTML || '<p class="muted">No connections yet.</p>') + '</div></section></div>';
+    }
+    function addMoodReference() {
+        const value = window.prompt("Paste an image URL (https://):");
+        if (!value) return;
+        let src;
+        try { const url = new URL(value); if (url.protocol !== "https:") throw new Error("https required"); src = url.href; }
+        catch (_) { notify("Please enter a valid HTTPS image URL."); return; }
+        const titleValue = window.prompt("Give this reference a name:", "New reference");
+        if (titleValue === null) return;
+        const notes = window.prompt("What should you remember about it?", "") ;
+        moodboardData().references.push({ src, title: titleValue.trim() || "Untitled reference", notes: notes || "" });
+        renderMoodboard();
+    }
+    function editMoodReference(index) {
+        const item = moodboardData().references[index];
+        if (!item) return;
+        const titleValue = window.prompt("Reference name:", item.title || "");
+        if (titleValue === null) return;
+        const notes = window.prompt("Notes:", item.notes || "");
+        if (notes === null) return;
+        item.title = titleValue.trim();
+        item.notes = notes;
+        renderMoodboard();
+    }
+    function addMoodColor() {
+        const value = window.prompt("Enter a hex color (for example #748fe8):", "#748fe8");
+        if (!value) return;
+        if (!/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim())) { notify("Enter a valid 3- or 6-digit hex color."); return; }
+        moodboardData().palette.push(value.trim().toLowerCase());
+        renderMoodboard();
+    }
+    async function saveMoodboard() {
+        if (!activeProject || activeProject.type !== "moodboard") return;
+        const { data, error } = await window.supabaseClient.from(table)
+            .update({ content: moodboardData() }).eq("id", activeProject.id).select().single();
+        if (error) { console.error(error); notify("Could not save moodboard. Check that the Step 3 migration was run."); return; }
+        activeProject = data;
+        projects = projects.map(p => p.id === data.id ? data : p);
+        notify("Moodboard saved.");
+    }
     function renderProject(project) {
         activeProject = project;
         title.textContent = project.name;
+        if (project.type === "moodboard") {
+            if (!project.content || typeof project.content !== "object") project.content = {};
+            selectedMoodRefs = [];
+            renderMoodboard();
+            return;
+        }
         if (project.type !== "board") {
             content.innerHTML = '<button class="text-button" id="back-to-projects">← All projects</button>' +
               '<div class="project-detail-head"><div><p class="eyebrow">' + escapeHTML(typeLabels[project.type] || "PROJECT") + '</p><h2>' + escapeHTML(project.name) + '</h2><p class="muted">' + escapeHTML(project.description || "Your project workspace is ready.") + '</p></div><div class="project-toolbar"><button class="button button-outline" data-rename-project="' + escapeHTML(project.id) + '">Rename</button><button class="button button-dark" data-export-project="' + escapeHTML(project.id) + '">Export .in</button></div></div>' +
@@ -203,7 +287,7 @@
         const name = window.prompt("Name your " + (typeLabels[type] || "project").toLowerCase() + ":");
         if (!name || !name.trim()) return;
         const { data, error } = await window.supabaseClient.from(table).insert({
-            owner_id: employee.user.id, name: name.trim(), type, description: "", content: { elements: [] }
+            owner_id: employee.user.id, name: name.trim(), type, description: "", content: type === "moodboard" ? { purpose: "", references: [], connections: [], palette: [] } : { elements: [] }
         }).select().single();
         if (error) { console.error(error); notify("Could not create project. Check the indesign database setup."); return; }
         projects.unshift(data); notify("Project created."); renderProject(data);
@@ -280,6 +364,40 @@
         const layer = event.target.closest("[data-select-board-element]");
         if(layer){selectedBoardElement=Number(layer.dataset.selectBoardElement);redrawBoard();return;}
         if(event.target.closest("#save-board-button")){saveBoard();return;}
+        if(event.target.closest("[data-add-mood-ref]")){addMoodReference();return;}
+        if(event.target.closest("[data-add-mood-color]")){addMoodColor();return;}
+        if(event.target.closest("#save-moodboard-button")){saveMoodboard();return;}
+        if(event.target.closest("#edit-mood-purpose")){
+            const value=window.prompt("What is the purpose or direction of this moodboard?",moodboardData().purpose);
+            if(value!==null){moodboardData().purpose=value;renderMoodboard();}
+            return;
+        }
+        const moodSelect=event.target.closest("[data-select-mood-ref]");
+        if(moodSelect){
+            const index=Number(moodSelect.dataset.selectMoodRef);
+            selectedMoodRefs=selectedMoodRefs.includes(index)?selectedMoodRefs.filter(i=>i!==index):selectedMoodRefs.concat(index).slice(-2);
+            renderMoodboard();return;
+        }
+        if(event.target.closest("[data-connect-mood-refs]")){
+            if(selectedMoodRefs.length!==2){notify("Select two references first.");return;}
+            const pair=[...selectedMoodRefs].sort((a,b)=>a-b);
+            const exists=moodboardData().connections.some(p=>p[0]===pair[0]&&p[1]===pair[1]);
+            if(!exists)moodboardData().connections.push(pair);
+            selectedMoodRefs=[];renderMoodboard();return;
+        }
+        const moodEdit=event.target.closest("[data-edit-mood-ref]");
+        if(moodEdit){editMoodReference(Number(moodEdit.dataset.editMoodRef));return;}
+        const moodDelete=event.target.closest("[data-delete-mood-ref]");
+        if(moodDelete){
+            const index=Number(moodDelete.dataset.deleteMoodRef);
+            moodboardData().references.splice(index,1);
+            moodboardData().connections=moodboardData().connections.filter(pair=>pair[0]!==index&&pair[1]!==index).map(pair=>pair.map(i=>i>index?i-1:i));
+            selectedMoodRefs=[];renderMoodboard();return;
+        }
+        const moodColor=event.target.closest("[data-remove-mood-color]");
+        if(moodColor){moodboardData().palette.splice(Number(moodColor.dataset.removeMoodColor),1);renderMoodboard();return;}
+        const moodConnection=event.target.closest("[data-delete-mood-connection]");
+        if(moodConnection){moodboardData().connections.splice(Number(moodConnection.dataset.deleteMoodConnection),1);renderMoodboard();return;}
         if(event.target.closest("#import-project-button")){document.getElementById("import-project-file").click();return;}
         const theme=event.target.closest("[data-theme]");
         if(theme){const dark=theme.dataset.theme==="dark";document.body.classList.toggle("dark-theme",dark);localStorage.setItem("indesign-theme",dark?"dark":"light");renderAccount();return;}
