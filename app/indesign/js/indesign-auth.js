@@ -5,8 +5,8 @@
     const LANDING_URL = "index.html";
 
     async function getEmployeeSession() {
-        if (!window.supabaseClient) throw new Error("Nemawashi connection is unavailable.");
-        const { data: { user }, error: authError } = await window.supabaseClient.auth.getUser();
+        const client = window.supabaseClient || (typeof supabaseClient !== "undefined" ? supabaseClient : null);\n        if (!client) throw new Error("Nemawashi connection is unavailable. The shared Supabase client did not load.");
+        const { data: { user }, error: authError } = await client.auth.getUser();
         if (authError) throw authError;
         if (!user) return null;
         const { data: profile, error: profileError } = await window.supabaseClient
@@ -22,7 +22,7 @@
     window.indesignAuth = {
         getEmployeeSession,
         signOut: async function () {
-            const { error } = await window.supabaseClient.auth.signOut();
+            const { error } = await client.auth.signOut();
             if (error) throw error;
             window.location.replace(LANDING_URL);
         }
