@@ -5,24 +5,28 @@ type Provider = "figma" | "adobe" | "canva";
 const providerConfig: Record<Provider, {
   clientEnv: string;
   secretEnv: string;
+  scopesEnv: string;
   tokenUrl: string;
   authStyle: "basic" | "body";
 }> = {
   figma: {
     clientEnv: "FIGMA_CLIENT_ID",
     secretEnv: "FIGMA_CLIENT_SECRET",
+    scopesEnv: "FIGMA_SCOPES",
     tokenUrl: "https://api.figma.com/v1/oauth/token",
     authStyle: "basic",
   },
   adobe: {
     clientEnv: "ADOBE_CLIENT_ID",
     secretEnv: "ADOBE_CLIENT_SECRET",
+    scopesEnv: "ADOBE_SCOPES",
     tokenUrl: "https://ims-na1.adobelogin.com/ims/token/v3",
     authStyle: "basic",
   },
   canva: {
     clientEnv: "CANVA_CLIENT_ID",
     secretEnv: "CANVA_CLIENT_SECRET",
+    scopesEnv: "CANVA_SCOPES",
     tokenUrl: "https://api.canva.com/rest/v1/oauth/token",
     authStyle: "basic",
   },
@@ -66,7 +70,7 @@ Deno.serve(async (req) => {
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const oauthError = url.searchParams.get("error");
-  if (!(provider in providerConfig)) return html("Unknown provider", "This provider is not enabled for OAuth.");
+  if (!provider || !(provider in providerConfig)) return html("Unknown provider", "This provider is not enabled for OAuth.");
   if (oauthError) return html("Authorisation cancelled", "The provider did not approve access. You can return to indesign and try again.");
   if (!code || !state) return html("Authorisation failed", "The provider did not return the required authorisation details.");
 
@@ -118,7 +122,7 @@ Deno.serve(async (req) => {
         provider,
         account_label: provider.charAt(0).toUpperCase() + provider.slice(1) + " account",
         status: "connected",
-        scopes: (Deno.env.get(config.scopesEnv ?? "") ?? "").split(/[ ,]+/).filter(Boolean),
+        scopes: (Deno.env.get(config.scopesEnv) ?? "").split(/[ ,]+/).filter(Boolean),
         connected_at: new Date().toISOString(),
         last_error: null,
       }, { onConflict: "user_id,provider" })
