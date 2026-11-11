@@ -84,9 +84,9 @@ with check (
 
 -- A private bucket: recipients only receive signed playback URLs from the share page.
 insert into storage.buckets (id, name, public, file_size_limit)
-values ('indesign-message-audio', 'indesign-message-audio', false, 104857600)
+values ('indesign-message-audio', 'indesign-message-audio', false, 524288000)
 on conflict (id) do update
-set public = false, file_size_limit = 104857600;
+set public = false, file_size_limit = 524288000;
 
 drop policy if exists "Senders can upload indesign message audio" on storage.objects;
 create policy "Senders can upload indesign message audio"
