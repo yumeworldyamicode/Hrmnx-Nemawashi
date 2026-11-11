@@ -323,6 +323,7 @@
         const titleValue = await ask("Name this reference", "New reference");
         if (titleValue === null) return;
         const notes = await showDialog({ kind: "textarea", title: "Add a note", value: "", placeholder: "What should you remember about this reference?" });
+        if (notes === null) return;
         moodboardData().references.push({ src, title: titleValue.trim() || "Untitled reference", notes: notes || "", x: 100 + moodboardData().references.length * 34, y: 100 + moodboardData().references.length * 34 });
         renderMoodboard();
     }
