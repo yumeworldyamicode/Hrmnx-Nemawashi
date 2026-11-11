@@ -416,6 +416,84 @@
             downloadBlob(blob, activeProject.name, ".png"); notify("PNG exported.");
         }, "image/png");
     }
+    function brainstormData() {
+        if (!activeProject.content || typeof activeProject.content !== "object") activeProject.content = {};
+        const data = activeProject.content;
+        if (!["music", "comeback"].includes(data.mode)) data.mode = "music";
+        if (!data.music || typeof data.music !== "object") data.music = {};
+        if (!data.comeback || typeof data.comeback !== "object") data.comeback = {};
+        const defaults = {
+            music: [{ id: "ideas", title: "Song ideas", items: [] }, { id: "production", title: "Production", items: [] }, { id: "lyrics", title: "Lyrics & topline", items: [] }, { id: "arrangement", title: "Arrangement", items: [] }],
+            comeback: [{ id: "concept", title: "Concept & story", items: [] }, { id: "visuals", title: "Visual direction", items: [] }, { id: "promotion", title: "Promotion", items: [] }, { id: "content", title: "Content ideas", items: [] }]
+        };
+        ["music", "comeback"].forEach(mode => {
+            const part = data[mode];
+            if (!Array.isArray(part.sections)) part.sections = defaults[mode].map(section => ({ ...section }));
+            part.sections.forEach((section, index) => {
+                if (!section.id) section.id = mode + "-" + index;
+                if (!Array.isArray(section.items)) section.items = [];
+            });
+        });
+        return data;
+    }
+    function activeBrainstormPart() {
+        const data = brainstormData();
+        return data[data.mode];
+    }
+    function renderBrainstorm() {
+        document.body.classList.add("indesign-brainstorm-fullscreen");
+        const data = brainstormData(), mode = data.mode, part = activeBrainstormPart();
+        const music = mode === "music";
+        const fields = music
+          ? [["projectName","Project name"],["daw","DAW"],["bpm","BPM"],["key","Key"],["contributors","Contributors"],["visibility","Session access"]]
+          : [["artist","Artist"],["release","Release"],["concept","Creative direction"],["launchDate","Target date"],["campaignLead","Campaign lead"]];
+        const fieldValues = fields.map(([key,label]) => '<div class="brainstorm-field"><span>' + escapeHTML(label) + '</span><strong>' + escapeHTML(part[key] || "Add details") + '</strong><button data-edit-brainstorm-field="' + key + '">Edit</button></div>').join("");
+        const sectionHTML = part.sections.map((section,index) => '<section class="brainstorm-section" data-brainstorm-section="' + index + '"><header><div><span class="brainstorm-section-index">' + String(index+1).padStart(2,"0") + '</span><input class="brainstorm-section-title" data-brainstorm-section-title="' + index + '" value="' + escapeHTML(section.title) + '" aria-label="Section title"></div><div class="brainstorm-section-actions"><button data-move-brainstorm-section="' + index + ':-1" title="Move up" ' + (index===0?'disabled':'') + '>↑</button><button data-move-brainstorm-section="' + index + ':1" title="Move down" ' + (index===part.sections.length-1?'disabled':'') + '>↓</button><button data-delete-brainstorm-section="' + index + '" title="Delete section">×</button></div></header><div class="brainstorm-ideas">' + (section.items.map((item,itemIndex) => '<article class="brainstorm-idea"><span class="brainstorm-idea-dot"></span><p>' + escapeHTML(item.text || "") + '</p><button data-edit-brainstorm-idea="' + index + ':' + itemIndex + '" title="Edit idea">···</button><button data-delete-brainstorm-idea="' + index + ':' + itemIndex + '" title="Remove idea">×</button></article>').join("") || '<p class="brainstorm-empty">Nothing here yet. Add your first idea.</p>') + '</div><button class="brainstorm-add-idea" data-add-brainstorm-idea="' + index + '">＋ Add an idea</button></section>').join("");
+        title.textContent = activeProject.name;
+        content.innerHTML = '<div class="brainstorm-workspace"><header class="brainstorm-topbar"><button class="mood-back" id="back-to-projects" title="Back to projects">←</button><div class="mood-doc-title"><strong>' + escapeHTML(activeProject.name) + '</strong><small>BRAINSTORM</small></div><div class="brainstorm-mode-switch"><button data-brainstorm-mode="music" class="' + (music?'active':'') + '">Music</button><button data-brainstorm-mode="comeback" class="' + (!music?'active':'') + '">Comebacks</button></div><span class="mood-save-state" id="brainstorm-save-state">Unsaved changes</span><button class="mood-top-action" id="save-brainstorm-button">Save</button><button class="mood-top-action" data-export-project="' + escapeHTML(activeProject.id) + '">Export .in</button></header><div class="brainstorm-body"><aside class="brainstorm-sidebar"><div class="mood-panel-heading">WORKSPACE</div><p class="brainstorm-side-description">' + (music?'Build a song from its first idea to a finished production plan.':'Shape the release concept and organize the campaign around it.') + '</p><div class="mood-panel-heading">PROJECT DETAILS</div>' + fieldValues + '<button class="brainstorm-add-section" id="add-brainstorm-section">＋ Add section</button></aside><main class="brainstorm-main"><div class="brainstorm-heading"><div><p class="eyebrow">' + (music?'MUSIC DEVELOPMENT':'COMEBACK DEVELOPMENT') + '</p><h2>' + (music?'Build the sound.':'Build the era.') + '</h2><p>' + (music?'Collect production thoughts, lyrics, and arrangement ideas in one place.':'Collect the concept, visual language, and promotional direction.') + '</p></div><span class="brainstorm-section-count">' + part.sections.length + ' SECTIONS</span></div><div class="brainstorm-section-grid">' + sectionHTML + '</div></main></div></div>';
+    }
+    async function addBrainstormIdea(sectionIndex) {
+        const section = activeBrainstormPart().sections[sectionIndex];
+        if (!section) return;
+        const value = await showDialog({ kind:"textarea", title:"Add an idea to " + section.title, value:"", placeholder:"Write down the idea…" });
+        if (value === null || !value.trim()) return;
+        section.items.push({ text:value.trim() });
+        renderBrainstorm();
+    }
+    async function editBrainstormIdea(sectionIndex, itemIndex) {
+        const item = activeBrainstormPart().sections[sectionIndex]?.items[itemIndex];
+        if (!item) return;
+        const value = await showDialog({ kind:"textarea", title:"Edit idea", value:item.text || "" });
+        if (value === null) return;
+        item.text = value.trim();
+        renderBrainstorm();
+    }
+    async function editBrainstormField(key) {
+        const part = activeBrainstormPart(), mode = brainstormData().mode;
+        const labels = { projectName:"Project name", daw:"DAW", bpm:"BPM", key:"Key", contributors:"Contributors", visibility:"Session access", artist:"Artist", release:"Release", concept:"Creative direction", launchDate:"Target date", campaignLead:"Campaign lead" };
+        const multiline = ["contributors","concept"].includes(key);
+        const value = await showDialog({ kind:multiline?"textarea":"prompt", title:labels[key] || "Edit detail", value:part[key] || "", placeholder:labels[key] || "" });
+        if (value === null) return;
+        part[key] = value.trim();
+        renderBrainstorm();
+    }
+    async function addBrainstormSection() {
+        const value = await ask("Name your new section", "");
+        if (!value || !value.trim()) return;
+        const sections = activeBrainstormPart().sections;
+        sections.push({ id:"section-" + Date.now(), title:value.trim(), items:[] });
+        renderBrainstorm();
+    }
+    async function saveBrainstorm() {
+        if (!activeProject || activeProject.type !== "brainstorm") return;
+        const { data, error } = await window.supabaseClient.from(table).update({ content: brainstormData() }).eq("id", activeProject.id).select().single();
+        if (error) { console.error(error); notify("Could not save brainstorm."); return; }
+        activeProject = data;
+        projects = projects.map(p => p.id === data.id ? data : p);
+        const state = document.getElementById("brainstorm-save-state");
+        if (state) state.textContent = "Saved";
+        notify("Brainstorm saved.");
+    }
     async function saveMoodboard() {
         if (!activeProject || activeProject.type !== "moodboard") return;
         const { data, error } = await window.supabaseClient.from(table)
@@ -439,6 +517,7 @@
             renderMoodboard();
             return;
         }
+        if (project.type === "brainstorm") { brainstormData(); renderBrainstorm(); return; }
         if (project.type !== "board") {
             content.innerHTML = '<button class="text-button" id="back-to-projects">← All projects</button>' +
               '<div class="project-detail-head"><div><p class="eyebrow">' + escapeHTML(typeLabels[project.type] || "PROJECT") + '</p><h2>' + escapeHTML(project.name) + '</h2><p class="muted">' + escapeHTML(project.description || "Your project workspace is ready.") + '</p></div><div class="project-toolbar"><button class="button button-outline" data-rename-project="' + escapeHTML(project.id) + '">Rename</button><button class="button button-dark" data-export-project="' + escapeHTML(project.id) + '">Export .in</button></div></div>' +
@@ -489,8 +568,9 @@
     async function createProject(type) {
         const name = await ask("Name your " + (typeLabels[type] || "project").toLowerCase());
         if (!name || !name.trim()) return;
+        const initialContent = type === "moodboard" ? { purpose: "", references: [], connections: [], palette: [] } : type === "brainstorm" ? { mode:"music", music:{}, comeback:{} } : { elements: [] };
         const { data, error } = await window.supabaseClient.from(table).insert({
-            owner_id: employee.user.id, name: name.trim(), type, description: "", content: type === "moodboard" ? { purpose: "", references: [], connections: [], palette: [] } : { elements: [] }
+            owner_id: employee.user.id, name: name.trim(), type, description: "", content: initialContent
         }).select().single();
         if (error) { console.error(error); notify("Could not create project. Check the indesign database setup."); return; }
         projects.unshift(data); notify("Project created."); renderProject(data);
@@ -514,7 +594,7 @@
         notify("Project deleted."); showView("projects");
     }
     function exportProject(id) {
-        const project = projects.find(p => p.id === id);
+        const project = activeProject?.id === id ? activeProject : projects.find(p => p.id === id);
         if (!project) return;
         const file = new Blob([JSON.stringify({format:"indesign",version:1,project},null,2)],{type:"application/json"});
         const url=URL.createObjectURL(file), a=document.createElement("a");
