@@ -442,6 +442,45 @@
         const data = brainstormData();
         return data[data.mode];
     }
+
+    let brainstormAudioUrl = null;
+    function renderMusicReferences(text) {
+        const refs=[]; let match;
+        const timePattern=/\\b(\\d{1,2}:\\d{2})\\s*(?:to|-)\\s*(\\d{1,2}:\\d{2})\\b/gi;
+        while((match=timePattern.exec(text))!==null)refs.push({type:"time",start:match[1],end:match[2]});
+        const rulePattern=/\\bRule\\s*(\\d+)(?:\\s*(?:to|-)\\s*Rule?\\s*(\\d+))?\\b/gi;
+        while((match=rulePattern.exec(text))!==null)refs.push({type:"rule",start:Number(match[1]),end:match[2]?Number(match[2]):Number(match[1])});
+        return refs.map(ref=>ref.type==="time"?'<button class="brainstorm-reference-chip" data-play-range="'+ref.start+':'+ref.end+'">♫ '+ref.start+' - '+ref.end+'</button>':'<button class="brainstorm-reference-chip lyric" data-show-rules="'+ref.start+':'+ref.end+'">♪ Rule '+ref.start+(ref.end!==ref.start?' - '+ref.end:'')+'</button>').join("");
+    }
+    function parseClock(value){const p=value.split(":").map(Number);return p[0]*60+p[1];}
+    function showRuleRange(start,end){
+        const lyrics=brainstormData().music.lyrics;
+        if(!lyrics?.sections){notify("Import a .lyrdem package first.");return;}
+        const rules=lyrics.sections.flatMap(section=>(section.rules||[]).map(rule=>({...rule,section:section.title}))).filter(rule=>rule.number>=start&&rule.number<=end);
+        if(!rules.length){notify("Those lyric rules are not in the imported package.");return;}
+        const html=rules.map(rule=>'<article class="music-rule-preview"><small>'+escapeHTML(rule.section)+' · RULE '+rule.number+'</small><p>'+escapeHTML(rule.text)+'</p>'+(rule.adlibs?.length?'<em>'+escapeHTML(rule.adlibs.join(" / "))+'</em>':'')+(rule.members?.length?'<small>PERFORMER: '+escapeHTML(rule.members.join(", "))+'</small>':'')+'</article>').join("");
+        const modal=document.createElement("div");modal.className="indesign-dialog-overlay visible music-reference-overlay";
+        modal.innerHTML='<section class="music-reference-dialog"><header><strong>Lyrics reference</strong><button type="button" data-close-reference>×</button></header><div>'+html+'</div></section>';
+        document.body.appendChild(modal);modal.addEventListener("click",event=>{if(event.target===modal||event.target.closest("[data-close-reference]"))modal.remove();});
+    }
+    async function importBrainstormPackage(file,kind){
+        try{
+            if(!window.JSZip)throw new Error("Package library did not load. Refresh and try again.");
+            const zip=await window.JSZip.loadAsync(file),mf=zip.file("manifest.json");
+            if(!mf)throw new Error("This package has no manifest.json.");
+            const data=JSON.parse(await mf.async("string")),expected=kind==="prodem"?"indesign-prodem":"indesign-lyrdem";
+            if(data.format!==expected||data.version!==1)throw new Error("This is not a supported ."+kind+" package.");
+            const music=brainstormData().music;
+            if(kind==="prodem"){
+                const track=data.track||{};music.production={title:track.title||"",artist:track.artist||"",bpm:track.bpm||"",key:track.key||"",producers:track.producers||[],credits:track.credits||"",audioName:data.assets?.audio||""};
+                if(brainstormAudioUrl)URL.revokeObjectURL(brainstormAudioUrl);
+                const path=data.assets?.audio?"audio/"+data.assets.audio:"";
+                if(path&&zip.file(path)){const blob=await zip.file(path).async("blob");brainstormAudioUrl=URL.createObjectURL(blob);}
+            }else music.lyrics={artist:data.artist||{},sections:data.sections||[],credits:data.credits||{}};
+            const state=document.getElementById("brainstorm-save-state");if(state)state.textContent="Unsaved changes";
+            renderBrainstorm();notify("."+kind+" imported into this brainstorm.");
+        }catch(error){notify(error.message||"Could not import package.");}
+    }
     function renderBrainstorm() {
         document.body.classList.remove("moodboard-fullscreen");
         document.body.classList.add("indesign-brainstorm-fullscreen");
@@ -451,9 +490,9 @@
           ? [["projectName","Project name"],["daw","DAW"],["bpm","BPM"],["key","Key"],["contributors","Contributors"],["visibility","Session access"]]
           : [["artist","Artist"],["release","Release"],["concept","Creative direction"],["launchDate","Target date"],["campaignLead","Campaign lead"]];
         const fieldValues = fields.map(([key,label]) => '<div class="brainstorm-field"><span>' + escapeHTML(label) + '</span><strong>' + escapeHTML(part[key] || "Add details") + '</strong><button data-edit-brainstorm-field="' + key + '">Edit</button></div>').join("");
-        const sectionHTML = part.sections.map((section,index) => '<section class="brainstorm-section" data-brainstorm-section="' + index + '"><header><div><span class="brainstorm-section-index">' + String(index+1).padStart(2,"0") + '</span><input class="brainstorm-section-title" data-brainstorm-section-title="' + index + '" value="' + escapeHTML(section.title) + '" aria-label="Section title"></div><div class="brainstorm-section-actions"><button data-move-brainstorm-section="' + index + ':-1" title="Move up" ' + (index===0?'disabled':'') + '>↑</button><button data-move-brainstorm-section="' + index + ':1" title="Move down" ' + (index===part.sections.length-1?'disabled':'') + '>↓</button><button data-delete-brainstorm-section="' + index + '" title="Delete section">×</button></div></header><div class="brainstorm-ideas">' + (section.items.map((item,itemIndex) => '<article class="brainstorm-idea"><span class="brainstorm-idea-dot"></span><p>' + escapeHTML(item.text || "") + '</p><button data-edit-brainstorm-idea="' + index + ':' + itemIndex + '" title="Edit idea">···</button><button data-delete-brainstorm-idea="' + index + ':' + itemIndex + '" title="Remove idea">×</button></article>').join("") || '<p class="brainstorm-empty">Nothing here yet. Add your first idea.</p>') + '</div><button class="brainstorm-add-idea" data-add-brainstorm-idea="' + index + '">＋ Add an idea</button></section>').join("");
+        const sectionHTML = part.sections.map((section,index) => '<section class="brainstorm-section" data-brainstorm-section="' + index + '"><header><div><span class="brainstorm-section-index">' + String(index+1).padStart(2,"0") + '</span><input class="brainstorm-section-title" data-brainstorm-section-title="' + index + '" value="' + escapeHTML(section.title) + '" aria-label="Section title"></div><div class="brainstorm-section-actions"><button data-move-brainstorm-section="' + index + ':-1" title="Move up" ' + (index===0?'disabled':'') + '>↑</button><button data-move-brainstorm-section="' + index + ':1" title="Move down" ' + (index===part.sections.length-1?'disabled':'') + '>↓</button><button data-delete-brainstorm-section="' + index + '" title="Delete section">×</button></div></header><div class="brainstorm-ideas">' + (section.items.map((item,itemIndex) => '<article class="brainstorm-idea"><span class="brainstorm-idea-dot"></span><div class="brainstorm-idea-copy"><p>' + escapeHTML(item.text || "") + '</p>' + renderMusicReferences(item.text || "") + '</div><button data-edit-brainstorm-idea="' + index + ':' + itemIndex + '" title="Edit idea">···</button><button data-delete-brainstorm-idea="' + index + ':' + itemIndex + '" title="Remove idea">×</button></article>').join("") || '<p class="brainstorm-empty">Nothing here yet. Add your first idea.</p>') + '</div><button class="brainstorm-add-idea" data-add-brainstorm-idea="' + index + '">＋ Add an idea</button></section>').join("");
         title.textContent = activeProject.name;
-        content.innerHTML = '<div class="brainstorm-workspace"><header class="brainstorm-topbar"><button class="mood-back" id="back-to-projects" title="Back to projects">←</button><div class="mood-doc-title"><strong>' + escapeHTML(activeProject.name) + '</strong><small>BRAINSTORM</small></div><div class="brainstorm-mode-switch"><button data-brainstorm-mode="music" class="' + (music?'active':'') + '">Music</button><button data-brainstorm-mode="comeback" class="' + (!music?'active':'') + '">Comebacks</button></div><span class="mood-save-state" id="brainstorm-save-state">Unsaved changes</span>' + (music ? '<button class="mood-top-action" id="open-music-tools">Music tools</button>' : '') + '<button class="mood-top-action" id="save-brainstorm-button">Save</button><button class="mood-top-action" data-export-project="' + escapeHTML(activeProject.id) + '">Export .in</button></header><div class="brainstorm-body"><aside class="brainstorm-sidebar"><div class="mood-panel-heading">WORKSPACE</div><p class="brainstorm-side-description">' + (music?'Build a song from its first idea to a finished production plan.':'Shape the release concept and organize the campaign around it.') + '</p><div class="mood-panel-heading">PROJECT DETAILS</div>' + fieldValues + '<button class="brainstorm-add-section" id="add-brainstorm-section">＋ Add section</button></aside><main class="brainstorm-main"><div class="brainstorm-heading"><div><p class="eyebrow">' + (music?'MUSIC DEVELOPMENT':'COMEBACK DEVELOPMENT') + '</p><h2>' + (music?'Build the sound.':'Build the era.') + '</h2><p>' + (music?'Collect production thoughts, lyrics, and arrangement ideas in one place.':'Collect the concept, visual language, and promotional direction.') + '</p></div><span class="brainstorm-section-count">' + part.sections.length + ' SECTIONS</span></div><div class="brainstorm-section-grid">' + sectionHTML + '</div></main></div></div>';
+        content.innerHTML = '<div class="brainstorm-workspace"><header class="brainstorm-topbar"><button class="mood-back" id="back-to-projects" title="Back to projects">←</button><div class="mood-doc-title"><strong>' + escapeHTML(activeProject.name) + '</strong><small>BRAINSTORM</small></div><div class="brainstorm-mode-switch"><button data-brainstorm-mode="music" class="' + (music?'active':'') + '">Music</button><button data-brainstorm-mode="comeback" class="' + (!music?'active':'') + '">Comebacks</button></div><span class="mood-save-state" id="brainstorm-save-state">Unsaved changes</span>' + (music ? '<button class="mood-top-action" id="open-music-tools">Music tools</button><button class="mood-top-action" id="import-prodem-trigger">Import .prodem</button><input id="brainstorm-prodem-file" type="file" accept=".prodem" hidden><button class="mood-top-action" id="import-lyrdem-trigger">Import .lyrdem</button><input id="brainstorm-lyrdem-file" type="file" accept=".lyrdem" hidden>' : '') + '<button class="mood-top-action" id="save-brainstorm-button">Save</button><button class="mood-top-action" data-export-project="' + escapeHTML(activeProject.id) + '">Export .in</button></header><div class="brainstorm-body"><aside class="brainstorm-sidebar"><div class="mood-panel-heading">WORKSPACE</div><p class="brainstorm-side-description">' + (music?'Build a song from its first idea to a finished production plan.':'Shape the release concept and organize the campaign around it.') + '</p><div class="mood-panel-heading">PROJECT DETAILS</div>' + fieldValues + '<button class="brainstorm-add-section" id="add-brainstorm-section">＋ Add section</button></aside><main class="brainstorm-main"><div class="brainstorm-heading"><div><p class="eyebrow">' + (music?'MUSIC DEVELOPMENT':'COMEBACK DEVELOPMENT') + '</p><h2>' + (music?'Build the sound.':'Build the era.') + '</h2><p>' + (music?'Collect production thoughts, lyrics, and arrangement ideas in one place.':'Collect the concept, visual language, and promotional direction.') + '</p></div><span class="brainstorm-section-count">' + part.sections.length + ' SECTIONS</span></div><div class="brainstorm-imported-assets">' + (part.production ? '<div class="brainstorm-asset-card"><strong>♫ ' + escapeHTML(part.production.title || "Production audio") + '</strong><span>' + escapeHTML(part.production.artist || "") + ' · ' + escapeHTML(part.production.bpm || "—") + ' BPM · ' + escapeHTML(part.production.key || "Key not set") + '</span>' + (brainstormAudioUrl ? '<audio id="brainstorm-audio" controls preload="metadata" src="' + brainstormAudioUrl + '"></audio>' : '<small>Re-import the .prodem to play audio in this session.</small>') + '</div>' : '') + (part.lyrics ? '<div class="brainstorm-asset-card"><strong>♪ ' + escapeHTML(part.lyrics.artist?.name || "Lyrics") + '</strong><span>' + part.lyrics.sections.reduce((n,section)=>n+(section.rules||[]).length,0) + ' lyric rules imported</span></div>' : '') + '</div><div class="brainstorm-section-grid">' + sectionHTML + '</div></main></div></div>';
     }
     async function addBrainstormIdea(sectionIndex) {
         const section = activeBrainstormPart().sections[sectionIndex];
@@ -668,7 +707,14 @@
         if(moodTool){document.querySelectorAll("[data-mood-tool]").forEach(b=>b.classList.toggle("active",b===moodTool));document.getElementById("mood-canvas-viewport")?.classList.toggle("pan-tool",moodTool.dataset.moodTool==="pan");return;}
         if(event.target.closest("[data-add-mood-color]")){await addMoodColor();return;}
         if(event.target.closest("#save-moodboard-button")){saveMoodboard();return;}
-        if(event.target.closest("#open-music-tools")){window.indesignMusicTools?.open();return;}if(event.target.closest("#save-brainstorm-button")){saveBrainstorm();return;}
+        if(event.target.closest("#open-music-tools")){window.indesignMusicTools?.open();return;}
+        if(event.target.closest("#import-prodem-trigger")){document.getElementById("brainstorm-prodem-file")?.click();return;}
+        if(event.target.closest("#import-lyrdem-trigger")){document.getElementById("brainstorm-lyrdem-file")?.click();return;}
+        const playRange=event.target.closest("[data-play-range]");
+        if(playRange){const [from,to]=playRange.dataset.playRange.split(":");const audio=document.getElementById("brainstorm-audio");if(!audio){notify("Import a .prodem package with audio first.");return;}const start=parseClock(from),end=parseClock(to);if(end<=start){notify("The end of the range must be after the start.");return;}audio.currentTime=start;audio.play().catch(()=>notify("Audio playback could not start."));audio.ontimeupdate=()=>{if(audio.currentTime>=end){audio.pause();audio.ontimeupdate=null;}};return;}
+        const ruleRange=event.target.closest("[data-show-rules]");
+        if(ruleRange){const [start,end]=ruleRange.dataset.showRules.split(":").map(Number);showRuleRange(start,end);return;}
+        if(event.target.closest("#save-brainstorm-button")){saveBrainstorm();return;}
         const brainstormMode=event.target.closest("[data-brainstorm-mode]");
         if(brainstormMode){brainstormData().mode=brainstormMode.dataset.brainstormMode;renderBrainstorm();return;}
         const brainstormField=event.target.closest("[data-edit-brainstorm-field]");
@@ -722,6 +768,8 @@
     });
     document.addEventListener("change",event=>{
         if(event.target.id==="import-project-file" && event.target.files?.[0]) importProject(event.target.files[0]);
+        if(event.target.id==="brainstorm-prodem-file"&&event.target.files?.[0])importBrainstormPackage(event.target.files[0],"prodem");
+        if(event.target.id==="brainstorm-lyrdem-file"&&event.target.files?.[0])importBrainstormPackage(event.target.files[0],"lyrdem");
         const sectionTitle=event.target.closest("[data-brainstorm-section-title]");
         if(sectionTitle){const section=activeBrainstormPart()?.sections[Number(sectionTitle.dataset.brainstormSectionTitle)];if(section){section.title=sectionTitle.value.trim()||"Untitled section";const state=document.getElementById("brainstorm-save-state");if(state)state.textContent="Unsaved changes";}}
     });
