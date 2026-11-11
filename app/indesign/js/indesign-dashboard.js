@@ -150,43 +150,135 @@
         });
     }
     let selectedMoodRefs = [];
+    let selectedMoodObject = null;
+    let moodViewport = { x: 0, y: 0, zoom: 1 };
+    let moodPointer = null;
     function moodboardData() {
         if (!activeProject.content || typeof activeProject.content !== "object") activeProject.content = {};
         const data = activeProject.content;
         if (!Array.isArray(data.references)) data.references = [];
         if (!Array.isArray(data.connections)) data.connections = [];
         if (!Array.isArray(data.palette)) data.palette = [];
+        if (!Array.isArray(data.notes)) data.notes = [];
         if (typeof data.purpose !== "string") data.purpose = "";
+        data.references.forEach((item, i) => {
+            if (!Number.isFinite(Number(item.x))) item.x = 90 + (i % 3) * 290;
+            if (!Number.isFinite(Number(item.y))) item.y = 90 + Math.floor(i / 3) * 280;
+        });
+        data.notes.forEach((item, i) => {
+            if (!Number.isFinite(Number(item.x))) item.x = 120 + i * 36;
+            if (!Number.isFinite(Number(item.y))) item.y = 420 + i * 36;
+        });
+        data.palette.forEach((item, i) => {
+            if (typeof item === "string") data.palette[i] = { color: item, x: 110 + i * 110, y: 760 };
+            else {
+                if (!Number.isFinite(Number(item.x))) item.x = 110 + i * 110;
+                if (!Number.isFinite(Number(item.y))) item.y = 760;
+            }
+        });
         return data;
+    }
+    function moodObjectList() {
+        const d = moodboardData();
+        return [
+            ...d.references.map((item, index) => ({ type: "reference", index, item })),
+            ...d.notes.map((item, index) => ({ type: "note", index, item })),
+            ...d.palette.map((item, index) => ({ type: "color", index, item }))
+        ];
+    }
+    function moodObjectHTML(entry) {
+        const { type, index, item } = entry;
+        const selected = selectedMoodObject && selectedMoodObject.type === type && selectedMoodObject.index === index;
+        const common = 'class="mood-canvas-object mood-object-' + type + (selected ? ' selected' : '') + '" data-mood-object="' + type + ':' + index + '" style="left:' + Number(item.x || 0) + 'px;top:' + Number(item.y || 0) + 'px"';
+        if (type === "reference") return '<article ' + common + '><img src="' + escapeHTML(item.src) + '" alt="' + escapeHTML(item.title || "Moodboard reference") + '" draggable="false"><div class="mood-object-copy"><strong>' + escapeHTML(item.title || "Untitled reference") + '</strong><p>' + escapeHTML(item.notes || "") + '</p></div><button class="mood-object-edit" data-edit-mood-ref="' + index + '" title="Edit reference">···</button></article>';
+        if (type === "note") return '<article ' + common + '><div class="mood-note-grip">NOTE</div><div class="mood-note-text">' + escapeHTML(item.text || "New note") + '</div><button class="mood-object-edit" data-edit-mood-note="' + index + '" title="Edit note">···</button></article>';
+        return '<article ' + common + '><div class="mood-color-swatch" style="background:' + escapeHTML(item.color || "#748fe8") + '"></div><span>' + escapeHTML(item.color || "#748fe8") + '</span><button class="mood-object-edit" data-remove-mood-color="' + index + '" title="Remove color">×</button></article>';
     }
     function renderMoodboard() {
         const data = moodboardData();
-        const refs = data.references;
-        const referenceHTML = refs.map((item, index) =>
-            '<article class="mood-ref-card' + (selectedMoodRefs.includes(index) ? ' selected' : '') + '">' +
-              '<button class="mood-ref-select" data-select-mood-ref="' + index + '" aria-pressed="' + selectedMoodRefs.includes(index) + '">' +
-                '<img src="' + escapeHTML(item.src) + '" alt="' + escapeHTML(item.title || "Moodboard reference") + '" loading="lazy">' +
-                '<span class="mood-ref-title">' + escapeHTML(item.title || "Untitled reference") + '</span>' +
-              '</button><div class="mood-ref-notes">' + escapeHTML(item.notes || "No notes yet.") + '</div>' +
-              '<div class="mood-ref-actions"><button data-edit-mood-ref="' + index + '">Edit</button><button data-delete-mood-ref="' + index + '">Remove</button></div>' +
-            '</article>'
-        ).join("");
-        const paletteHTML = data.palette.map((color, index) =>
-            '<button class="mood-color" data-remove-mood-color="' + index + '" title="Remove ' + escapeHTML(color) + '">' +
-            '<i style="background:' + escapeHTML(color) + '"></i><span>' + escapeHTML(color) + '</span></button>'
-        ).join("");
-        const connectionsHTML = data.connections.map((pair, index) => {
-            const a = refs[pair[0]], b = refs[pair[1]];
+        document.body.classList.add("moodboard-fullscreen");
+        title.textContent = activeProject.name;
+        const objects = moodObjectList();
+        const connectionLines = data.connections.map(pair => {
+            const a = data.references[pair[0]], b = data.references[pair[1]];
             if (!a || !b) return "";
-            return '<div class="mood-connection"><span>' + escapeHTML(a.title || "Reference " + (pair[0] + 1)) + '</span><b>↔</b><span>' + escapeHTML(b.title || "Reference " + (pair[1] + 1)) + '</span><button data-delete-mood-connection="' + index + '" aria-label="Remove connection">×</button></div>';
+            return '<line x1="' + (Number(a.x || 0) + 115) + '" y1="' + (Number(a.y || 0) + 100) + '" x2="' + (Number(b.x || 0) + 115) + '" y2="' + (Number(b.y || 0) + 100) + '" />';
         }).join("");
-        content.innerHTML = '<button class="text-button" id="back-to-projects">← All projects</button>' +
-          '<div class="board-topline"><div><p class="eyebrow">MOODBOARD</p><h2>' + escapeHTML(activeProject.name) + '</h2><p class="muted">' + escapeHTML(data.purpose || "Add a purpose to guide this moodboard.") + '</p></div><div class="project-toolbar"><button class="button button-outline" id="edit-mood-purpose">Edit purpose</button><button class="button button-dark" id="save-moodboard-button">Save moodboard</button><button class="button button-outline" data-export-project="' + escapeHTML(activeProject.id) + '">Export .in</button></div></div>' +
-          '<div class="moodboard-tools"><button data-add-mood-ref>＋ Add reference</button><button data-connect-mood-refs ' + (selectedMoodRefs.length === 2 ? '' : 'disabled') + '>Connect selected</button><span>' + refs.length + ' REFERENCES</span></div>' +
-          '<section class="moodboard-section"><div class="moodboard-section-head"><h3>Visual references</h3><p>Select two references to connect them.</p></div>' +
-          '<div class="mood-reference-grid">' + (referenceHTML || '<div class="mood-empty">Add image references to start collecting visual ideas.</div>') + '</div></section>' +
-          '<div class="moodboard-lower"><section class="moodboard-section"><div class="moodboard-section-head"><h3>Color palette</h3><button class="text-button" data-add-mood-color>＋ Add color</button></div><div class="mood-palette">' + (paletteHTML || '<p class="muted">Save colors that define this direction.</p>') + '</div></section>' +
-          '<section class="moodboard-section"><div class="moodboard-section-head"><h3>Connections</h3><p>Relationships between references</p></div><div class="mood-connections">' + (connectionsHTML || '<p class="muted">No connections yet.</p>') + '</div></section></div>';
+        const layerHTML = objects.map(o => '<button class="mood-layer' + (selectedMoodObject && selectedMoodObject.type === o.type && selectedMoodObject.index === o.index ? ' active' : '') + '" data-select-mood-object="' + o.type + ':' + o.index + '"><span>' + escapeHTML(o.type === "reference" ? (o.item.title || "Image") : o.type === "note" ? (o.item.text || "Note").slice(0, 25) : o.item.color) + '</span><small>' + (o.type === "reference" ? "Image" : o.type === "note" ? "Note" : "Color") + '</small></button>').join("");
+        const palette = data.palette.map(c => '<button class="mood-sidebar-color" data-remove-mood-color="' + data.palette.indexOf(c) + '"><i style="background:' + escapeHTML(c.color || c) + '"></i><span>' + escapeHTML(c.color || c) + '</span></button>').join("");
+        content.innerHTML = '<div class="mood-workspace">' +
+          '<header class="mood-topbar"><button class="mood-back" id="back-to-projects" title="Back to projects">←</button><div class="mood-doc-title"><strong>' + escapeHTML(activeProject.name) + '</strong><small>MOODBOARD</small></div><button class="mood-purpose-button" id="edit-mood-purpose">' + escapeHTML(data.purpose || "Add a purpose…") + '</button><span class="mood-save-state" id="mood-save-state">All changes saved locally</span><button class="mood-top-action" id="save-moodboard-button">Save</button><div class="mood-export-wrap"><button class="mood-top-action" id="mood-export-toggle">Export ↓</button><div class="mood-export-menu" id="mood-export-menu"><button data-export-moodboard="png">Download PNG</button><button data-export-moodboard="json">Download JSON</button><button data-export-project="' + escapeHTML(activeProject.id) + '">Download .in</button></div></div></header>' +
+          '<div class="mood-toolstrip"><button class="active" data-mood-tool="select" title="Select">↖</button><button data-mood-tool="pan" title="Pan">✋</button><i></i><button data-add-mood-ref title="Add image">▧</button><button data-add-mood-note title="Add note">T</button><button data-add-mood-color title="Add color">◉</button><button data-connect-mood-refs title="Connect two selected images" ' + (selectedMoodRefs.length === 2 ? '' : 'disabled') + '>⌁</button><span class="mood-tool-hint">Select objects to move them · Drag empty space to pan · Scroll to zoom</span></div>' +
+          '<div class="mood-workarea"><aside class="mood-left-panel"><div class="mood-panel-heading">LAYERS <span>' + objects.length + '</span></div><div class="mood-layer-list">' + (layerHTML || '<p class="mood-panel-empty">Your objects will appear here.</p>') + '</div><div class="mood-panel-heading mood-panel-subhead">COLOR PALETTE <button data-add-mood-color>＋</button></div><div class="mood-sidebar-palette">' + (palette || '<p class="mood-panel-empty">No colors yet.</p>') + '</div><div class="mood-panel-heading mood-panel-subhead">CONNECTIONS <span>' + data.connections.length + '</span></div><div class="mood-connection-list">' + data.connections.map((p,i) => '<div><span>' + escapeHTML(data.references[p[0]]?.title || "Image " + (p[0]+1)) + ' ↔ ' + escapeHTML(data.references[p[1]]?.title || "Image " + (p[1]+1)) + '</span><button data-delete-mood-connection="' + i + '">×</button></div>').join("") + '</div></aside>' +
+          '<main class="mood-canvas-viewport" id="mood-canvas-viewport"><div class="mood-canvas-world" id="mood-canvas-world" style="transform:translate(' + moodViewport.x + 'px,' + moodViewport.y + 'px) scale(' + moodViewport.zoom + ')"><svg class="mood-connection-svg" id="mood-connection-svg">' + connectionLines + '</svg>' + objects.map(moodObjectHTML).join("") + '</div></main>' +
+          '<aside class="mood-right-panel"><div class="mood-panel-heading">MOODBOARD</div><label class="mood-field-label">Name</label><div class="mood-field-value">' + escapeHTML(activeProject.name) + '</div><label class="mood-field-label">Purpose</label><div class="mood-field-value mood-purpose-value">' + escapeHTML(data.purpose || "No purpose added yet.") + '</div><button class="mood-panel-button" id="edit-mood-purpose">Edit purpose</button><div class="mood-panel-divider"></div><div class="mood-panel-heading">SELECTED OBJECT</div><div id="mood-selection-details" class="mood-selection-details">' + (selectedMoodObject ? escapeHTML(selectedMoodObject.type === "reference" ? (data.references[selectedMoodObject.index]?.title || "Image") : selectedMoodObject.type === "note" ? (data.notes[selectedMoodObject.index]?.text || "Note") : (data.palette[selectedMoodObject.index]?.color || data.palette[selectedMoodObject.index] || "Color")) : 'Select an object on the canvas to see its details.') + '</div><div class="mood-panel-divider"></div><div class="mood-panel-heading">CANVAS</div><div class="mood-zoom-controls"><button id="mood-zoom-out">−</button><span id="mood-zoom-label">' + Math.round(moodViewport.zoom * 100) + '%</span><button id="mood-zoom-in">＋</button><button id="mood-zoom-fit">Fit</button></div></aside></div></div>';
+        bindMoodCanvas();
+    }
+    function updateMoodTransform() {
+        const world = document.getElementById("mood-canvas-world");
+        const label = document.getElementById("mood-zoom-label");
+        if (world) world.style.transform = 'translate(' + moodViewport.x + 'px,' + moodViewport.y + 'px) scale(' + moodViewport.zoom + ')';
+        if (label) label.textContent = Math.round(moodViewport.zoom * 100) + "%";
+    }
+    function bindMoodCanvas() {
+        const viewport = document.getElementById("mood-canvas-viewport");
+        const world = document.getElementById("mood-canvas-world");
+        if (!viewport || !world) return;
+        viewport.addEventListener("wheel", event => {
+            event.preventDefault();
+            const rect = viewport.getBoundingClientRect();
+            const px = event.clientX - rect.left, py = event.clientY - rect.top;
+            const old = moodViewport.zoom;
+            const next = Math.max(.2, Math.min(2.5, old * (event.deltaY < 0 ? 1.1 : .9)));
+            moodViewport.x = px - (px - moodViewport.x) * (next / old);
+            moodViewport.y = py - (py - moodViewport.y) * (next / old);
+            moodViewport.zoom = next; updateMoodTransform();
+        }, { passive: false });
+        viewport.addEventListener("pointerdown", event => {
+            const object = event.target.closest("[data-mood-object]");
+            if (object && !event.target.closest("button")) {
+                const [type, rawIndex] = object.dataset.moodObject.split(":");
+                const index = Number(rawIndex);
+                selectedMoodObject = { type, index };
+                if (type === "reference") selectedMoodRefs = selectedMoodRefs.includes(index) ? selectedMoodRefs : selectedMoodRefs.concat(index).slice(-2);
+                const item = type === "reference" ? moodboardData().references[index] : type === "note" ? moodboardData().notes[index] : moodboardData().palette[index];
+                moodPointer = { mode: "object", type, index, startX: event.clientX, startY: event.clientY, x: Number(item.x || 0), y: Number(item.y || 0), pointerId: event.pointerId };
+                object.setPointerCapture(event.pointerId);
+                document.querySelectorAll(".mood-canvas-object").forEach(n => n.classList.toggle("selected", n === object));
+                event.preventDefault(); return;
+            }
+            if (!object) {
+                moodPointer = { mode: "pan", startX: event.clientX, startY: event.clientY, x: moodViewport.x, y: moodViewport.y, pointerId: event.pointerId };
+                viewport.setPointerCapture(event.pointerId);
+                viewport.classList.add("is-panning");
+            }
+        });
+        viewport.addEventListener("pointermove", event => {
+            if (!moodPointer) return;
+            const dx = (event.clientX - moodPointer.startX) / (moodPointer.mode === "object" ? moodViewport.zoom : 1);
+            const dy = (event.clientY - moodPointer.startY) / (moodPointer.mode === "object" ? moodViewport.zoom : 1);
+            if (moodPointer.mode === "pan") {
+                moodViewport.x = moodPointer.x + dx; moodViewport.y = moodPointer.y + dy; updateMoodTransform();
+            } else {
+                const d = moodboardData();
+                const item = moodPointer.type === "reference" ? d.references[moodPointer.index] : moodPointer.type === "note" ? d.notes[moodPointer.index] : d.palette[moodPointer.index];
+                if (!item) return;
+                item.x = Math.round(moodPointer.x + dx); item.y = Math.round(moodPointer.y + dy);
+                const node = world.querySelector('[data-mood-object="' + moodPointer.type + ':' + moodPointer.index + '"]');
+                if (node) { node.style.left = item.x + "px"; node.style.top = item.y + "px"; }
+                updateMoodConnections();
+            }
+        });
+        const stop = () => { moodPointer = null; viewport.classList.remove("is-panning"); };
+        viewport.addEventListener("pointerup", stop); viewport.addEventListener("pointercancel", stop);
+    }
+    function updateMoodConnections() {
+        const svg = document.getElementById("mood-connection-svg");
+        if (!svg) return;
+        svg.innerHTML = moodboardData().connections.map(pair => {
+            const a = moodboardData().references[pair[0]], b = moodboardData().references[pair[1]];
+            return a && b ? '<line x1="' + (Number(a.x || 0)+115) + '" y1="' + (Number(a.y || 0)+100) + '" x2="' + (Number(b.x || 0)+115) + '" y2="' + (Number(b.y || 0)+100) + '" />' : "";
+        }).join("");
     }
     function addMoodReference() {
         const value = window.prompt("Paste an image URL (https://):");
@@ -197,7 +289,7 @@
         const titleValue = window.prompt("Give this reference a name:", "New reference");
         if (titleValue === null) return;
         const notes = window.prompt("What should you remember about it?", "") ;
-        moodboardData().references.push({ src, title: titleValue.trim() || "Untitled reference", notes: notes || "" });
+        moodboardData().references.push({ src, title: titleValue.trim() || "Untitled reference", notes: notes || "", x: 100 + moodboardData().references.length * 34, y: 100 + moodboardData().references.length * 34 });
         renderMoodboard();
     }
     function editMoodReference(index) {
@@ -215,8 +307,69 @@
         const value = window.prompt("Enter a hex color (for example #748fe8):", "#748fe8");
         if (!value) return;
         if (!/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim())) { notify("Enter a valid 3- or 6-digit hex color."); return; }
-        moodboardData().palette.push(value.trim().toLowerCase());
+        moodboardData().palette.push({ color: value.trim().toLowerCase(), x: 120 + moodboardData().palette.length * 35, y: 760 });
         renderMoodboard();
+    }
+    function addMoodNote() {
+        const value = window.prompt("Write a note for your moodboard:", "New idea");
+        if (value === null) return;
+        const notes = moodboardData().notes;
+        notes.push({ text: value, x: 140 + notes.length * 35, y: 430 + notes.length * 35 });
+        selectedMoodObject = { type: "note", index: notes.length - 1 };
+        renderMoodboard();
+    }
+    function editMoodNote(index) {
+        const item = moodboardData().notes[index];
+        if (!item) return;
+        const value = window.prompt("Edit note:", item.text || "");
+        if (value !== null) { item.text = value; renderMoodboard(); }
+    }
+    function exportMoodboardJSON() {
+        const project = activeProject;
+        const blob = new Blob([JSON.stringify({ format: "indesign-moodboard", version: 1, project }, null, 2)], { type: "application/json" });
+        downloadBlob(blob, project.name, ".json");
+    }
+    function downloadBlob(blob, name, extension) {
+        const url = URL.createObjectURL(blob), a = document.createElement("a");
+        a.href = url; a.download = name.replace(/[^a-z0-9-_ ]/gi, "").trim().replace(/\\s+/g, "-") + extension;
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    async function exportMoodboardPNG() {
+        const d = moodboardData(), canvas = document.createElement("canvas");
+        canvas.width = 1800; canvas.height = 1200;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#f1f2f5"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#111"; ctx.font = "600 34px Arial"; ctx.fillText(activeProject.name, 64, 68);
+        if (d.purpose) { ctx.fillStyle = "#777"; ctx.font = "18px Arial"; ctx.fillText(d.purpose.slice(0, 110), 64, 102); }
+        for (const item of d.references) {
+            const x = 64 + Number(item.x || 0) * .75, y = 150 + Number(item.y || 0) * .75;
+            const img = new Image(); img.crossOrigin = "anonymous";
+            try {
+                await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = item.src; });
+                const w = 250, h = 190, ratio = Math.min(w / img.width, h / img.height);
+                ctx.drawImage(img, x, y, img.width * ratio, img.height * ratio);
+            } catch (_) {
+                ctx.fillStyle = "#e8e8ec"; ctx.fillRect(x, y, 250, 150);
+                ctx.fillStyle = "#555"; ctx.font = "14px Arial"; ctx.fillText("Image unavailable", x + 12, y + 78);
+            }
+            ctx.fillStyle = "#111"; ctx.font = "bold 16px Arial"; ctx.fillText((item.title || "Reference").slice(0, 32), x, y + 214);
+            ctx.fillStyle = "#777"; ctx.font = "13px Arial"; ctx.fillText((item.notes || "").slice(0, 48), x, y + 236);
+        }
+        for (const item of d.notes) {
+            const x = 64 + Number(item.x || 0) * .75, y = 150 + Number(item.y || 0) * .75;
+            ctx.fillStyle = "#fff4a8"; ctx.fillRect(x, y, 220, 130);
+            ctx.fillStyle = "#222"; ctx.font = "16px Arial"; ctx.fillText((item.text || "").slice(0, 100), x + 12, y + 28, 195);
+        }
+        d.palette.forEach(item => {
+            const color = item.color || item, x = 64 + Number(item.x || 0) * .75, y = 1030;
+            ctx.fillStyle = color; ctx.fillRect(x, y, 54, 54);
+            ctx.fillStyle = "#333"; ctx.font = "12px Arial"; ctx.fillText(color, x, y + 72);
+        });
+        canvas.toBlob(blob => {
+            if (!blob) { notify("PNG export failed. Try exporting JSON or .in instead."); return; }
+            downloadBlob(blob, activeProject.name, ".png"); notify("PNG exported.");
+        }, "image/png");
     }
     async function saveMoodboard() {
         if (!activeProject || activeProject.type !== "moodboard") return;
@@ -229,6 +382,7 @@
     }
     function renderProject(project) {
         activeProject = project;
+        document.body.classList.remove("moodboard-fullscreen");
         title.textContent = project.name;
         if (project.type === "moodboard") {
             if (!project.content || typeof project.content !== "object") project.content = {};
@@ -333,6 +487,7 @@
     async function showView(view) {
         document.querySelectorAll(".nav-item").forEach(button=>button.classList.toggle("active",button.dataset.view===view));
         activeProject=null;
+        document.body.classList.remove("moodboard-fullscreen");
         if(view==="projects") { try { await loadProjects(); renderProjects(); } catch(e) { console.error(e); notify("Could not load projects. Check the database setup."); } }
         else if(view==="messages") renderMessages();
         else if(view==="account") renderAccount();
@@ -365,6 +520,19 @@
         if(layer){selectedBoardElement=Number(layer.dataset.selectBoardElement);redrawBoard();return;}
         if(event.target.closest("#save-board-button")){saveBoard();return;}
         if(event.target.closest("[data-add-mood-ref]")){addMoodReference();return;}
+        if(event.target.closest("[data-add-mood-note]")){addMoodNote();return;}
+        const moodNoteEdit=event.target.closest("[data-edit-mood-note]");
+        if(moodNoteEdit){editMoodNote(Number(moodNoteEdit.dataset.editMoodNote));return;}
+        if(event.target.closest("#mood-export-toggle")){document.getElementById("mood-export-menu")?.classList.toggle("visible");return;}
+        const moodExport=event.target.closest("[data-export-moodboard]");
+        if(moodExport){document.getElementById("mood-export-menu")?.classList.remove("visible");if(moodExport.dataset.exportMoodboard==="json")exportMoodboardJSON();else exportMoodboardPNG();return;}
+        const moodObjectSelect=event.target.closest("[data-select-mood-object]");
+        if(moodObjectSelect){const [type,index]=moodObjectSelect.dataset.selectMoodObject.split(":");selectedMoodObject={type,index:Number(index)};renderMoodboard();return;}
+        if(event.target.closest("#mood-zoom-in")){moodViewport.zoom=Math.min(2.5,moodViewport.zoom*1.15);updateMoodTransform();return;}
+        if(event.target.closest("#mood-zoom-out")){moodViewport.zoom=Math.max(.2,moodViewport.zoom/1.15);updateMoodTransform();return;}
+        if(event.target.closest("#mood-zoom-fit")){moodViewport={x:0,y:0,zoom:1};updateMoodTransform();return;}
+        const moodTool=event.target.closest("[data-mood-tool]");
+        if(moodTool){document.querySelectorAll("[data-mood-tool]").forEach(b=>b.classList.toggle("active",b===moodTool));document.getElementById("mood-canvas-viewport")?.classList.toggle("pan-tool",moodTool.dataset.moodTool==="pan");return;}
         if(event.target.closest("[data-add-mood-color]")){addMoodColor();return;}
         if(event.target.closest("#save-moodboard-button")){saveMoodboard();return;}
         if(event.target.closest("#edit-mood-purpose")){
