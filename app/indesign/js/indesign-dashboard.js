@@ -527,6 +527,8 @@
         if(event.target.closest("[data-add-mood-note]")){addMoodNote();return;}
         const moodNoteEdit=event.target.closest("[data-edit-mood-note]");
         if(moodNoteEdit){editMoodNote(Number(moodNoteEdit.dataset.editMoodNote));return;}
+        const moodNoteDelete=event.target.closest("[data-delete-mood-note]");
+        if(moodNoteDelete){moodboardData().notes.splice(Number(moodNoteDelete.dataset.deleteMoodNote),1);selectedMoodObject=null;renderMoodboard();return;}
         if(event.target.closest("#mood-export-toggle")){document.getElementById("mood-export-menu")?.classList.toggle("visible");return;}
         const moodExport=event.target.closest("[data-export-moodboard]");
         if(moodExport){document.getElementById("mood-export-menu")?.classList.remove("visible");if(moodExport.dataset.exportMoodboard==="json")exportMoodboardJSON();else exportMoodboardPNG();return;}
