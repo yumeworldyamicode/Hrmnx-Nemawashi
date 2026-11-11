@@ -89,7 +89,9 @@ function card(item,index){
     '<p class="integration-description">'+escapeHTML(item.capabilities[0])+', '+escapeHTML(item.capabilities[1].toLowerCase())+'.</p>'+
     (status.account?'<p class="integration-account">'+escapeHTML(status.account)+'</p>':'')+
     '<div class="integration-card-bottom"><span>'+escapeHTML(item.phase)+'</span>'+
-    '<button class="button button-outline integration-details" data-integration="'+index+'">Details ↗</button></div></article>';
+    '<div class="integration-card-actions">'+
+    (["figma","adobe","canva"].includes(item.id)?'<button class="button button-dark integration-connect" data-connect-integration="'+escapeHTML(item.id)+'">Connect ↗</button>':'')+
+    '<button class="button button-outline integration-details" data-integration="'+index+'">Details</button></div></div></article>';
 }
 
 function render(filter="All",refresh=true){
@@ -117,6 +119,26 @@ function render(filter="All",refresh=true){
     });
   }
   return html;
+}
+
+async function connectProvider(provider){
+  const client=window.supabaseClient;
+  if(!client){window.alert("Supabase is not available. Refresh the page and try again.");return;}
+  const button=document.querySelector('[data-connect-integration="'+provider+'"]');
+  if(button){button.disabled=true;button.textContent="Connecting…";}
+  try{
+    const {data,error}=await client.functions.invoke("indesign-oauth-start",{body:{provider}});
+    if(error)throw error;
+    if(!data?.authorization_url)throw new Error(data?.error||"The provider did not return an authorisation link.");
+    window.location.assign(data.authorization_url);
+  }catch(error){
+    console.error("indesign provider connection could not start:",error);
+    const message=error?.context?.error||error?.message||"Could not start the secure connection.";
+    const toast=document.getElementById("toast");
+    if(toast){toast.textContent=message;toast.classList.add("visible");}
+    else window.alert(message);
+    if(button){button.disabled=false;button.textContent="Connect ↗";}
+  }
 }
 
 function showDetails(index){
@@ -157,6 +179,8 @@ document.addEventListener("click",e=>{
     if(host){host.innerHTML=render(filter.dataset.integrationFilter,false);window.indesignFileExchange?.init();}
     return;
   }
+  const connect=e.target.closest("[data-connect-integration]");
+  if(connect){connectProvider(connect.dataset.connectIntegration);return;}
   const detail=e.target.closest("[data-integration]");
   if(detail)showDetails(Number(detail.dataset.integration));
 });
