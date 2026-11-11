@@ -66,13 +66,10 @@ async function encryptTokens(tokens: Record<string, unknown>) {
 
 Deno.serve(async (req) => {
   const url = new URL(req.url);
-  const provider = url.searchParams.get("provider") as Provider;
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const oauthError = url.searchParams.get("error");
-  if (!provider || !(provider in providerConfig)) return html("Unknown provider", "This provider is not enabled for OAuth.");
-  if (oauthError) return html("Authorisation cancelled", "The provider did not approve access. You can return to indesign and try again.");
-  if (!code || !state) return html("Authorisation failed", "The provider did not return the required authorisation details.");
+  if (!state) return html("Authorisation failed", "The provider did not return a valid session state.");
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -88,13 +85,17 @@ Deno.serve(async (req) => {
     if (stateError || !stateRow) return html("Session expired", "The authorisation session expired or could not be verified. Start the connection again from indesign.");
 
     await admin.from("indesign_oauth_states").delete().eq("id", stateRow.id);
+    if (oauthError) return html("Authorisation cancelled", "The provider did not approve access. You can return to indesign and try again.");
+    if (!code) return html("Authorisation failed", "The provider did not return an authorisation code.");
 
+    const provider = stateRow.provider as Provider;
+    if (!(provider in providerConfig)) return html("Unknown provider", "This provider is not enabled for OAuth.");
     const config = providerConfig[provider];
     const clientId = Deno.env.get(config.clientEnv);
     const clientSecret = Deno.env.get(config.secretEnv);
     if (!clientId || !clientSecret) throw new Error("Provider credentials are not configured.");
 
-    const redirectUri = supabaseUrl + "/functions/v1/indesign-oauth-callback?provider=" + provider;
+    const redirectUri = supabaseUrl + "/functions/v1/indesign-oauth-callback";
     const form = new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: redirectUri });
     if (provider === "canva" && stateRow.pkce_verifier) form.set("code_verifier", stateRow.pkce_verifier);
     if (config.authStyle === "body") {
