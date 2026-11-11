@@ -3,13 +3,17 @@
 
 const logoUrls = {
   figma:"https://cdn.simpleicons.org/figma",
-  adobe:"https://cdn.simpleicons.org/adobe",
+  adobe:"https://cdn.simpleicons.org/adobecreativecloud",
   canva:"https://cdn.simpleicons.org/canva",
   penpot:"https://cdn.simpleicons.org/penpot",
   ableton_live:"https://cdn.simpleicons.org/abletonlive",
   fl_studio:"https://cdn.simpleicons.org/flstudio",
   logic_pro:"https://cdn.simpleicons.org/logicpro",
   studio_one:"https://cdn.simpleicons.org/presonus"
+};
+const logoFallbacks = {
+  figma:"F", adobe:"A", canva:"Canva", penpot:"P",
+  ableton_live:"LIVE", fl_studio:"FL", logic_pro:"Logic", studio_one:"S1"
 };
 
 const providers = [
@@ -78,7 +82,7 @@ async function loadConnections(){
 function card(item,index){
   const status = statusFor(item.id);
   return '<article class="integration-card" data-provider="'+escapeHTML(item.id)+'">'+
-    '<div class="integration-card-top"><span class="integration-icon"><img src="'+logoUrls[item.id]+'" alt="'+escapeHTML(item.name)+' logo" loading="lazy"></span>'+
+    '<div class="integration-card-top"><span class="integration-icon"><span class="integration-logo-fallback" hidden>'+escapeHTML(logoFallbacks[item.id]||item.name)+'</span><img src="'+logoUrls[item.id]+'" alt="'+escapeHTML(item.name)+' logo" loading="lazy" onerror="this.hidden=true;this.previousElementSibling.hidden=false"></span>'+
     '<span class="integration-status" data-status="'+status.state+'">'+status.label+'</span></div>'+
     '<p class="integration-category">'+item.category+' / '+escapeHTML(item.kind)+'</p>'+
     '<h3>'+escapeHTML(item.name)+'</h3>'+
