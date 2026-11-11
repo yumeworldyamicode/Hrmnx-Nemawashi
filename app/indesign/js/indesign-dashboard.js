@@ -718,7 +718,7 @@
         document.body.classList.remove("moodboard-fullscreen", "indesign-brainstorm-fullscreen");
         if(view==="projects") { try { await loadProjects(); renderProjects(); } catch(e) { console.error(e); notify("Could not load projects. Check the database setup."); } }
         else if(view==="messages") renderMessages();
-        else if(view==="integrations") { title.textContent="Integrations"; content.innerHTML=window.indesignIntegrations ? window.indesignIntegrations.render() : '<p class="muted">Integrations could not be loaded. Refresh the page.</p>'; }
+        else if(view==="integrations") { title.textContent="Integrations"; content.innerHTML=window.indesignIntegrations ? window.indesignIntegrations.render() : '<p class="muted">Integrations could not be loaded. Refresh the page.</p>'; window.indesignFileExchange?.init(); }
         else if(view==="account") renderAccount();
         else { try { await loadProjects(); } catch(e) { console.error(e); } renderHome(); }
     }
