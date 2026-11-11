@@ -324,7 +324,7 @@
             const project=parsed.project;
             if(parsed.format!=="indesign" || !project || !typeLabels[project.type] || typeof project.name!=="string") throw new Error("This is not a valid indesign project file.");
             const {data,error}=await window.supabaseClient.from(table).insert({
-                owner_id:employee.user.id,name:project.name,type:project.type,description:project.description||"",content:(project.content && Array.isArray(project.content.elements)) ? project.content : {elements:[]}
+                owner_id:employee.user.id,name:project.name,type:project.type,description:project.description||"",content:(project.content && typeof project.content === "object" && !Array.isArray(project.content)) ? project.content : (project.type === "moodboard" ? {purpose:"",references:[],connections:[],palette:[]} : {elements:[]})
             }).select().single();
             if(error) throw error;
             projects.unshift(data); notify("Project imported."); renderProject(data);
