@@ -338,3 +338,50 @@ body.dark-theme .music-tool-primary{background:#748fe8;border-color:#748fe8}
 .music-rule-preview p{margin:7px 0;font-size:13px;line-height:1.6}
 .music-rule-preview em{display:block;font-size:10px;color:var(--accent);font-style:normal}
 @media(max-width:600px){.brainstorm-imported-assets{grid-template-columns:1fr}.brainstorm-topbar{overflow-x:auto}.brainstorm-topbar>*{flex-shrink:0}}
+
+/* Step 6 — native controls and DEM builder */
+.brainstorm-topbar button,.brainstorm-idea button,.brainstorm-section-actions button,.brainstorm-add-idea,.brainstorm-add-section,.brainstorm-reference-chip,.music-tool-primary,.music-tool-import,.dem-builder-dialog button,.dem-share-link button{font-family:Helvetica,Arial,sans-serif;border-radius:0;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.brainstorm-topbar .mood-top-action{height:30px;padding:0 11px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:9px;font-weight:700;cursor:pointer}
+.brainstorm-topbar .mood-top-action:hover{border-color:var(--accent);color:var(--accent)}
+.brainstorm-topbar .mood-top-action-primary{background:#111;color:#fff;border-color:#111}
+body.dark-theme .brainstorm-topbar .mood-top-action-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.brainstorm-asset-card audio{display:block;width:100%;height:38px;padding:4px;border:1px solid var(--line);background:var(--surface);accent-color:var(--accent);color-scheme:light}
+body.dark-theme .brainstorm-asset-card audio{color-scheme:dark}
+.brainstorm-cover-thumb{width:54px;height:54px;object-fit:cover;border:1px solid var(--line)}
+.brainstorm-idea button:hover,.brainstorm-section-actions button:hover{background:var(--bg);color:var(--accent)}
+.brainstorm-reference-chip{border-radius:0}
+.music-tools-dialog button,.music-reference-dialog button,.indesign-dialog button{font-family:Helvetica,Arial,sans-serif;border-radius:0}
+.music-tools-dialog button:hover,.music-reference-dialog button:hover{border-color:var(--accent)}
+.music-tool-import{background:var(--surface);border:1px solid var(--line);color:var(--text)}
+.music-tool-primary{background:#111;border:1px solid #111;color:#fff;letter-spacing:.2px}
+.music-tool-primary:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+body.dark-theme .music-tool-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.music-tool-field select{appearance:none;border-radius:0;color-scheme:light}
+body.dark-theme .music-tool-field select{color-scheme:dark}
+.music-tool-field input[type=file]::file-selector-button{padding:6px 9px;margin-right:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:9px Helvetica,Arial,sans-serif;cursor:pointer}
+.dem-builder-overlay{z-index:13000}
+.dem-builder-dialog{width:min(720px,100%);max-height:90vh;overflow:auto;background:var(--bg);color:var(--text);border:1px solid var(--line);box-shadow:0 25px 90px #0005;transform:translateY(12px) scale(.985);transition:transform .2s ease}
+.dem-builder-overlay.visible .dem-builder-dialog{transform:none}
+.dem-builder-dialog>header{display:flex;align-items:center;justify-content:space-between;padding:17px 20px;border-bottom:1px solid var(--line)}
+.dem-builder-dialog>header>div{display:grid;gap:4px}.dem-builder-dialog>header strong{font-size:13px}.dem-builder-dialog>header strong span{color:var(--accent)}.dem-builder-dialog>header small{font-size:8px;letter-spacing:1px;color:var(--muted)}
+.dem-builder-dialog>header button{width:28px;height:28px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:18px;cursor:pointer}
+.dem-builder-body{padding:24px}.dem-builder-body h2{font-size:27px;letter-spacing:-1px;margin:8px 0 18px}
+.dem-field{display:block;margin:12px 0;font-size:9px;font-weight:700;color:var(--muted)}
+.dem-field input,.dem-field select{display:block;width:100%;margin-top:6px;padding:11px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:11px Helvetica,Arial,sans-serif;border-radius:0}
+.dem-builder-note{font-size:10px;line-height:1.6;color:var(--muted);margin:16px 0}
+.dem-sync-player{position:sticky;top:0;z-index:2;padding:10px;background:var(--bg);border:1px solid var(--line)}
+.dem-sync-player audio{width:100%;height:38px;accent-color:var(--accent)}
+.dem-sync-player>div{display:flex;justify-content:space-between;font-size:9px;color:var(--muted)}
+.dem-sync-list{display:grid;gap:5px;max-height:280px;overflow:auto;margin:12px 0}
+.dem-sync-list button{display:grid;gap:4px;width:100%;padding:10px 12px;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--text);cursor:pointer}
+.dem-sync-list button.active{border-color:var(--accent);background:color-mix(in srgb,var(--accent),transparent 90%)}
+.dem-sync-list button small{font-size:8px;letter-spacing:1px;color:var(--muted)}
+.dem-sync-list button span{font-size:11px;line-height:1.5}
+.dem-sync-list button em{font-size:9px;color:var(--accent);font-style:normal}
+.dem-share-link{display:flex;gap:7px;margin:20px 0}
+.dem-share-link input{flex:1;min-width:0;padding:11px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:10px Helvetica,Arial,sans-serif}
+.dem-share-link button{padding:0 14px;border:1px solid #111;background:#111;color:white;font-size:9px;font-weight:700;cursor:pointer}
+body.dark-theme .dem-share-link button{background:var(--accent);border-color:var(--accent)}
+.dem-open-link{display:inline-block;margin-left:14px;color:var(--accent);font-size:10px;text-decoration:none}
+[hidden]{display:none!important}
+@media(max-width:700px){.brainstorm-topbar{gap:5px}.brainstorm-topbar .mood-top-action{padding:0 7px;font-size:8px}.dem-builder-body{padding:16px}.dem-share-link{flex-direction:column}.dem-share-link button{padding:10px}}
