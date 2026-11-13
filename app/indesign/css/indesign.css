@@ -458,3 +458,79 @@ body.dark-theme .dem-sync-player audio{color-scheme:dark}
 .dark-theme .integration-exchange-form select,.dark-theme .integration-file-picker{background:#171717;border-color:#333}
 @media(max-width:900px){.integration-exchange-form{grid-template-columns:1fr 1fr}.integration-exchange-form .button{width:100%}}
 @media(max-width:560px){.integration-exchange-form{grid-template-columns:1fr}.integration-exchange-heading{align-items:flex-start;flex-direction:column}.integration-asset-row{align-items:flex-start;flex-direction:column}.integration-exchange-form .button{width:100%}}
+
+
+/* Mobile navigation and workspace cleanup */
+@media(max-width:800px){
+  .sidebar{
+    position:sticky;inset:auto;width:100%;height:auto;min-height:0;
+    padding:14px 18px 10px;border-right:0;border-bottom:1px solid var(--line);
+    display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px;
+    background:var(--bg);z-index:30;
+  }
+  .sidebar .wordmark{font-size:22px;line-height:1}
+  .sidebar .wordmark:after{content:none}
+  .sidebar-label{display:none}
+  .main-nav{order:3;display:flex;flex:1 0 100%;gap:5px;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 0 1px;scrollbar-width:none}
+  .main-nav::-webkit-scrollbar{display:none}
+  .nav-item,.sidebar .nav-item:not(.active){
+    display:flex;flex:0 0 auto;justify-content:flex-start;gap:7px;
+    height:38px;padding:0 11px;font-size:11px;white-space:nowrap;
+    border:1px solid transparent;
+  }
+  .nav-item>span{width:auto;font-size:15px}
+  .nav-item.active{background:color-mix(in srgb,var(--accent),transparent 90%);border-color:color-mix(in srgb,var(--accent),transparent 72%);color:var(--text)}
+  .sidebar-bottom{order:2;margin:0 0 0 auto}
+  .account-button{width:auto;padding:0;justify-content:center}
+  .account-button>span:not(.avatar){display:none}
+  .dashboard-main{margin-left:0;min-width:0}
+  .dashboard-header{height:auto;min-height:76px;padding:15px 20px}
+  .dashboard-content{padding:28px 18px 56px}
+  .welcome-row{gap:16px}
+  .welcome-row h2{font-size:clamp(38px,10vw,54px)}
+  .welcome-row>.button{width:100%;justify-content:center}
+  .section-heading{margin-top:42px;gap:12px;align-items:flex-end}
+  .section-heading>span{max-width:45%;text-align:right;line-height:1.5}
+  .project-types{grid-template-columns:1fr}
+  .type-card{min-height:145px}
+  .project-toolbar,.board-toolbar,.moodboard-tools,.brainstorm-topbar{
+    max-width:100%;flex-wrap:wrap;gap:7px
+  }
+  .project-toolbar .button,.board-toolbar button,.moodboard-tools button{min-height:38px}
+  .board-topline{gap:14px}
+  .board-editor{grid-template-columns:minmax(0,1fr);min-height:0}
+  .board-inspector{border-right:0;border-bottom:1px solid var(--line);padding:12px}
+  .board-inspector #board-layers{display:flex;gap:5px;flex-wrap:wrap}
+  .board-layer{width:auto;max-width:100%;padding:8px}
+  .board-canvas-wrap{padding:10px;min-width:0}
+  .board-stage{min-width:560px;min-height:520px}
+  .brainstorm-body{grid-template-columns:minmax(0,1fr)!important}
+  .brainstorm-sidebar{border-right:0!important;border-bottom:1px solid var(--line);padding:14px!important}
+  .brainstorm-topbar{align-items:center;overflow:visible}
+  .brainstorm-topbar .mood-doc-title{min-width:0;flex:1}
+  .brainstorm-topbar .mood-save-state{flex:1 0 100%;order:5}
+  .brainstorm-topbar .mood-top-action{font-size:10px;padding:9px 10px;min-height:36px}
+  .brainstorm-main{min-width:0;padding:18px!important}
+  .brainstorm-section-grid{grid-template-columns:minmax(0,1fr)!important}
+  .integration-filters{flex-wrap:wrap;margin-top:28px}
+  .integration-filter{padding:9px 11px}
+  .integration-card{padding:16px}
+  .integration-exchange-form{grid-template-columns:minmax(0,1fr)}
+  .integration-exchange-form .button{width:100%}
+}
+@media(max-width:480px){
+  .sidebar{padding:12px 14px 9px}
+  .dashboard-header{padding:13px 16px}
+  .dashboard-content{padding:24px 14px 44px}
+  .nav-item,.sidebar .nav-item:not(.active){height:36px;padding:0 9px;font-size:10px}
+  .board-toolbar{padding:8px}
+  .board-toolbar button{padding:8px 10px;font-size:10px}
+  .moodboard-tools{flex-wrap:wrap;padding:8px}
+  .moodboard-tools button{padding:8px 10px;font-size:10px}
+  .brainstorm-topbar{padding:9px!important}
+  .brainstorm-topbar .mood-top-action{flex:1 1 calc(50% - 7px);justify-content:center}
+  .brainstorm-mode-switch{max-width:100%}
+  .brainstorm-mode-switch button{padding:8px 10px}
+  .moodboard-lower{grid-template-columns:1fr}
+  .dem-share-link{flex-direction:column}
+}
