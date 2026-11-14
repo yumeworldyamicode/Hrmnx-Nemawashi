@@ -4915,3 +4915,12 @@ button {
 .navigation-icon .hrmnx-icon,.communication-card-icon .hrmnx-icon,.space-placeholder-icon .hrmnx-icon,.nav-item .hrmnx-icon{width:20px;height:20px}
 .type-symbol .hrmnx-icon{width:28px;height:28px}
 .hrmnx-icon{display:inline-block;width:1.2em;height:1.2em;flex:0 0 auto;vertical-align:-.22em;stroke:currentColor;overflow:visible}.attachment-option-icon .hrmnx-icon,.music-project-icon .hrmnx-icon{width:1.4em;height:1.4em}
+/* Layout safety: allow long names, URLs and labels to wrap instead of overlap */
+main,section,article,aside,header,footer,nav,.card,.panel{min-width:0}
+p,h1,h2,h3,h4,small,strong,label,a,button{overflow-wrap:anywhere}
+img,video,canvas{max-width:100%}
+@media(max-width:700px){
+ .sidebar,.main-content,.dashboard-content,.page-content{min-width:0;max-width:100%}
+ .content,.content-wrapper,.main-content{overflow-wrap:anywhere}
+ button,a{max-width:100%}
+}
