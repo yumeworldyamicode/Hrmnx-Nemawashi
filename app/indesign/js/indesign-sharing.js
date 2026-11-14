@@ -37,7 +37,7 @@
   function addShareButtons(){
     document.querySelectorAll(".brainstorm-idea").forEach(article=>{
       if(article.querySelector(".brainstorm-share-idea"))return;
-      const button=document.createElement("button");button.type="button";button.className="brainstorm-share-idea";button.textContent="↗ Share";button.setAttribute("aria-label","Share this idea privately");
+      const button=document.createElement("button");button.type="button";button.className="brainstorm-share-idea";button.innerHTML=window.HrmnxIcons.svg("external-link")+' Share';button.setAttribute("aria-label","Share this idea privately");
       article.appendChild(button);
     });
   }
