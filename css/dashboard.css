@@ -4859,3 +4859,8 @@ body {
     }
 
 }
+
+/* Shared custom SVG icon styling */
+.hrmnx-icon{display:inline-block;width:1.2em;height:1.2em;flex:0 0 auto;vertical-align:-.22em;stroke:currentColor;overflow:visible}
+.navigation-icon .hrmnx-icon,.communication-card-icon .hrmnx-icon,.space-placeholder-icon .hrmnx-icon,.nav-item .hrmnx-icon{width:20px;height:20px}
+.type-symbol .hrmnx-icon{width:28px;height:28px}
