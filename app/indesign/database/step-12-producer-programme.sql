@@ -121,12 +121,9 @@ create policy "Staff manage producer programmes" on public.indesign_producer_pro
 for all to authenticated using (public.indesign_is_staff()) with check (public.indesign_is_staff());
 
 drop policy if exists "Public can view producer submissions" on public.indesign_producer_submissions;
-create policy "Public can view producer submissions" on public.indesign_producer_submissions
-for select to anon,authenticated using (
-  status='submitted' and exists (
-    select 1 from public.indesign_dems d where d.id=dem_id and d.visibility='public' and d.is_public=true
-  )
-);
+drop policy if exists "Submitters and staff can view producer submissions" on public.indesign_producer_submissions;
+create policy "Submitters and staff can view producer submissions" on public.indesign_producer_submissions
+for select to authenticated using (auth.uid()=submitter_id or public.indesign_is_staff());
 drop policy if exists "Submitters can view own producer submissions" on public.indesign_producer_submissions;
 create policy "Submitters can view own producer submissions" on public.indesign_producer_submissions
 for select to authenticated using (auth.uid()=submitter_id);
@@ -171,8 +168,9 @@ create policy "Staff manage competition selections" on public.indesign_producer_
 for all to authenticated using (public.indesign_is_staff()) with check (public.indesign_is_staff());
 
 drop policy if exists "Public can view competition vote totals" on public.indesign_producer_competition_votes;
-create policy "Public can view competition vote totals" on public.indesign_producer_competition_votes
-for select to anon,authenticated using (true);
+drop policy if exists "Voters and staff can view individual votes" on public.indesign_producer_competition_votes;
+create policy "Voters and staff can view individual votes" on public.indesign_producer_competition_votes
+for select to authenticated using (auth.uid()=voter_id or public.indesign_is_staff());
 drop policy if exists "Signed-in KiKi users can vote once per round" on public.indesign_producer_competition_votes;
 create policy "Signed-in KiKi users can vote once per round" on public.indesign_producer_competition_votes
 for insert to authenticated with check (
@@ -262,3 +260,40 @@ $$;
 drop trigger if exists indesign_validate_competition_vote on public.indesign_producer_competition_votes;
 create trigger indesign_validate_competition_vote before insert on public.indesign_producer_competition_votes
 for each row execute function public.indesign_validate_competition_vote();
+
+-- Public-facing read APIs return only safe display fields and aggregated vote totals.
+-- Individual voter IDs and submission ownership IDs are never exposed to anonymous visitors.
+create or replace function public.get_indesign_producer_submissions()
+returns table (
+  submission_id uuid,
+  dem_id uuid,
+  slug text,
+  title text,
+  artist text,
+  cover_path text,
+  description text,
+  submitted_at timestamptz,
+  creator_name text
+)
+language sql stable security definer set search_path=public as $$
+  select s.id,d.id,d.slug,d.title,d.artist,d.cover_path,d.description,s.submitted_at,
+         coalesce(nullif(p.display_name,''),nullif(p.username,''),'Producer')
+  from public.indesign_producer_submissions s
+  join public.indesign_dems d on d.id=s.dem_id
+  left join public.profiles p on p.id=s.submitter_id
+  where s.status='submitted' and d.visibility='public' and d.is_public=true
+  order by s.submitted_at desc;
+$$;
+revoke all on function public.get_indesign_producer_submissions() from public;
+grant execute on function public.get_indesign_producer_submissions() to anon,authenticated;
+
+create or replace function public.get_indesign_competition_vote_totals(competition_uuid uuid, vote_round smallint)
+returns table (submission_id uuid, vote_count bigint)
+language sql stable security definer set search_path=public as $$
+  select v.submission_id,count(*)::bigint
+  from public.indesign_producer_competition_votes v
+  where v.competition_id=competition_uuid and v.round_number=vote_round
+  group by v.submission_id;
+$$;
+revoke all on function public.get_indesign_competition_vote_totals(uuid,smallint) from public;
+grant execute on function public.get_indesign_competition_vote_totals(uuid,smallint) to anon,authenticated;
