@@ -45,12 +45,10 @@
       </form>
       <button type="button" id="pp-signout" class="pp-signout" hidden>Sign out</button>
       <div id="pp-submission-area" hidden>
-        <label for="pp-dem-select">Choose one of your public DEMs</label>
-        <select id="pp-dem-select"><option value="">Loading your DEMs…</option></select>
-        <div class="pp-selected-note" id="pp-dem-note">Only public DEMs owned by your signed-in account can be submitted.</div>
-        <button class="button button-dark pp-submit-button" id="pp-submit" disabled>Submit to the programme ↗</button>
-        <p class="pp-feedback" id="pp-feedback" role="status"></p>
-        <div class="pp-my-entry"><h3>Your submissions</h3><div id="pp-my-submissions"><p class="muted">Loading…</p></div></div>
+        <p class="pp-card-copy">Create a Music Brainstorm inside the official programme workspace. Only DEMs published from one of these programme projects can qualify for a Producer Competition.</p>
+        <a class="button button-dark pp-submit-button" id="pp-workspace-link" href="producer-workspace.html">Open your Music Brainstorm workspace ↗</a>
+        <p class="pp-login-help">Your ordinary public DEMs are not automatically eligible. Start a new project here, then publish its DEM from that project.</p>
+        <div class="pp-my-entry"><h3>Your programme submissions</h3><div id="pp-my-submissions"><p class="muted">Loading…</p></div></div>
       </div>
       <div id="pp-closed" class="pp-message" hidden>Applications are currently closed. You can still read the programme guide; check back when submissions reopen.</div>
     </section>
@@ -59,6 +57,6 @@
 <footer class="pp-footer"><span class="wordmark">indesign<span>.</span></span><span>AN HRMNX ENTERTAINMENT PROGRAMME</span></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../js/supabase.js?v=2"></script>
-<script src="js/producer-programme.js?v=20261114-1"></script>
+<script src="js/producer-programme.js?v=20261114-2"></script>
 </body>
 </html>
