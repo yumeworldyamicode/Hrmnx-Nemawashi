@@ -2,8 +2,9 @@
 "use strict";
 const client=()=>window.supabaseClient;
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let host=null, pool=[], competitions=[], selected=new Set(), activeCompetition=null, activeRound=1, eligible=[];
+let host=null, pool=[], competitions=[], program=null, activeCompetition=null, eligible=[];
 const notify=message=>{const node=document.getElementById("toast");if(node){node.textContent=message;node.classList.add("visible");setTimeout(()=>node.classList.remove("visible"),2800);}};
+async function loadProgram(){const {data,error}=await client().from("indesign_producer_programs").select("id,slug,title,is_open").eq("slug","open-producer-programme").single();if(error)throw error;program=data;}
 async function loadPool(){
  const {data,error}=await client().from("indesign_producer_submissions")
   .select("id,submitted_at,submitter_id,dem:indesign_dems(id,slug,title,artist,cover_path,visibility,is_public)")
@@ -17,19 +18,19 @@ async function loadCompetitions(){
   .order("created_at",{ascending:false});
  if(error)throw error;competitions=data||[];
 }
-function card(d){
+function card(d,submissionId,isChosen){
  const art=d.cover_path?'<div class="producer-art"><img src="'+esc(client().storage.from("in-music-artwork").getPublicUrl(d.cover_path).data.publicUrl)+'" alt=""></div>':'<div class="producer-art producer-art-empty">in.</div>';
- return '<article class="producer-dem-card">'+art+'<div class="producer-dem-copy"><strong>'+esc(d.title)+'</strong><span>'+esc(d.artist)+'</span><small>Public programme submission</small></div>';
+ return '<article class="producer-dem-card '+(isChosen?"chosen":"")+'" data-programme-entry="'+esc(submissionId)+'">'+art+'<div class="producer-dem-copy"><strong>'+esc(d.title)+'</strong><span>'+esc(d.artist)+'</span><small>Public programme submission</small></div>';
 }
 async function render(root){
  host=root;root.innerHTML='<p class="muted">Loading Producer Competition Space…</p>';
- try{await Promise.all([loadPool(),loadCompetitions()]);draw();}
+ try{await Promise.all([loadProgram(),loadPool(),loadCompetitions()]);draw();}
  catch(e){console.error(e);root.innerHTML='<div class="empty-state"><strong>Could not load Producer Competitions.</strong><p>'+esc(e.message||"Check that the Step 12 database migration has been run.")+'</p></div>';}
 }
 function draw(){
  const active=competitions.find(c=>c.id===activeCompetition);
  host.innerHTML='<div class="producer-admin"><div class="welcome-row"><div><p class="eyebrow">INDESIGN MUSIC / STAFF SPACE</p><h2>Producer<br>competitions.</h2><p class="muted">Create a competition space, choose 20 programme submissions and manage each weekly round.</p></div><button class="button button-dark" id="producer-new-competition">＋ New competition</button></div>'+
- '<div class="producer-summary"><div><strong>'+pool.length+'</strong><span>ELIGIBLE PUBLIC DEMS</span></div><div><strong>'+competitions.length+'</strong><span>COMPETITION SPACES</span></div></div>'+
+ '<div class="producer-program-status"><div><strong>Producer Programme</strong><span>'+(program?.is_open?'OPEN FOR SUBMISSIONS':'CLOSED TO SUBMISSIONS')+'</span></div><button class="button button-outline" id="producer-toggle-program">'+(program?.is_open?'Close programme':'Open programme')+'</button></div>'+ '<div class="producer-summary"><div><strong>'+pool.length+'</strong><span>ELIGIBLE PUBLIC DEMS</span></div><div><strong>'+competitions.length+'</strong><span>COMPETITION SPACES</span></div></div>'+
  '<div class="section-heading"><h3>Competition spaces</h3><span>A SPACE IS CREATED FOR EACH COMPETITION</span></div>'+
  (competitions.length?'<div class="producer-competition-list">'+competitions.map(c=>'<button class="producer-competition-row '+(c.id===activeCompetition?'active':'')+'" data-producer-open="'+esc(c.id)+'"><span><strong>'+esc(c.title)+'</strong><small>'+esc(c.status.replaceAll("_"," ").toUpperCase())+' · '+new Date(c.created_at).toLocaleDateString()+'</small></span><span>↗</span></button>').join("")+'</div>':'<div class="empty-state"><strong>No competition spaces yet.</strong><p>Create the first one to begin collecting programme DEMs.</p></div>')+
  (active?renderCompetition(active):'')+'</div>';
@@ -45,7 +46,7 @@ function renderCompetition(c){
 function renderEntryPicker(c){
  const entries=eligible;
  return '<div class="producer-pool-head"><div><h4>Choose 20 contestants</h4><p>Select only public DEMs submitted through the Producer Programme.</p></div><strong>'+entries.length+' / 20 selected</strong></div>'+
- '<div class="producer-dem-grid">'+(pool.length?pool.map(s=>card(s.dem)+'</article>').join(""):'<p class="muted">No eligible programme submissions have been received yet.</p>')+'</div>'+
+ '<div class="producer-dem-grid">'+(pool.length?pool.map(s=>card(s.dem,s.id,eligible.includes(s.id))+'</article>').join(""):'<p class="muted">No eligible programme submissions have been received yet.</p>')+'</div>'+
  '<p class="producer-note">The 20-entry pool is saved when you press “Save contestant pool”. Then Week 1 opens for staff selection and public voting.</p>'+
  '<button class="button button-dark" id="producer-save-pool" '+(entries.length!==20?'disabled':'')+'>Save contestant pool and open Week 1</button>';
 }
@@ -64,7 +65,7 @@ async function openCompetition(id){
  activeCompetition=id;await refreshActive();draw();
 }
 async function refreshActive(){
- await Promise.all([loadPool(),loadCompetitions()]);
+ await Promise.all([loadProgram(),loadPool(),loadCompetitions()]);
  const c=competitions.find(x=>x.id===activeCompetition);if(!c)return;
  const [{data:entries,error:e1},{data:selections,error:e2}]=await Promise.all([
  client().from("indesign_producer_competition_entries").select("id,submission_id,entry_number").eq("competition_id",activeCompetition).order("entry_number"),
@@ -114,13 +115,14 @@ async function finalizeRound(){
 document.addEventListener("click",async event=>{
  const open=event.target.closest("[data-producer-open]");if(open){try{await openCompetition(open.dataset.producerOpen);}catch(e){notify(e.message);}return;}
  const select=event.target.closest("[data-producer-select]");if(select){const id=select.dataset.producerSelect;const c=competitions.find(x=>x.id===activeCompetition);const n=c?.current_round;const prior=n===1?null:n-1;const base=(window.__producerEntries||[]).filter(x=>!prior||(window.__producerSelections||[]).some(s=>s.round_number===prior&&s.submission_id===x.submission_id));const round=c?.rounds?.find(r=>r.round_number===n);const set=new Set((window.__producerSelections||[]).filter(x=>x.round_number===n).map(x=>x.submission_id));if(set.has(id))set.delete(id);else if(set.size<round.target_count)set.add(id);else{notify("This round allows "+round.target_count+" selections.");return;}window.__producerSelections=(window.__producerSelections||[]).filter(x=>x.round_number!==n).concat([...set].map(submission_id=>({round_number:n,submission_id})));draw();return;}
+ if(event.target.closest("#producer-toggle-program")){const {error}=await client().from("indesign_producer_programs").update({is_open:!program.is_open,updated_at:new Date().toISOString()}).eq("id",program.id);if(error){notify(error.message);return;}await loadProgram();draw();notify(program.is_open?"Producer Programme opened.":"Producer Programme closed.");return;}
  if(event.target.closest("#producer-new-competition")){await createCompetition();return;}
  if(event.target.closest("#producer-save-pool")){await savePool();return;}
  if(event.target.closest("#producer-finalize-round")){await finalizeRound();return;}
 });
 document.addEventListener("click",event=>{
  const card=event.target.closest(".producer-dem-card");
- if(card&&host?.querySelector("#producer-save-pool")&&!event.target.closest("button")){const d=pool.find(s=>s.dem?.id&&card.textContent.includes(s.dem.title));if(!d)return;if(eligible.includes(d.id))eligible=eligible.filter(x=>x!==d.id);else if(eligible.length<20)eligible.push(d.id);else notify("The contestant pool is limited to 20.");draw();}
+ if(card&&host?.querySelector("#producer-save-pool")&&!event.target.closest("button")){const id=card.dataset.programmeEntry;if(!id)return;if(eligible.includes(id))eligible=eligible.filter(x=>x!==id);else if(eligible.length<20)eligible.push(id);else notify("The contestant pool is limited to 20.");draw();}
 });
 window.indesignCompetitions={render};
 })();
