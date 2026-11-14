@@ -30,7 +30,7 @@ function markup(){
  '<label>Project<select id="integration-file-project"><option value="">Loading projects…</option></select></label>'+
  '<label>Provider<select id="integration-file-provider">'+providers.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("")+'</select></label>'+
  '<label class="integration-file-picker">Choose file<input id="integration-file-input" type="file"><span id="integration-file-name">No file selected</span></label>'+
- '<button class="button button-dark" id="integration-file-upload" type="button">Upload to project ↗</button>'+
+ '<button class="button button-dark" id="integration-file-upload" type="button">Upload to project '+window.HrmnxIcons.svg("external-link")+'</button>'+
  '</div><p class="integration-file-hint" id="integration-file-hint">Design tools: upload exported artwork or project files. DAWs: upload supported session files, stems or audio exports. This stores the file in the selected indesign project; it does not remotely open or modify the source application.</p>'+
  '<div class="integration-assets-heading"><h3>Project files</h3><button class="text-button" id="integration-file-refresh" type="button">Refresh ↻</button></div>'+
  '<div class="integration-assets-list" id="integration-assets-list"><p class="muted">Choose a project to view its files.</p></div>'+
@@ -97,7 +97,7 @@ async function uploadFile(){
   notify("File added to the project.");
   await loadAssets();
  }catch(error){console.error("Integration file upload failed:",error);notify(error.message||"Could not upload this file.");}
- finally{if(button){button.disabled=false;button.textContent="Upload to project ↗";}}
+ finally{if(button){button.disabled=false;button.innerHTML='Upload to project '+window.HrmnxIcons.svg("external-link");}}
 }
 async function downloadFile(id){
  const asset=assets.find(a=>a.id===id);if(!asset)return;
