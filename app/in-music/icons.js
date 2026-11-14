@@ -1,0 +1,1 @@
+(()=>{window.imIcon=(name,cls="")=>'<svg class="im-icon '+cls+'" aria-hidden="true" focusable="false"><use href="icons.svg#'+String(name).replace(/[^a-z-]/g,"")+'"></use></svg>';})();
