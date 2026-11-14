@@ -74,10 +74,20 @@ async function refreshActive(){
  if(e1)throw e1;if(e2)throw e2;window.__producerEntries=entries||[];window.__producerSelections=selections||[];
  eligible=(window.__producerEntries||[]).map(e=>e.submission_id);
 }
+function askTextDialog(title,value="",multiline=false){
+ return new Promise(resolve=>{
+  const overlay=document.createElement("div");overlay.className="indesign-dialog-overlay visible";
+  overlay.innerHTML='<section class="indesign-dialog" role="dialog" aria-modal="true"><div class="indesign-dialog-top"><span class="indesign-dialog-mark">indesign<span>.</span></span><button class="indesign-dialog-close" type="button" data-cancel aria-label="Close">×</button></div><h2>'+esc(title)+'</h2><label class="indesign-dialog-label">'+(multiline?'<textarea class="indesign-dialog-input" rows="4"></textarea>':'<input class="indesign-dialog-input" type="text">')+'</label><div class="indesign-dialog-actions"><button class="indesign-dialog-cancel" type="button" data-cancel>Cancel</button><button class="indesign-dialog-submit" type="button">Continue</button></div></section>';
+  const field=overlay.querySelector("input,textarea");field.value=value;
+  const finish=result=>{overlay.remove();resolve(result);};
+  overlay.addEventListener("click",e=>{if(e.target===overlay||e.target.closest("[data-cancel]"))finish(null);if(e.target.closest(".indesign-dialog-submit"))finish(field.value);});
+  document.body.appendChild(overlay);field.focus();
+ });
+}
 async function createCompetition(){
- const title=prompt("Competition title (for example: Producer Competition - Week 1)");
+ const title=await askTextDialog("Name this Producer Competition Space");
  if(!title||!title.trim())return;
- const announcement=prompt("Announcement text for the InDesign Music message board:","A new Producer Competition is open. Join the Producer Programme to submit your DEM.");
+ const announcement=await askTextDialog("Write the message-board announcement","A new Producer Competition is open. Join the Producer Programme to submit your DEM.",true);
  if(announcement===null)return;
  const {data:{user},error:authError}=await client().auth.getUser();if(authError||!user){notify("Please sign in again.");return;}
  const {data,error}=await client().from("indesign_producer_competitions").insert({title:title.trim(),announcement:announcement.trim(),status:"submissions",current_round:0,created_by:user.id}).select("id").single();
