@@ -32,6 +32,14 @@ layers:'<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>
 star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/>',
 heart:'<path d="M20.8 8.8c0 5.1-8.8 10-8.8 10s-8.8-4.9-8.8-10A4.8 4.8 0 0 1 12 6.4a4.8 4.8 0 0 1 8.8 2.4Z"/>'
 };
+p["arrow-up"]='<path d="m5 12 7-7 7 7M12 19V5"/>';
+p["arrow-down"]='<path d="m5 12 7 7 7-7M12 5v14"/>';
+p.file='<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8"/>';
+p.link='<path d="M10 13a5 5 0 0 0 7.5.5l3-3A5 5 0 0 0 13.4 3l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3A5 5 0 0 0 10.6 21l1.7-1.7"/>';
+p.hand='<path d="M8 11V5a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v8-5a2 2 0 0 1 4 0v8c0 5-3 8-8 8h-1c-2 0-3-1-4-3l-3-5a2 2 0 0 1 4-2l1 2"/>';
+p.palette='<path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 1.6-4.4 1.5 1.5 0 0 1 1-2.6H19a2 2 0 0 0 2-2 9 9 0 0 0-9-9Z"/><circle cx="7.5" cy="10" r="1"/><circle cx="11" cy="7" r="1"/><circle cx="15.5" cy="8.5" r="1"/>';
+p.more='<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>';
+p["arrow-left"]='<path d="m15 18-6-6 6-6M9 12h12"/>';
 window.HrmnxIcons={svg:(name,cls="")=>'<svg class="hrmnx-icon '+cls+'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(p[name]||p.sparkles)+'</svg>'};
 
 function replacePlaceholders(root){
