@@ -570,7 +570,7 @@ function renderBasicPage(
                 <div
                     class="space-placeholder-icon"
                 >
-                    ${escapeHtml(icon)}
+                    ${icon}
                 </div>
 
                 <h3>
@@ -1669,7 +1669,7 @@ spaceHeader.innerHTML = `
                 class="attachment-option"
                 data-attachment-type="prodem"
             >
-                <span class="attachment-option-icon">♫</span>
+                <span class="attachment-option-icon">${window.HrmnxIcons.svg("music")}</span>
                 <span>
                     <strong>Demo Base</strong>
                     <small>Music demo</small>
@@ -1681,7 +1681,7 @@ spaceHeader.innerHTML = `
                 class="attachment-option"
                 data-attachment-type="image"
             >
-                <span class="attachment-option-icon">▧</span>
+                <span class="attachment-option-icon">${window.HrmnxIcons.svg("image")}</span>
                 <span>
                     <strong>Image</strong>
                     <small>Upload an image</small>
@@ -3059,31 +3059,31 @@ function getSpaceIcon(
     switch (type) {
 
         case "general":
-            return "◌";
+            return window.HrmnxIcons.svg("message");
 
         case "planning":
-            return "◇";
+            return window.HrmnxIcons.svg("board");
 
         case "feedback":
-            return "◎";
+            return window.HrmnxIcons.svg("users");
 
         case "info":
-            return "ⓘ";
+            return window.HrmnxIcons.svg("info");
 
         case "creative":
-            return "✦";
+            return window.HrmnxIcons.svg("sparkles");
 
         case "music":
-            return "♫";
+            return window.HrmnxIcons.svg("music");
 
         case "meeting":
-            return "◉";
+            return window.HrmnxIcons.svg("calendar");
 
         case "app_creating":
-            return "＋";
+            return window.HrmnxIcons.svg("plus");
 
         case "project":
-            return "◆";
+            return window.HrmnxIcons.svg("folder");
 
         case "massive_project":
             return "◆";
