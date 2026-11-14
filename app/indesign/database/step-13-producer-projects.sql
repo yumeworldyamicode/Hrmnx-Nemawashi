@@ -79,6 +79,31 @@ before insert or update of type, content, producer_program_id
 on public.indesign_projects
 for each row execute function public.indesign_validate_producer_project();
 
+-- Replace the earlier broad submission policy: ordinary public DEMs must
+-- never qualify just because a user manually selects them on the programme page.
+drop policy if exists "Users can submit their own public DEMs to an open programme" on public.indesign_producer_submissions;
+create policy "Only own programme-project DEMs can be submitted"
+on public.indesign_producer_submissions for insert to authenticated
+with check (
+  auth.uid() = submitter_id
+  and status = 'submitted'
+  and exists (
+    select 1
+    from public.indesign_producer_programs pr
+    join public.indesign_projects p on p.producer_program_id = pr.id
+    join public.indesign_dems d on d.project_id = p.id
+    where pr.id = program_id
+      and pr.is_open = true
+      and p.owner_id = auth.uid()
+      and p.type = 'brainstorm'
+      and coalesce(p.content->>'mode', 'music') = 'music'
+      and d.id = dem_id
+      and d.owner_id = auth.uid()
+      and d.visibility = 'public'
+      and d.is_public = true
+  )
+);
+
 -- A public DEM published from a programme project is automatically submitted.
 -- An unlisted DEM cannot qualify through this path.
 create or replace function public.indesign_auto_submit_producer_dem()
