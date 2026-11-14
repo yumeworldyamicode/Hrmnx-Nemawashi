@@ -111,7 +111,7 @@ returns boolean language sql stable security definer set search_path=public as $
   select exists(select 1 from public.profiles p where p.id=auth.uid() and p.is_staff=true);
 $$;
 revoke all on function public.indesign_is_staff() from public;
-grant execute on function public.indesign_is_staff() to authenticated;
+grant execute on function public.indesign_is_staff() to anon,authenticated;
 
 drop policy if exists "Anyone can view open producer programmes" on public.indesign_producer_programs;
 create policy "Anyone can view open producer programmes" on public.indesign_producer_programs
