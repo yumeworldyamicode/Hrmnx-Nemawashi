@@ -37,6 +37,13 @@
       <h2>Submit a DEM.</h2>
       <p class="pp-card-copy" id="pp-account-copy">Sign in with the KiKi account you want associated with your submission.</p>
       <div id="pp-auth" class="pp-message" hidden></div>
+      <form id="pp-login-form" class="pp-login-form" hidden>
+        <label for="pp-email">KiKi account email</label><input id="pp-email" type="email" autocomplete="email" required placeholder="you@example.com">
+        <label for="pp-password">Password</label><input id="pp-password" type="password" autocomplete="current-password" required placeholder="Your KiKi password">
+        <button class="button button-dark pp-submit-button" type="submit" id="pp-login">Continue with KiKi ↗</button>
+        <p class="pp-login-help">This uses the same shared account system as KiKi. Your password is sent directly to Supabase over HTTPS and is not stored by this page.</p>
+      </form>
+      <button type="button" id="pp-signout" class="pp-signout" hidden>Sign out</button>
       <div id="pp-submission-area" hidden>
         <label for="pp-dem-select">Choose one of your public DEMs</label>
         <select id="pp-dem-select"><option value="">Loading your DEMs…</option></select>
