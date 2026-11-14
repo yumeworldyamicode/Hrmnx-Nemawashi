@@ -50,3 +50,18 @@ drop policy if exists "Nemawashi staff can manage verified artists" on public.in
 create policy "Nemawashi staff can manage verified artists" on public.in_music_verified_artists
  for all to authenticated using (public.in_music_is_staff()) with check (public.in_music_is_staff());
 grant insert,update,delete on public.in_music_verified_artists to authenticated;
+
+-- Staff-only username lookup avoids granting broad access to member account rows.
+create or replace function public.in_music_find_member_by_username(target_username text)
+returns uuid language plpgsql stable security definer set search_path=public as $$
+declare found_user uuid;
+begin
+ if not public.in_music_is_staff() then
+  raise exception 'Only Nemawashi staff can look up members for artist verification.';
+ end if;
+ select p.id into found_user from public.profiles p where lower(p.username)=lower(trim(target_username)) limit 1;
+ return found_user;
+end;
+$$;
+revoke all on function public.in_music_find_member_by_username(text) from public;
+grant execute on function public.in_music_find_member_by_username(text) to authenticated;
