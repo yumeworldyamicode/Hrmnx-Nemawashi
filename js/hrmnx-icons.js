@@ -33,4 +33,18 @@ star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2
 heart:'<path d="M20.8 8.8c0 5.1-8.8 10-8.8 10s-8.8-4.9-8.8-10A4.8 4.8 0 0 1 12 6.4a4.8 4.8 0 0 1 8.8 2.4Z"/>'
 };
 window.HrmnxIcons={svg:(name,cls="")=>'<svg class="hrmnx-icon '+cls+'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(p[name]||p.sparkles)+'</svg>'};
+
+function replacePlaceholders(root){
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+ const nodes=[];while(walker.nextNode())if(/\\$\\{window\\.HrmnxIcons\\.svg\\("[a-z-]+"\\)\\}/.test(walker.currentNode.nodeValue))nodes.push(walker.currentNode);
+ nodes.forEach(node=>{
+  const template=document.createElement("template");
+  template.innerHTML=node.nodeValue.replace(/\\$\\{window\\.HrmnxIcons\\.svg\\("([a-z-]+)"\\)\\}/g,(_,name)=>window.HrmnxIcons.svg(name));
+  node.replaceWith(template.content);
+ });
+}
+replacePlaceholders(document.documentElement);
+new MutationObserver(records=>records.forEach(record=>{
+ record.addedNodes.forEach(node=>{if(node.nodeType===Node.TEXT_NODE)replacePlaceholders(node.parentNode);else if(node.nodeType===Node.ELEMENT_NODE)replacePlaceholders(node);});
+})).observe(document.documentElement,{childList:true,subtree:true});
 })();
