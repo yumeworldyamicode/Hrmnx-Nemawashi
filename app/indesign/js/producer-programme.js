@@ -2,7 +2,7 @@
 "use strict";
 const client=window.supabaseClient;
 const $=id=>document.getElementById(id);
-const status=$("pp-status"),authBox=$("pp-auth"),area=$("pp-submission-area"),closed=$("pp-closed"),select=$("pp-dem-select"),submit=$("pp-submit"),feedback=$("pp-feedback");
+const status=$("pp-status"),authBox=$("pp-auth"),loginForm=$("pp-login-form"),loginButton=$("pp-login"),signoutButton=$("pp-signout"),area=$("pp-submission-area"),closed=$("pp-closed"),select=$("pp-dem-select"),submit=$("pp-submit"),feedback=$("pp-feedback");
 let user=null,program=null,dems=[];
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function setStatus(open){status.innerHTML='<span class="pp-status-dot '+(open?"is-open":"")+'"></span><span>'+(open?"Applications are open":"Applications are closed")+'</span>';}
@@ -18,8 +18,9 @@ async function load(){
  program=programData;
  setStatus(!!program?.is_open);
  if(!program){message(authBox,"The programme has not been configured yet.");return;}
- if(!sessionData.session?.user){$("pp-account-copy").textContent="Sign in with your KiKi account to submit a DEM. Your account session must be active in this browser.";message(authBox,"No signed-in account was detected. Open KiKi, sign in, then return here in the same browser.");return;}
+ if(!sessionData.session?.user){$("pp-account-copy").textContent="Sign in using the email and password associated with your KiKi account.";loginForm.hidden=false;return;}
  user=sessionData.session.user;
+ loginForm.hidden=true;authBox.hidden=true;signoutButton.hidden=false;
  $("pp-account-copy").textContent="Signed in as "+(user.email||"your KiKi account")+". Select a public DEM you own.";
  if(!program.is_open){closed.hidden=false;return;}
  area.hidden=false;
@@ -39,6 +40,8 @@ async function loadMySubmissions(){
  const rows=data||[];
  $("pp-my-submissions").innerHTML=rows.length?rows.map(s=>{const d=dems.find(x=>x.id===s.dem_id);return '<article class="pp-entry"><strong>'+esc(d?.title||"Submitted DEM")+'</strong><span>'+esc(s.status==="submitted"?"Submitted":"Withdrawn")+' · '+new Date(s.submitted_at).toLocaleDateString()+'</span></article>';}).join(""):'<p class="muted">You have not submitted a DEM yet.</p>';
 }
+loginForm.addEventListener("submit",async event=>{event.preventDefault();loginButton.disabled=true;loginButton.textContent="Connecting…";authBox.hidden=true;const email=$("pp-email").value.trim();const password=$("pp-password").value;const {data,error}=await client.auth.signInWithPassword({email,password});loginButton.disabled=false;loginButton.textContent="Continue with KiKi ↗";if(error){message(authBox,"We could not sign in with those details. Check your KiKi account email and password, then try again.");return;}user=data.user;loginForm.hidden=true;await load();});
+signoutButton.addEventListener("click",async()=>{await client.auth.signOut();user=null;area.hidden=true;signoutButton.hidden=true;loginForm.hidden=false;$("pp-account-copy").textContent="Sign in using the email and password associated with your KiKi account.";});
 select.addEventListener("change",()=>{submit.disabled=!select.value;});
 submit.addEventListener("click",async()=>{
  const dem=dems.find(d=>d.id===select.value);if(!dem||!program?.is_open)return;
