@@ -169,3 +169,22 @@ with check (
   )
 );
 
+
+-- Allow participants with an open Producer Programme Music Brainstorm to
+-- upload their .dem package. The DEM row insert policy separately validates
+-- the exact project ownership and programme link.
+drop policy if exists "Programme participants upload DEM packages" on storage.objects;
+create policy "Programme participants upload DEM packages"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'indesign-dems'
+  and name like '%.dem'
+  and exists (
+    select 1 from public.indesign_projects p
+    join public.indesign_producer_programs pr on pr.id = p.producer_program_id
+    where p.owner_id = auth.uid()
+      and p.type = 'brainstorm'
+      and coalesce(p.content->>'mode', 'music') = 'music'
+      and pr.is_open = true
+  )
+);
