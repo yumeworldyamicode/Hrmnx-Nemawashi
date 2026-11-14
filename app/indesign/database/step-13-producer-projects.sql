@@ -188,3 +188,9 @@ with check (
       and pr.is_open = true
   )
 );
+
+-- Cover artwork upload permission for open programme Music Brainstorm owners.
+drop policy if exists "Programme participants upload DEM cover artwork" on storage.objects;
+create policy "Programme participants upload DEM cover artwork"
+on storage.objects for insert to authenticated
+with check (bucket_id = 'in-music-artwork' and exists (select 1 from public.indesign_projects p join public.indesign_producer_programs pr on pr.id = p.producer_program_id where p.owner_id = auth.uid() and p.type = 'brainstorm' and coalesce(p.content->>'mode', 'music') = 'music' and pr.is_open = true));
