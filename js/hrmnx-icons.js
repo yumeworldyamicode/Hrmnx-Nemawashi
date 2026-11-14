@@ -39,6 +39,7 @@ p.link='<path d="M10 13a5 5 0 0 0 7.5.5l3-3A5 5 0 0 0 13.4 3l-1.7 1.7"/><path d=
 p.hand='<path d="M8 11V5a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v8-5a2 2 0 0 1 4 0v8c0 5-3 8-8 8h-1c-2 0-3-1-4-3l-3-5a2 2 0 0 1 4-2l1 2"/>';
 p.palette='<path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 1.6-4.4 1.5 1.5 0 0 1 1-2.6H19a2 2 0 0 0 2-2 9 9 0 0 0-9-9Z"/><circle cx="7.5" cy="10" r="1"/><circle cx="11" cy="7" r="1"/><circle cx="15.5" cy="8.5" r="1"/>';
 p.more='<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>';
+p["external-link"]='<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/>';
 p["arrow-left"]='<path d="m15 18-6-6 6-6M9 12h12"/>';
 window.HrmnxIcons={svg:(name,cls="")=>'<svg class="hrmnx-icon '+cls+'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(p[name]||p.sparkles)+'</svg>'};
 
