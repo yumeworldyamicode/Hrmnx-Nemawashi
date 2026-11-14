@@ -90,7 +90,7 @@ function card(item,index){
     (status.account?'<p class="integration-account">'+escapeHTML(status.account)+'</p>':'')+
     '<div class="integration-card-bottom"><span>'+escapeHTML(item.phase)+'</span>'+
     '<div class="integration-card-actions">'+
-    (["figma","adobe","canva"].includes(item.id)?'<button class="button button-dark integration-connect" data-connect-integration="'+escapeHTML(item.id)+'">Connect ↗</button>':'')+
+    (["figma","adobe","canva"].includes(item.id)?'<button class="button button-dark integration-connect" data-connect-integration="'+escapeHTML(item.id)+'">Connect '+window.HrmnxIcons.svg("external-link")+'</button>':'')+
     '<button class="button button-outline integration-details" data-integration="'+index+'">Details</button></div></div></article>';
 }
 
@@ -137,7 +137,7 @@ async function connectProvider(provider){
     const toast=document.getElementById("toast");
     if(toast){toast.textContent=message;toast.classList.add("visible");}
     else window.alert(message);
-    if(button){button.disabled=false;button.textContent="Connect ↗";}
+    if(button){button.disabled=false;button.innerHTML='Connect '+window.HrmnxIcons.svg("external-link");}
   }
 }
 
