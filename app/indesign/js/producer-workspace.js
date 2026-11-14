@@ -102,7 +102,7 @@ function renderCreateForm(){
 }
 function renderEditor(){
  if(!active)return;normalise(active);list.hidden=true;editor.hidden=false;$("pw-heading").textContent=active.name;
- const m=active.content.music,sections=m.sections;
+ const m=active.content.music,sections=m.sections;lyrics=m.lyrics||null;
  editor.innerHTML='<div class="pw-editor-top"><button class="pw-back" id="pw-back">← All projects</button><div><span class="pw-project-kind">OFFICIAL PROGRAMME PROJECT</span><h2>'+esc(active.name)+'</h2></div><div class="pw-editor-actions"><button class="button button-outline" id="pw-import-prodem">Import .prodem</button><button class="button button-outline" id="pw-import-lyrdem">Import .lyrdem</button><button class="button button-dark" id="pw-publish-dem">Publish DEM</button><button class="button button-outline" id="pw-save">Save changes</button><input id="pw-prodem-file" type="file" accept=".prodem" hidden><input id="pw-lyrdem-file" type="file" accept=".lyrdem" hidden></div></div>'+
  '<div class="pw-meta"><label>Project title<input data-meta="projectName" value="'+esc(m.projectName||active.name)+'"></label><label>DAW<input data-meta="daw" value="'+esc(m.daw||'')+'" placeholder="e.g. Ableton Live"></label><label>BPM<input data-meta="bpm" value="'+esc(m.bpm||'')+'" inputmode="numeric" placeholder="e.g. 124"></label><label>Key<input data-meta="key" value="'+esc(m.key||'')+'" placeholder="e.g. F minor"></label><label class="pw-wide">Contributors<input data-meta="contributors" value="'+esc(m.contributors||'')+'" placeholder="Names or roles"></label></div>'+
  '<div class="pw-section-heading"><div><span class="eyebrow">IDEA BOARD</span><h3>Develop your sound.</h3></div><button class="button button-outline" id="pw-add-section">＋ Add section</button></div>'+
