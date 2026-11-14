@@ -30,7 +30,7 @@ async function importMusicPackage(file,kind){
  if(kind==="prodem"){
   if(data.format!=="indesign-prodem"||data.version!==1)throw new Error("Unsupported .prodem package.");
   const name=data.assets?.audio;if(!name||!zip.file("audio/"+name))throw new Error("The .prodem package does not contain its audio file.");
-  productionBlob=await zip.file("audio/"+name).async("blob");productionName=name;
+  const rawAudio=await zip.file("audio/"+name).async("blob");productionName=name;const ext=(name.split(".").pop()||"").toLowerCase();const mime={mp3:"audio/mpeg",wav:"audio/wav",m4a:"audio/mp4",aac:"audio/aac",ogg:"audio/ogg",flac:"audio/flac",webm:"audio/webm"}[ext]||"application/octet-stream";productionBlob=new Blob([rawAudio],{type:mime});
   const track=data.track||{};active.content.music.production={title:track.title||"",artist:track.artist||"",bpm:track.bpm||"",key:track.key||"",producers:track.producers||[],credits:track.credits||"",contributions:Array.isArray(track.contributions)?track.contributions:[],audioName:name};
   const art=data.assets?.artwork;if(art&&zip.file("artwork/"+art))coverBlob=await zip.file("artwork/"+art).async("blob");
  }else{
