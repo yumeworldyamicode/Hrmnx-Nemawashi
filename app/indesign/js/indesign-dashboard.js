@@ -734,6 +734,7 @@
         if(view==="projects") { try { await loadProjects(); renderProjects(); } catch(e) { console.error(e); notify("Could not load projects. Check the database setup."); } }
         else if(view==="messages") renderMessages();
         else if(view==="recent-publications") await renderRecentPublications();
+        else if(view==="producer-competitions") { title.textContent="Producer competitions"; if(window.indesignCompetitions) await window.indesignCompetitions.render(content); else content.innerHTML="<p class=\"muted\">Competition manager could not be loaded. Refresh the page.</p>"; }
         else if(view==="dem-settings") renderDemSettings();
         else if(view==="integrations") { title.textContent="Integrations"; content.innerHTML=window.indesignIntegrations ? window.indesignIntegrations.render() : '<p class="muted">Integrations could not be loaded. Refresh the page.</p>'; window.indesignFileExchange?.init(); }
         else if(view==="account") renderAccount();
