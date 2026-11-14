@@ -22,7 +22,7 @@ const COMPONENTS = [
     { type: "hero", label: "Hero", icon: "✦" },
     { type: "heading", label: "Heading", icon: "H" },
     { type: "text", label: "Text", icon: "T" },
-    { type: "button", label: "Button", icon: "↗" },
+    { type: "button", label: "Button", icon: "external-link" },
     { type: "image", label: "Image", icon: "▧" },
     { type: "spacer", label: "Spacer", icon: "↕" }
 ];
@@ -505,7 +505,7 @@ function renderComponentList() {
 
     list.innerHTML = COMPONENTS.map(component => `
         <button class="component-button" data-component="${component.type}">
-            <span class="component-symbol">${component.icon}</span>
+            <span class="component-symbol">${component.icon==="external-link" ? window.HrmnxIcons.svg("external-link") : component.icon}</span>
             <span>${component.label}</span>
         </button>
     `).join("");
@@ -1486,7 +1486,7 @@ function renderComponentList() {
     const list = document.getElementById("componentList");
     list.innerHTML = V2_COMPONENTS.map(component => `
         <button class="component-button" data-component="${component.type}">
-            <span class="component-symbol">${escapeHtml(component.icon)}</span>
+            <span class="component-symbol">${component.icon==="external-link" ? window.HrmnxIcons.svg("external-link") : escapeHtml(component.icon)}</span>
             <span>${escapeHtml(component.label)}</span>
         </button>
     `).join("");
@@ -2790,7 +2790,7 @@ function nmBuildGeneratedHTML(site, page, sections, theme) {
     const filename = isHome ? "index.html" : (nmSlug(page.slug || page.name) + ".html");
     const nav = `<header class="site-nav"><div class="nav-inner"><a class="brand-link" href="/app/${slug}/">${nmEscapeHtml(site.name)}</a><nav class="nav-links"><a href="/app/${slug}/">Home</a></nav></div></header>`;
     const announcement = theme.announcement?.enabled ? `<div class="announcement" style="background:${nmEscapeHtml(theme.announcement.background||theme.primary||"#8f6cff")};color:${nmEscapeHtml(theme.announcement.color||"#fff")}">${nmEscapeHtml(theme.announcement.text||"")}</div>` : "";
-    const body = sections.map(nmElementHTML).join("\\n");
+    const body = sections.map(nmElementHTML).join("\n");
     const footer = theme.footer?.enabled !== false ? `<footer>${nmEscapeHtml(theme.footer?.text || "© " + new Date().getFullYear() + " " + (theme.footer?.company || "Hrmnx Entertainment"))}</footer>` : "";
     return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${nmEscapeHtml(page.name || site.name)}</title><link rel="stylesheet" href="style.css"></head><body>${announcement}${nav}<main>${body}</main>${footer}<script src="script.js"></script></body></html>`;
 }
