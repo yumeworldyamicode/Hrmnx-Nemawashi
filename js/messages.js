@@ -477,7 +477,7 @@ function renderPage(
             renderBasicPage(
                 "Personal Messages",
                 "Private conversations with other Nemawashi users.",
-                "◇"
+                window.HrmnxIcons.svg("message")
             );
 
             break;
@@ -488,7 +488,7 @@ function renderPage(
             renderBasicPage(
                 "Subsidiary Messages",
                 "Communication between Hrmnx subsidiaries and their teams.",
-                "◇"
+                window.HrmnxIcons.svg("message")
             );
 
             break;
@@ -499,7 +499,7 @@ function renderPage(
             renderBasicPage(
                 "Business Messages",
                 "Professional communication across Hrmnx Entertainment.",
-                "◇"
+                window.HrmnxIcons.svg("message")
             );
 
             break;
@@ -1800,7 +1800,7 @@ async function loadMessages(spaceId, selectionToken = nemawashiSpaceSelectionTok
 
         messagesList.innerHTML = `
             <div class="messages-empty">
-                <div class="messages-empty-icon">◇</div>
+                <div class="messages-empty-icon">${window.HrmnxIcons.svg("message")}</div>
                 <h3>No messages yet</h3>
                 <p>Start the conversation in this Space.</p>
             </div>
@@ -2449,7 +2449,7 @@ function renderMessage(
                 alt="${escapeHtml(displayName)}"
             >
         `
-        : "◇";
+        : window.HrmnxIcons.svg("message");
 
     return `
         ${divider}
@@ -2607,7 +2607,7 @@ function renderMessageAttachment(
         previewClass =
             "message-native-demo-attachment message-prodem-attachment";
     } else if (type === "image") {
-        icon = "▧";
+        icon = window.HrmnxIcons.svg("image");
         label = "Image";
     }
 
@@ -3086,10 +3086,10 @@ function getSpaceIcon(
             return window.HrmnxIcons.svg("folder");
 
         case "massive_project":
-            return "◆";
+            return window.HrmnxIcons.svg("folder");
 
         default:
-            return "◌";
+            return window.HrmnxIcons.svg("message");
 
     }
 
@@ -3480,7 +3480,7 @@ function initializeMusicSpace() {
                 class="music-action-button primary"
                 id="start-new-call-button"
             >
-                <span>＋</span>
+                <span>${window.HrmnxIcons.svg("plus")}</span>
                 Start a new call
             </button>
 
@@ -4604,7 +4604,7 @@ function renderAnnouncementOption(
                         ? "K"
                         : key === "serashio"
                             ? "S"
-                            : "↗"
+                            : window.HrmnxIcons.svg("arrow")
                 }
             </span>
 
