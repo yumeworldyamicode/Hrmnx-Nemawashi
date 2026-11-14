@@ -36,15 +36,21 @@ window.HrmnxIcons={svg:(name,cls="")=>'<svg class="hrmnx-icon '+cls+'" viewBox="
 
 function replacePlaceholders(root){
  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
- const nodes=[];while(walker.nextNode())if(/\\$\\{window\\.HrmnxIcons\\.svg\\("[a-z-]+"\\)\\}/.test(walker.currentNode.nodeValue))nodes.push(walker.currentNode);
+ const nodes=[];
+ while(walker.nextNode()){
+  if(/\$\{window\.HrmnxIcons\.svg\("[a-z-]+"\)\}/.test(walker.currentNode.nodeValue))nodes.push(walker.currentNode);
+ }
  nodes.forEach(node=>{
   const template=document.createElement("template");
-  template.innerHTML=node.nodeValue.replace(/\\$\\{window\\.HrmnxIcons\\.svg\\("([a-z-]+)"\\)\\}/g,(_,name)=>window.HrmnxIcons.svg(name));
+  template.innerHTML=node.nodeValue.replace(/\$\{window\.HrmnxIcons\.svg\("([a-z-]+)"\)\}/g,(_,name)=>window.HrmnxIcons.svg(name));
   node.replaceWith(template.content);
  });
 }
 replacePlaceholders(document.documentElement);
 new MutationObserver(records=>records.forEach(record=>{
- record.addedNodes.forEach(node=>{if(node.nodeType===Node.TEXT_NODE)replacePlaceholders(node.parentNode);else if(node.nodeType===Node.ELEMENT_NODE)replacePlaceholders(node);});
+ record.addedNodes.forEach(node=>{
+  if(node.nodeType===Node.TEXT_NODE&&node.parentNode)replacePlaceholders(node.parentNode);
+  else if(node.nodeType===Node.ELEMENT_NODE)replacePlaceholders(node);
+ });
 })).observe(document.documentElement,{childList:true,subtree:true});
 })();
