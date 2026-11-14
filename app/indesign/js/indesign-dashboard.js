@@ -483,7 +483,7 @@
             if(data.format!==expected||data.version!==1)throw new Error("This is not a supported ."+kind+" package.");
             const music=brainstormData().music;
             if(kind==="prodem"){
-                const track=data.track||{};music.production={title:track.title||"",artist:track.artist||"",bpm:track.bpm||"",key:track.key||"",producers:track.producers||[],credits:track.credits||"",audioName:data.assets?.audio||""};
+                const track=data.track||{};music.production={title:track.title||"",artist:track.artist||"",bpm:track.bpm||"",key:track.key||"",producers:track.producers||[],credits:track.credits||"",contributions:Array.isArray(track.contributions)?track.contributions:[],audioName:data.assets?.audio||""};
                 if(brainstormAudioUrl)URL.revokeObjectURL(brainstormAudioUrl);
                 const path=data.assets?.audio?"audio/"+data.assets.audio:"";
                 if(path&&zip.file(path)){const raw=await zip.file(path).async("blob");const ext=(data.assets.audio.split(".").pop()||"").toLowerCase();const mime={mp3:"audio/mpeg",wav:"audio/wav",m4a:"audio/mp4",aac:"audio/aac",ogg:"audio/ogg",flac:"audio/flac",webm:"audio/webm"}[ext]||"application/octet-stream";const blob=new Blob([raw],{type:mime});brainstormAudioBlob=blob;brainstormAudioUrl=URL.createObjectURL(blob);const artPath=data.assets?.artwork?"artwork/"+data.assets.artwork:"";if(brainstormCoverUrl)URL.revokeObjectURL(brainstormCoverUrl);if(artPath&&zip.file(artPath)){brainstormCoverBlob=await zip.file(artPath).async("blob");brainstormCoverUrl=URL.createObjectURL(brainstormCoverBlob);}}
@@ -517,7 +517,7 @@
                 if(!titleValue||!artist)throw new Error("Add a DEM title and artist.");
                 if(timings.some(t=>t===null))throw new Error("Sync every lyric rule first. "+timings.filter(t=>t===null).length+" remain.");
                 status.textContent="Building package…";
-                const manifest={format:"indesign-dem",version:1,createdAt:new Date().toISOString(),title:titleValue,artist,vocalMode:overlay.querySelector("#dem-vocal-mode").value,production:music.production||{},lyrics:{artist:music.lyrics?.artist||{},sections:music.lyrics?.sections||[],rules:rules.map((r,i)=>({...r,time:timings[i]}))},assets:{audio:music.production?.audioName||"production-audio",artwork:brainstormCoverBlob?"cover":null}};
+                const manifest={format:"indesign-dem",version:1,createdAt:new Date().toISOString(),title:titleValue,artist,vocalMode:overlay.querySelector("#dem-vocal-mode").value,production:music.production||{},contributions:Array.isArray(music.production?.contributions)?music.production.contributions:[],lyrics:{artist:music.lyrics?.artist||{},sections:music.lyrics?.sections||[],rules:rules.map((r,i)=>({...r,time:timings[i]}))},assets:{audio:music.production?.audioName||"production-audio",artwork:brainstormCoverBlob?"cover":null}};
                 const zip=new window.JSZip();zip.file("manifest.json",JSON.stringify(manifest,null,2));zip.file("audio/"+manifest.assets.audio,brainstormAudioBlob);if(brainstormCoverBlob)zip.file("artwork/cover",brainstormCoverBlob);
                 const packageBlob=await zip.generateAsync({type:"blob",compression:"DEFLATE"}),slug=crypto.randomUUID(),path=slug+".dem";
                 const {error:upErr}=await window.supabaseClient.storage.from("indesign-dems").upload(path,packageBlob,{contentType:"application/zip"});
@@ -528,7 +528,7 @@
                 if(!visibility){await window.supabaseClient.storage.from("indesign-dems").remove([path]);if(coverPath)await window.supabaseClient.storage.from("in-music-artwork").remove([coverPath]);return;}
                 const description=visibility==="public"?(await showDialog({kind:"textarea",title:"Publication description",value:"",placeholder:"Add a description for this DEM…",confirmLabel:"Publish"})):"";
                 if(description===null){await window.supabaseClient.storage.from("indesign-dems").remove([path]);if(coverPath)await window.supabaseClient.storage.from("in-music-artwork").remove([coverPath]);return;}
-                const {error:dbErr}=await window.supabaseClient.from("indesign_dems").insert({slug,title:titleValue,artist,owner_id:employee.user.id,project_id:activeProject?.id||null,package_path:path,cover_path:coverPath,is_public:visibility==="public",visibility,description,theme:localStorage.getItem("indesign-default-dem-theme")||"blur"});
+                const {error:dbErr}=await window.supabaseClient.from("indesign_dems").insert({slug,title:titleValue,artist,owner_id:employee.user.id,project_id:activeProject?.id||null,package_path:path,cover_path:coverPath,is_public:visibility==="public",visibility,description,contributions:manifest.contributions,theme:localStorage.getItem("indesign-default-dem-theme")||"blur"});
                 if(dbErr){await window.supabaseClient.storage.from("indesign-dems").remove([path]);if(coverPath)await window.supabaseClient.storage.from("in-music-artwork").remove([coverPath]);throw dbErr;}
                 if(dbErr){await window.supabaseClient.storage.from("indesign-dems").remove([path]);throw dbErr;}
                 const url=new URL("dem.html?id="+encodeURIComponent(slug),location.href).href,body=overlay.querySelector(".dem-builder-body");
