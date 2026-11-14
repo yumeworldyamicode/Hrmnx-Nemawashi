@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f8f8f6">
+<title>Music Producer Programme - indesign</title>
+<link rel="stylesheet" href="css/indesign.css?v=20261114-2">
+<link rel="stylesheet" href="css/producer-programme.css?v=20261114-1">
+</head>
+<body class="producer-programme-page">
+<header class="pp-header">
+  <a class="wordmark" href="index.html">indesign<span>.</span></a>
+  <a class="pp-kiki-link" href="https://kiki.hrmnx.site/">KiKi ↗</a>
+</header>
+<main class="pp-main">
+  <section class="pp-hero">
+    <p class="eyebrow">INDESIGN MUSIC · OPEN CALL</p>
+    <h1>Make something.<br><span>Let it be heard.</span></h1>
+    <p class="pp-intro">The InDesign Music Producer Programme is a place to share your original music ideas, publish a public DEM and become eligible for future Producer Competitions.</p>
+    <div class="pp-status" id="pp-status"><span class="pp-status-dot"></span><span>Checking programme status…</span></div>
+  </section>
+  <section class="pp-layout">
+    <div class="pp-guide">
+      <p class="eyebrow">HOW IT WORKS</p>
+      <h2>Your idea, in four steps.</h2>
+      <div class="pp-steps">
+        <article><span class="pp-step-icon">01</span><div><h3>Build a Music Brainstorm</h3><p>Develop your production, lyrics and creative direction in an InDesign Music Brainstorm.</p></div></article>
+        <article><span class="pp-step-icon">02</span><div><h3>Publish a public DEM</h3><p>Your DEM needs to be published publicly on InDesign Music before it can be submitted.</p></div></article>
+        <article><span class="pp-step-icon">03</span><div><h3>Submit it here</h3><p>Choose your public DEM below. Your entry will be reviewed by the InDesign team.</p></div></article>
+        <article><span class="pp-step-icon">04</span><div><h3>Become competition-eligible</h3><p>Only DEMs submitted through this official programme can be selected for a Producer Competition.</p></div></article>
+      </div>
+      <aside class="pp-note"><strong>A quick note</strong><p>Publishing a normal public DEM does not automatically enter it into a competition. You must submit it through this programme while submissions are open.</p></aside>
+    </div>
+    <section class="pp-submit-card">
+      <p class="eyebrow">YOUR PROGRAMME ENTRY</p>
+      <h2>Submit a DEM.</h2>
+      <p class="pp-card-copy" id="pp-account-copy">Sign in with the KiKi account you want associated with your submission.</p>
+      <div id="pp-auth" class="pp-message" hidden></div>
+      <div id="pp-submission-area" hidden>
+        <label for="pp-dem-select">Choose one of your public DEMs</label>
+        <select id="pp-dem-select"><option value="">Loading your DEMs…</option></select>
+        <div class="pp-selected-note" id="pp-dem-note">Only public DEMs owned by your signed-in account can be submitted.</div>
+        <button class="button button-dark pp-submit-button" id="pp-submit" disabled>Submit to the programme ↗</button>
+        <p class="pp-feedback" id="pp-feedback" role="status"></p>
+        <div class="pp-my-entry"><h3>Your submissions</h3><div id="pp-my-submissions"><p class="muted">Loading…</p></div></div>
+      </div>
+      <div id="pp-closed" class="pp-message" hidden>Applications are currently closed. You can still read the programme guide; check back when submissions reopen.</div>
+    </section>
+  </section>
+</main>
+<footer class="pp-footer"><span class="wordmark">indesign<span>.</span></span><span>AN HRMNX ENTERTAINMENT PROGRAMME</span></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../js/supabase.js?v=2"></script>
+<script src="js/producer-programme.js?v=20261114-1"></script>
+</body>
+</html>
