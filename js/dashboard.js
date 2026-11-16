@@ -220,6 +220,12 @@ function renderOverview(user) {
             )}
 
             ${moduleCard(
+                "KiKi News",
+                "Create and edit News Posts shown on KiKi.",
+                "kiki-news"
+            )}
+
+            ${moduleCard(
                 "Direct Messages",
                 "Manage orders, coupons and entitlements.",
                 "orders"
