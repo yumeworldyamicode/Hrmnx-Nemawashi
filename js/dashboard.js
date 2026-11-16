@@ -67,6 +67,11 @@ const sectionNames = {
         title: "Staff Posts"
     },
 
+    "kiki-news": {
+        label: "KIKI",
+        title: "News Posts"
+    },
+
     profiles: {
         label: "KIKI",
         title: "Profiles"
@@ -331,6 +336,12 @@ async function openSection(section) {
     // Serashio Notices
     if (section === "notices") {
         await renderSerashioNotices();
+        return;
+    }
+
+    // KiKi News Posts
+    if (section === "kiki-news") {
+        await renderKiKiNewsPosts();
         return;
     }
 
@@ -10817,6 +10828,130 @@ if (signOutButton) {
         }
     );
 
+}
+
+
+
+let nemawashiKiKiNewsPosts = [];
+let kikiNewsEditorSections = [];
+
+async function renderKiKiNewsPosts() {
+    sectionLabel.textContent = "KIKI";
+    sectionTitle.textContent = "News Posts";
+    dashboardContent.innerHTML = '<section class="serashio-module"><div class="module-header"><div><span class="eyebrow">KIKIFICIAL</span><h2>News Posts</h2><p>Create, edit and publish long-form KiKi News Posts.</p></div><button type="button" class="primary-button" id="kiki-news-create">+ Create News Post</button></div><div class="module-toolbar"><input id="kiki-news-search" class="module-search" type="search" placeholder="Search News Posts..."><div id="kiki-news-count" class="module-count">Loading...</div></div><div id="kiki-news-list" class="notices-admin-list"><div class="module-loading">Loading News Posts...</div></div></section>';
+    document.getElementById("kiki-news-create")?.addEventListener("click", () => openKiKiNewsEditor());
+    document.getElementById("kiki-news-search")?.addEventListener("input", filterKiKiNewsPosts);
+    await loadKiKiNewsPosts();
+}
+
+async function loadKiKiNewsPosts() {
+    const list = document.getElementById("kiki-news-list");
+    if (!list) return;
+    const { data, error } = await supabaseClient.from("kiki_news_posts")
+        .select("id,title,subtitle,header_image_url,is_published,created_at")
+        .order("created_at", { ascending: false });
+    if (error) {
+        console.error("KiKi News Posts load failed:", error);
+        list.innerHTML = '<div class="module-error">Could not load News Posts. Apply the KiKi News Posts database setup first. ' + escapeHtml(error.message) + '</div>';
+        return;
+    }
+    nemawashiKiKiNewsPosts = data || [];
+    renderKiKiNewsPostList();
+}
+
+function renderKiKiNewsPostList(items = nemawashiKiKiNewsPosts) {
+    const list = document.getElementById("kiki-news-list");
+    if (!list) return;
+    const count = document.getElementById("kiki-news-count");
+    if (count) count.textContent = items.length + " News Post" + (items.length === 1 ? "" : "s");
+    if (!items.length) {
+        list.innerHTML = '<div class="module-empty"><h3>No News Posts yet</h3><p>Create the first one to get started.</p></div>';
+        return;
+    }
+    list.innerHTML = items.map(post => {
+        const image = post.header_image_url ? '<img src="' + escapeAttribute(post.header_image_url) + '" alt="">' : '<span class="notice-admin-image">✦</span>';
+        return '<button type="button" class="notice-admin-card" data-kiki-news-id="' + escapeAttribute(post.id) + '">' + image + '<span class="notice-admin-info"><strong>' + escapeHtml(post.title) + '</strong><small>' + (post.is_published ? 'Published' : 'Draft') + ' · ' + escapeHtml(post.created_at ? new Date(post.created_at).toLocaleDateString() : '') + '</small></span><span>→</span></button>';
+    }).join("");
+    list.querySelectorAll("[data-kiki-news-id]").forEach(button => button.addEventListener("click", () => openKiKiNewsEditor(button.dataset.kikiNewsId)));
+}
+
+function filterKiKiNewsPosts() {
+    const term = (document.getElementById("kiki-news-search")?.value || "").trim().toLowerCase();
+    renderKiKiNewsPostList(nemawashiKiKiNewsPosts.filter(post => (post.title || "").toLowerCase().includes(term) || (post.subtitle || "").toLowerCase().includes(term)));
+}
+
+function openKiKiNewsEditor(postId = null) {
+    const post = postId ? nemawashiKiKiNewsPosts.find(item => String(item.id) === String(postId)) : null;
+    kikiNewsEditorSections = post && Array.isArray(post.sections) ? post.sections.map(section => ({ ...section })) : [{ heading: "", content: "", image_url: "" }];
+    sectionLabel.textContent = "KIKI";
+    sectionTitle.textContent = post ? "Edit News Post" : "Create News Post";
+    dashboardContent.innerHTML = '<section class="serashio-module"><button type="button" class="back-button" id="kiki-news-back">← Back to News Posts</button><div class="module-header" style="margin-top:20px"><div><span class="eyebrow">KIKIFICIAL / NEWS EDITOR</span><h2>' + (post ? 'Edit News Post' : 'Create News Post') + '</h2><p>Build the article using separate content sections. Save it as a draft before publishing if needed.</p></div></div><form id="kiki-news-form"><div class="notice-form-field"><label for="kiki-news-title">News Post title</label><input id="kiki-news-title" maxlength="180" required value="' + escapeAttribute(post?.title || "") + '"></div><div class="notice-form-field"><label for="kiki-news-subtitle">Introduction / subtitle</label><textarea id="kiki-news-subtitle" rows="3">' + escapeHtml(post?.subtitle || "") + '</textarea></div><div class="notice-form-field"><label for="kiki-news-header-image">Header picture URL</label><input type="url" id="kiki-news-header-image" placeholder="https://..." value="' + escapeAttribute(post?.header_image_url || "") + '"></div><div class="module-header"><h3>Post sections</h3><button type="button" class="secondary-button" id="kiki-news-add-section">+ Add section</button></div><div id="kiki-news-sections"></div><label style="display:flex;gap:9px;align-items:center;margin:18px 0"><input id="kiki-news-published" type="checkbox" ' + (post?.is_published ? 'checked' : '') + '> Publish this News Post on KiKi</label><div id="kiki-news-status" class="notice-editor-message"></div><div class="notice-form-actions"><div class="notice-form-actions-right"><button type="submit" class="person-save-button" id="kiki-news-save">Save News Post</button><button type="button" class="secondary-button" id="kiki-news-cancel">Cancel</button>' + (post ? '<button type="button" class="danger-button" id="kiki-news-delete">Delete News Post</button>' : '') + '</div></div></form></section>';
+    const syncSections = () => {
+        document.querySelectorAll("[data-kiki-news-block]").forEach(block => {
+            const index = Number(block.dataset.kikiNewsBlock);
+            kikiNewsEditorSections[index] = {
+                heading: block.querySelector("[data-news-heading]")?.value || "",
+                content: block.querySelector("[data-news-content]")?.value || "",
+                image_url: block.querySelector("[data-news-image]")?.value || ""
+            };
+        });
+    };
+    const drawSections = () => {
+        const container = document.getElementById("kiki-news-sections");
+        if (!container) return;
+        container.innerHTML = kikiNewsEditorSections.map((item, index) =>
+            '<div class="notice-editor-card" data-kiki-news-block="' + index + '"><div class="module-header"><strong>Section ' + (index + 1) + '</strong><button type="button" class="danger-button" data-remove-news-section="' + index + '">Remove</button></div><div class="notice-form-field"><label>Section heading</label><input data-news-heading value="' + escapeAttribute(item.heading || "") + '" placeholder="Section heading"></div><div class="notice-form-field"><label>Text</label><textarea data-news-content rows="6" placeholder="Write this section...">' + escapeHtml(item.content || "") + '</textarea></div><div class="notice-form-field"><label>Section picture URL (optional)</label><input type="url" data-news-image value="' + escapeAttribute(item.image_url || "") + '" placeholder="https://..."></div></div>'
+        ).join("");
+        container.querySelectorAll("[data-remove-news-section]").forEach(button => button.addEventListener("click", () => {
+            syncSections();
+            kikiNewsEditorSections.splice(Number(button.dataset.removeNewsSection), 1);
+            drawSections();
+        }));
+        container.querySelectorAll("[data-news-heading],[data-news-content],[data-news-image]").forEach(input => input.addEventListener("input", syncSections));
+    };
+    drawSections();
+    document.getElementById("kiki-news-add-section")?.addEventListener("click", () => {
+        syncSections();
+        kikiNewsEditorSections.push({ heading: "", content: "", image_url: "" });
+        drawSections();
+    });
+    document.getElementById("kiki-news-back")?.addEventListener("click", renderKiKiNewsPosts);
+    document.getElementById("kiki-news-cancel")?.addEventListener("click", renderKiKiNewsPosts);
+    document.getElementById("kiki-news-form")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        syncSections();
+        const status = document.getElementById("kiki-news-status");
+        const save = document.getElementById("kiki-news-save");
+        const payload = {
+            title: document.getElementById("kiki-news-title").value.trim(),
+            subtitle: document.getElementById("kiki-news-subtitle").value.trim() || null,
+            header_image_url: document.getElementById("kiki-news-header-image").value.trim() || null,
+            sections: kikiNewsEditorSections,
+            is_published: document.getElementById("kiki-news-published").checked,
+            author_id: window.nemawashiUser?.id || null,
+            updated_at: new Date().toISOString()
+        };
+        if (!payload.title) { status.textContent = "Please add a title."; return; }
+        save.disabled = true;
+        save.textContent = "Saving...";
+        const result = postId
+            ? await supabaseClient.from("kiki_news_posts").update(payload).eq("id", postId)
+            : await supabaseClient.from("kiki_news_posts").insert(payload);
+        if (result.error) {
+            console.error(result.error);
+            status.textContent = "Could not save: " + result.error.message;
+            save.disabled = false;
+            save.textContent = "Save News Post";
+            return;
+        }
+        await renderKiKiNewsPosts();
+    });
+    document.getElementById("kiki-news-delete")?.addEventListener("click", async () => {
+        if (!confirm("Delete this News Post?")) return;
+        const { error } = await supabaseClient.from("kiki_news_posts").delete().eq("id", postId);
+        if (error) { document.getElementById("kiki-news-status").textContent = "Could not delete: " + error.message; return; }
+        await renderKiKiNewsPosts();
+    });
 }
 
 
