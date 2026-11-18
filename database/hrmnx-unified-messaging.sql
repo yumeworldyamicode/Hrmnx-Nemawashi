@@ -75,3 +75,19 @@ values
  ('nemawashi','1.1.0','Unified Hrmnx Messages','Personal, Business and Space messages now share one communication foundation. Notifications and quick chat are being introduced across Hrmnx apps.',true),
  ('indesign','1.1.0','Connected to Hrmnx Messages','InDesign now uses the shared Nemawashi messaging service, with Personal, Business and Space categories.',true)
 on conflict(app_slug,version) do nothing;
+
+-- Preserve Music Brainstorm share cards when legacy direct messages are mirrored.
+alter table public.hrmnx_messages add column if not exists share_id uuid references public.indesign_shared_segments(id) on delete set null;
+create or replace function public.hrmnx_mirror_legacy_direct_message()
+returns trigger language plpgsql security definer set search_path=public as $$
+begin
+ insert into public.hrmnx_messages(category,sender_id,recipient_id,content,share_id,source_table,source_id,created_at)
+ values('personal',new.sender_id,new.recipient_id,coalesce(new.content,''),new.share_id,'nemawashi_direct_messages',new.id,new.created_at)
+ on conflict(source_table,source_id) where source_table is not null and source_id is not null do nothing;
+ return new;
+end; $$;
+drop trigger if exists hrmnx_mirror_legacy_direct_message on public.nemawashi_direct_messages;
+create trigger hrmnx_mirror_legacy_direct_message after insert on public.nemawashi_direct_messages
+for each row execute function public.hrmnx_mirror_legacy_direct_message();
+update public.hrmnx_messages h set share_id=d.share_id from public.nemawashi_direct_messages d
+where h.source_table='nemawashi_direct_messages' and h.source_id=d.id and h.share_id is null and d.share_id is not null;
