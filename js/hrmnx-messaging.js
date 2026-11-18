@@ -1,0 +1,66 @@
+/* Hrmnx shared Messages, toast notifications, quick chat and release notes */
+(function(){
+"use strict";
+var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
+var db=function(){return window.supabaseClient;};
+var user=null,profiles=[],rows=[],spaces=[],category="personal",targetId=null,host=null,channel=null;
+var appSlug=document.body.dataset.hrmnxApp||(location.pathname.indexOf("/app/indesign/")>=0?"indesign":"nemawashi");
+var appVersion=document.body.dataset.hrmnxVersion||"1.1.0";
+function css(){
+ if(document.getElementById("hrmnx-shared-messaging-css"))return;
+ var s=document.createElement("style");s.id="hrmnx-shared-messaging-css";
+ s.textContent='.hx-msg{display:grid;grid-template-columns:225px minmax(0,1fr);min-height:540px;height:calc(100vh - 190px);border:1px solid #e7e8ed;background:#fff;color:#171923;font-family:Helvetica,Arial,sans-serif}.hx-nav{border-right:1px solid #ececf0;padding:14px;overflow:auto}.hx-tab,.hx-person,.hx-space{width:100%;border:0;background:transparent;text-align:left;padding:11px;color:#30313a;cursor:pointer;font:12px Helvetica,Arial}.hx-tab.active,.hx-person.active,.hx-space.active{background:#f0f2ff}.hx-nav-label{font-size:9px;letter-spacing:1.2px;color:#9295a0;padding:15px 10px 7px}.hx-main{display:flex;flex-direction:column;min-width:0}.hx-head{padding:17px 20px;border-bottom:1px solid #ececf0}.hx-head strong{font-size:14px}.hx-head small{display:block;margin-top:5px;color:#898c98;font-size:10px}.hx-list{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:11px;min-height:230px}.hx-message{max-width:min(78%,560px);align-self:flex-start;padding:11px 13px;background:#f3f4f7;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}.hx-message.mine{align-self:flex-end;background:#edf0ff}.hx-message time{display:block;margin-top:6px;color:#888b96;font-size:9px}.hx-compose{display:flex;gap:8px;padding:13px;border-top:1px solid #ececf0}.hx-compose textarea{flex:1;resize:none;min-width:0;border:1px solid #e0e2e9;padding:10px;font:12px Helvetica,Arial}.hx-compose button{border:0;background:#748fe8;color:#fff;padding:0 17px;font-size:11px;font-weight:700;cursor:pointer}.hx-empty{margin:auto;text-align:center;padding:25px;color:#8a8d98;font-size:12px;line-height:1.6}.hx-toast-stack{position:fixed;right:22px;bottom:22px;z-index:99998;display:flex;flex-direction:column;gap:9px;width:min(340px,calc(100vw - 28px));pointer-events:none}.hx-toast{pointer-events:auto;background:#fff;border:1px solid #e3e5eb;box-shadow:0 10px 35px #17192320;padding:13px 15px;color:#20212a;cursor:pointer;font:12px Helvetica,Arial}.hx-toast strong,.hx-toast small{display:block}.hx-toast small{margin-top:5px;color:#777b88;line-height:1.4}.hx-mini{position:fixed;right:22px;bottom:22px;width:min(360px,calc(100vw - 28px));height:430px;max-height:70vh;z-index:99999;background:#fff;border:1px solid #dfe1e8;box-shadow:0 15px 50px #17192330;display:flex;flex-direction:column;font-family:Helvetica,Arial}.hx-mini-head{padding:13px 15px;background:#171923;color:#fff;display:flex;justify-content:space-between;align-items:center;font-size:12px}.hx-mini-head button{background:none;border:0;color:white;cursor:pointer;font-size:18px}.hx-mini-list{padding:12px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:8px}.hx-mini-list .hx-message{max-width:90%}.hx-mini-compose{display:flex;padding:10px;gap:7px;border-top:1px solid #eee}.hx-mini-compose input{flex:1;min-width:0;border:1px solid #ddd;padding:9px;font:12px Helvetica,Arial}.hx-mini-compose button{border:0;background:#748fe8;color:white;padding:0 12px}.hx-update-overlay{position:fixed;inset:0;background:#15172280;z-index:100000;display:grid;place-items:center;padding:20px;opacity:0;transition:opacity .18s}.hx-update-overlay.visible{opacity:1}.hx-update{background:white;color:#171923;width:min(480px,100%);padding:28px;font-family:Helvetica,Arial}.hx-update-mark{font-size:10px;letter-spacing:1.5px;color:#748fe8;font-weight:700}.hx-update h2{font-size:25px;margin:12px 0 6px}.hx-update p{font-size:12px;line-height:1.65;color:#696d78}.hx-update-version{font-size:10px;color:#8b8e99}.hx-update button{margin-top:17px;background:#171923;color:white;border:0;padding:11px 17px;font-size:11px;cursor:pointer}.hx-footer{text-align:center;color:#9699a3;font:10px Helvetica,Arial,sans-serif;padding:20px 10px}@media(max-width:700px){.hx-msg{grid-template-columns:75px minmax(0,1fr)}.hx-nav{padding:6px}.hx-tab,.hx-person,.hx-space{padding:9px 5px;font-size:10px}.hx-list{padding:10px}.hx-message{max-width:94%}.hx-compose{padding:8px}.hx-compose button{padding:0 10px}}';
+ document.head.appendChild(s);
+}
+function footer(){if(document.querySelector(".hx-footer"))return;var f=document.createElement("footer");f.className="hx-footer";f.textContent="© 2026 Hrmnx Entertainment";(document.querySelector("main")||document.body).appendChild(f);}
+async function updates(){
+ try{var r=await db().from("hrmnx_app_releases").select("version,title,summary").eq("app_slug",appSlug).eq("is_published",true).order("released_at",{ascending:false}).limit(1).maybeSingle();if(r.error||!r.data||r.data.version===appVersion)return;
+ var key="hrmnx-update-"+appSlug,seen="";try{seen=localStorage.getItem(key)||"";}catch(e){}if(seen===r.data.version)return;
+ var o=document.createElement("div");o.className="hx-update-overlay";o.innerHTML='<section class="hx-update" role="dialog" aria-modal="true"><span class="hx-update-mark">HRMNX / '+esc(appSlug.toUpperCase())+'</span><h2>'+esc(r.data.title||"What's new")+'</h2><p>'+esc(r.data.summary||"This app has been updated.")+'</p><div class="hx-update-version">VERSION '+esc(r.data.version)+'</div><button type="button">Continue</button></section>';
+ o.querySelector("button").onclick=function(){try{localStorage.setItem(key,r.data.version);}catch(e){}o.remove();};document.body.appendChild(o);requestAnimationFrame(function(){o.classList.add("visible");});
+ }catch(e){console.warn("Hrmnx release check:",e);}
+}
+function toast(m){
+ if(!m||m.sender_id===user.id||(m.category==="personal"&&m.recipient_id!==user.id))return;
+ var stack=document.querySelector(".hx-toast-stack");if(!stack){stack=document.createElement("div");stack.className="hx-toast-stack";document.body.appendChild(stack);}
+ var b=document.createElement("button");b.className="hx-toast";b.innerHTML="<strong>"+esc(m.category==="space"?"Space message":m.category==="business"?"Business message":"Personal message")+"</strong><small>"+esc(String(m.content||"").slice(0,120))+"</small>";
+ b.onclick=function(){mini(m);b.remove();};stack.appendChild(b);setTimeout(function(){b.remove();},9000);
+}
+function mini(m){
+ var old=document.querySelector(".hx-mini");if(old)old.remove();var p=document.createElement("section");p.className="hx-mini";
+ p.innerHTML='<header class="hx-mini-head"><strong>Quick chat</strong><button type="button">×</button></header><div class="hx-mini-list"><article class="hx-message">'+esc(m.content||"")+'</article></div><form class="hx-mini-compose"><input maxlength="4000" placeholder="Write a reply…" autocomplete="off"><button>Send</button></form>';
+ p.querySelector(".hx-mini-head button").onclick=function(){p.remove();};
+ p.querySelector("form").onsubmit=async function(e){e.preventDefault();var input=p.querySelector("input"),v=input.value.trim();if(!v)return;var payload={category:m.category,sender_id:user.id,content:v};if(m.category==="personal")payload.recipient_id=m.sender_id;if(m.category==="space")payload.space_id=m.space_id;var r=await db().from("hrmnx_messages").insert(payload);if(r.error){alert(r.error.message);return;}p.remove();};
+ document.body.appendChild(p);
+}
+function realtime(){if(channel)return;channel=db().channel("hrmnx-shared-"+user.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"hrmnx_messages"},function(p){toast(p.new);}).subscribe();}
+async function init(){css();var c=db();if(!c)return;try{var a=await c.auth.getUser();user=a.data&&a.data.user;if(!user)return;footer();updates();realtime();}catch(e){console.warn("Hrmnx shared runtime",e);}}
+async function render(target,initial){
+ host=target;category=initial||"personal";target.innerHTML='<p class="hx-empty">Loading Hrmnx Messages…</p>';var c=db();if(!user){var a=await c.auth.getUser();user=a.data&&a.data.user;}if(!user){target.innerHTML='<p class="hx-empty">Sign in through Nemawashi to access Messages.</p>';return;}
+ var p=await c.from("profiles").select("id,display_name,username").eq("is_staff",true).order("display_name").limit(300);if(p.error){target.innerHTML='<p class="hx-empty">'+esc(p.error.message)+'</p>';return;}profiles=(p.data||[]).filter(x=>x.id!==user.id);
+ var sp=await c.from("nemawashi_spaces").select("id,name,space_type,app_id").order("name");spaces=sp.data||[];
+ targetId=category==="personal"?(profiles[0]&&profiles[0].id):category==="spaces"?(spaces[0]&&spaces[0].id):null;
+ await loadRows();paint();
+}
+async function loadRows(){
+ var q=db().from("hrmnx_messages").select("id,category,sender_id,recipient_id,space_id,content,created_at,is_edited").order("created_at",{ascending:true}).limit(700);
+ if(category==="personal"){if(!targetId){rows=[];return;}q=q.eq("category","personal").or("and(sender_id.eq."+user.id+",recipient_id.eq."+targetId+"),and(sender_id.eq."+targetId+",recipient_id.eq."+user.id+")");}
+ else if(category==="business")q=q.eq("category","business");
+ else {q=q.eq("category","space");if(targetId)q=q.eq("space_id",targetId);else q=q.limit(0);}
+ var r=await q;if(r.error){console.error("Hrmnx messages query",r.error);rows=[];}else rows=r.data||[];
+}
+function paint(){
+ if(!host)return;var people=category==="personal"?profiles.map(p=>'<button class="hx-person '+(p.id===targetId?"active":"")+'" data-target="'+esc(p.id)+'">'+esc(p.display_name||p.username||"Employee")+'</button>').join(""):"";
+ var spaceList=category==="spaces"?spaces.map(s=>'<button class="hx-space '+(s.id===targetId?"active":"")+'" data-target="'+esc(s.id)+'">'+esc(s.name)+'</button>').join(""):"";
+ var selected=category==="personal"?profiles.find(p=>p.id===targetId):spaces.find(s=>s.id===targetId);
+ var title=category==="business"?"Business Messages":category==="personal"?(selected&& (selected.display_name||selected.username)||"Personal Messages"):(selected&&selected.name||"Space Messages");
+ var html=rows.map(m=>'<article class="hx-message '+(m.sender_id===user.id?"mine":"")+'">'+esc(m.content||"")+'<time>'+esc(profiles.find(p=>p.id===m.sender_id)?.display_name||"Hrmnx employee")+' · '+esc(new Date(m.created_at).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}))+'</time></article>').join("");
+ host.innerHTML='<section class="hx-msg"><aside class="hx-nav"><div class="hx-nav-label">MESSAGES</div>'+["personal","business","spaces"].map(t=>'<button class="hx-tab '+(category===t?"active":"")+'" data-category="'+t+'">'+(t==="personal"?"Personal":t==="business"?"Business":"Spaces")+'</button>').join("")+(category==="personal"?'<div class="hx-nav-label">EMPLOYEES</div>'+people:category==="spaces"?'<div class="hx-nav-label">SPACES</div>'+spaceList:"")+'</aside><section class="hx-main"><header class="hx-head"><strong>'+esc(title)+'</strong><small>'+(category==="personal"?"Private conversation":category==="business"?"Company-wide communication":"Space conversation")+'</small></header><div class="hx-list">'+(html||'<p class="hx-empty">No messages here yet.</p>')+'</div><form class="hx-compose"><textarea rows="2" maxlength="5000" placeholder="Write a message…"></textarea><button>Send</button></form></section></section>';
+ host.querySelectorAll("[data-category]").forEach(b=>b.onclick=async function(){category=b.dataset.category;targetId=category==="personal"?(profiles[0]&&profiles[0].id):category==="spaces"?(spaces[0]&&spaces[0].id):null;await loadRows();paint();});
+ host.querySelectorAll("[data-target]").forEach(b=>b.onclick=async function(){targetId=b.dataset.target;await loadRows();paint();});
+ var list=host.querySelector(".hx-list");list.scrollTop=list.scrollHeight;
+ host.querySelector("form").onsubmit=async function(e){e.preventDefault();var field=e.currentTarget.querySelector("textarea"),value=field.value.trim();if(!value)return;var payload={category:category,sender_id:user.id,content:value};if(category==="personal"){if(!targetId)return;payload.recipient_id=targetId;}if(category==="spaces"){if(!targetId)return;payload.space_id=targetId;}var b=e.currentTarget.querySelector("button");b.disabled=true;var r=await db().from("hrmnx_messages").insert(payload).select("id,category,sender_id,recipient_id,space_id,content,created_at,is_edited").single();b.disabled=false;if(r.error){alert(r.error.message);return;}field.value="";rows.push(r.data);paint();};
+}
+window.HrmnxMessaging={render:render,refresh:async function(){await loadRows();paint();}};
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
