@@ -69,3 +69,9 @@ create table if not exists public.hrmnx_app_releases (
 alter table public.hrmnx_app_releases enable row level security;
 drop policy if exists "Published Hrmnx release notes are readable" on public.hrmnx_app_releases;
 create policy "Published Hrmnx release notes are readable" on public.hrmnx_app_releases for select to authenticated using(is_published=true);
+
+insert into public.hrmnx_app_releases(app_slug,version,title,summary,is_published)
+values
+ ('nemawashi','1.1.0','Unified Hrmnx Messages','Personal, Business and Space messages now share one communication foundation. Notifications and quick chat are being introduced across Hrmnx apps.',true),
+ ('indesign','1.1.0','Connected to Hrmnx Messages','InDesign now uses the shared Nemawashi messaging service, with Personal, Business and Space categories.',true)
+on conflict(app_slug,version) do nothing;
