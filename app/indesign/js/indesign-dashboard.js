@@ -116,8 +116,10 @@
     }
     function renderMessages() {
         title.textContent = "Messages";
-        content.innerHTML = '<p class="eyebrow">NEMAWASHI CONNECTION</p><h2 style="font-size:48px;letter-spacing:-3px">Messages.</h2><p class="muted">Your indesign messages will connect to Nemawashi and remain available there.</p><div class="empty-state" style="margin-top:32px"><span>' + window.HrmnxIcons.svg("arrow") + '</span><strong>Messaging integration is the next stage.</strong><p>This area is reserved for your Nemawashi conversations.</p></div>';
+        if (window.indesignMessages) { window.indesignMessages.render(content); return; }
+        content.innerHTML = '<div class="empty-state"><strong>Messages could not be loaded.</strong><p>Refresh the page and try again.</p></div>';
     }
+
     function renderAccount() {
         title.textContent = "Account";
         const theme = document.body.classList.contains("dark-theme") ? "dark" : "light";
