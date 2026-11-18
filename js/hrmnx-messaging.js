@@ -3,7 +3,7 @@
 "use strict";
 var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
 var db=function(){return window.supabaseClient;};
-var user=null,profiles=[],rows=[],spaces=[],category="personal",targetId=null,host=null,channel=null;
+var user=null,profiles=[],rows=[],spaces=[],shareRows=[],category="personal",targetId=null,host=null,channel=null;
 var appSlug=document.body.dataset.hrmnxApp||(location.pathname.indexOf("/app/indesign/")>=0?"indesign":"nemawashi");
 var appVersion=document.body.dataset.hrmnxVersion||"1.1.0";
 function css(){
@@ -30,7 +30,7 @@ function mini(m){
  var old=document.querySelector(".hx-mini");if(old)old.remove();var p=document.createElement("section");p.className="hx-mini";
  p.innerHTML='<header class="hx-mini-head"><strong>Quick chat</strong><button type="button">×</button></header><div class="hx-mini-list"><article class="hx-message">'+esc(m.content||"")+'</article></div><form class="hx-mini-compose"><input maxlength="4000" placeholder="Write a reply…" autocomplete="off"><button>Send</button></form>';
  p.querySelector(".hx-mini-head button").onclick=function(){p.remove();};
- p.querySelector("form").onsubmit=async function(e){e.preventDefault();var input=p.querySelector("input"),v=input.value.trim();if(!v)return;var payload={category:m.category,sender_id:user.id,content:v};if(m.category==="personal")payload.recipient_id=m.sender_id;if(m.category==="space")payload.space_id=m.space_id;var r=await db().from("hrmnx_messages").insert(payload);if(r.error){alert(r.error.message);return;}p.remove();};
+ p.querySelector("form").onsubmit=async function(e){e.preventDefault();var input=p.querySelector("input"),v=input.value.trim();if(!v)return;var payload={sender_id:user.id,content:v},r;if(m.category==="personal"){payload.recipient_id=m.sender_id;r=await db().from("nemawashi_direct_messages").insert(payload);}else if(m.category==="space"){r=await db().from("nemawashi_messages").insert({user_id:user.id,space_id:m.space_id,content:v});}else{payload.category="business";r=await db().from("hrmnx_messages").insert(payload);}if(r.error){alert(r.error.message);return;}p.remove();};
  document.body.appendChild(p);
 }
 function realtime(){if(channel)return;channel=db().channel("hrmnx-shared-"+user.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"hrmnx_messages"},function(p){toast(p.new);}).subscribe();}
@@ -43,23 +43,27 @@ async function render(target,initial){
  await loadRows();paint();
 }
 async function loadRows(){
- var q=db().from("hrmnx_messages").select("id,category,sender_id,recipient_id,space_id,content,created_at,is_edited").order("created_at",{ascending:true}).limit(700);
+ var q=db().from("hrmnx_messages").select("id,category,sender_id,recipient_id,space_id,content,share_id,created_at,is_edited").order("created_at",{ascending:true}).limit(700);
  if(category==="personal"){if(!targetId){rows=[];return;}q=q.eq("category","personal").or("and(sender_id.eq."+user.id+",recipient_id.eq."+targetId+"),and(sender_id.eq."+targetId+",recipient_id.eq."+user.id+")");}
  else if(category==="business")q=q.eq("category","business");
  else {q=q.eq("category","space");if(targetId)q=q.eq("space_id",targetId);else q=q.limit(0);}
- var r=await q;if(r.error){console.error("Hrmnx messages query",r.error);rows=[];}else rows=r.data||[];
+ var r=await q;if(r.error){console.error("Hrmnx messages query",r.error);rows=[];}else rows=r.data||[];var shareIds=Array.from(new Set(rows.map(function(m){return m.share_id;}).filter(Boolean)));shareRows=[];if(shareIds.length){var sr=await db().from("indesign_shared_segments").select("id,project_name,section_name,start_seconds,end_seconds").in("id",shareIds);if(!sr.error)shareRows=sr.data||[];}
 }
 function paint(){
  if(!host)return;var people=category==="personal"?profiles.map(p=>'<button class="hx-person '+(p.id===targetId?"active":"")+'" data-target="'+esc(p.id)+'">'+esc(p.display_name||p.username||"Employee")+'</button>').join(""):"";
  var spaceList=category==="spaces"?spaces.map(s=>'<button class="hx-space '+(s.id===targetId?"active":"")+'" data-target="'+esc(s.id)+'">'+esc(s.name)+'</button>').join(""):"";
  var selected=category==="personal"?profiles.find(p=>p.id===targetId):spaces.find(s=>s.id===targetId);
  var title=category==="business"?"Business Messages":category==="personal"?(selected&& (selected.display_name||selected.username)||"Personal Messages"):(selected&&selected.name||"Space Messages");
- var html=rows.map(m=>'<article class="hx-message '+(m.sender_id===user.id?"mine":"")+'">'+esc(m.content||"")+'<time>'+esc(profiles.find(p=>p.id===m.sender_id)?.display_name||"Hrmnx employee")+' · '+esc(new Date(m.created_at).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}))+'</time></article>').join("");
+ var html=rows.map(function(m){
+  var sh=shareRows.find(function(x){return x.id===m.share_id;});
+  var card=sh?'<div class="hx-share"><strong>♫ '+esc(sh.project_name)+'</strong><small>'+esc(sh.section_name)+'</small><a href="/app/indesign/segment.html?id='+encodeURIComponent(sh.id)+'" target="_blank" rel="noopener">Play shared section</a></div>':"";
+  return '<article class="hx-message '+(m.sender_id===user.id?"mine":"")+'">'+esc(m.content||"")+card+'<time>'+esc(profiles.find(p=>p.id===m.sender_id)?.display_name||"Hrmnx employee")+' · '+esc(new Date(m.created_at).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}))+'</time></article>';
+ }).join("");
  host.innerHTML='<section class="hx-msg"><aside class="hx-nav"><div class="hx-nav-label">MESSAGES</div>'+["personal","business","spaces"].map(t=>'<button class="hx-tab '+(category===t?"active":"")+'" data-category="'+t+'">'+(t==="personal"?"Personal":t==="business"?"Business":"Spaces")+'</button>').join("")+(category==="personal"?'<div class="hx-nav-label">EMPLOYEES</div>'+people:category==="spaces"?'<div class="hx-nav-label">SPACES</div>'+spaceList:"")+'</aside><section class="hx-main"><header class="hx-head"><strong>'+esc(title)+'</strong><small>'+(category==="personal"?"Private conversation":category==="business"?"Company-wide communication":"Space conversation")+'</small></header><div class="hx-list">'+(html||'<p class="hx-empty">No messages here yet.</p>')+'</div><form class="hx-compose"><textarea rows="2" maxlength="5000" placeholder="Write a message…"></textarea><button>Send</button></form></section></section>';
  host.querySelectorAll("[data-category]").forEach(b=>b.onclick=async function(){category=b.dataset.category;targetId=category==="personal"?(profiles[0]&&profiles[0].id):category==="spaces"?(spaces[0]&&spaces[0].id):null;await loadRows();paint();});
  host.querySelectorAll("[data-target]").forEach(b=>b.onclick=async function(){targetId=b.dataset.target;await loadRows();paint();});
  var list=host.querySelector(".hx-list");list.scrollTop=list.scrollHeight;
- host.querySelector("form").onsubmit=async function(e){e.preventDefault();var field=e.currentTarget.querySelector("textarea"),value=field.value.trim();if(!value)return;var payload={category:category,sender_id:user.id,content:value};if(category==="personal"){if(!targetId)return;payload.recipient_id=targetId;}if(category==="spaces"){if(!targetId)return;payload.space_id=targetId;}var b=e.currentTarget.querySelector("button");b.disabled=true;var r=await db().from("hrmnx_messages").insert(payload).select("id,category,sender_id,recipient_id,space_id,content,created_at,is_edited").single();b.disabled=false;if(r.error){alert(r.error.message);return;}field.value="";rows.push(r.data);paint();};
+ host.querySelector("form").onsubmit=async function(e){e.preventDefault();var field=e.currentTarget.querySelector("textarea"),value=field.value.trim();if(!value)return;var payload={sender_id:user.id,content:value},r;if(category==="personal"){if(!targetId)return;payload.recipient_id=targetId;r=await db().from("nemawashi_direct_messages").insert(payload);}else if(category==="spaces"){if(!targetId)return;r=await db().from("nemawashi_messages").insert({user_id:user.id,space_id:targetId,content:value});}else{payload.category="business";r=await db().from("hrmnx_messages").insert(payload);}var b=e.currentTarget.querySelector("button");b.disabled=true;if(r.error){b.disabled=false;alert(r.error.message);return;}field.value="";await loadRows();paint();};
 }
 window.HrmnxMessaging={render:render,refresh:async function(){await loadRows();paint();}};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
