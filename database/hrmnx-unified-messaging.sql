@@ -68,7 +68,7 @@ create table if not exists public.hrmnx_app_releases (
 );
 alter table public.hrmnx_app_releases enable row level security;
 drop policy if exists "Published Hrmnx release notes are readable" on public.hrmnx_app_releases;
-create policy "Published Hrmnx release notes are readable" on public.hrmnx_app_releases for select to authenticated using(is_published=true);
+create policy "Published Hrmnx release notes are readable" on public.hrmnx_app_releases for select to anon, authenticated using(is_published=true);
 
 insert into public.hrmnx_app_releases(app_slug,version,title,summary,is_published)
 values
@@ -91,3 +91,14 @@ create trigger hrmnx_mirror_legacy_direct_message after insert on public.nemawas
 for each row execute function public.hrmnx_mirror_legacy_direct_message();
 update public.hrmnx_messages h set share_id=d.share_id from public.nemawashi_direct_messages d
 where h.source_table='nemawashi_direct_messages' and h.source_id=d.id and h.share_id is null and d.share_id is not null;
+
+insert into public.hrmnx_app_releases(app_slug,version,title,summary,is_published)
+values
+ ('links','1.0.0','Hrmnx Links updates','Your release links workspace is connected to the Hrmnx app update system.',true),
+ ('shop','1.0.0','Hrmnx Shop updates','Your Hrmnx Shop is connected to the shared app update system.',true),
+ ('kiki','1.0.0','KiKi updates','KiKi is connected to the shared Hrmnx app update system.',true),
+ ('audition','1.0.0','Audition updates','Hrmnx Audition is connected to the shared app update system.',true),
+ ('yumeworld','1.0.0','Yumeworld updates','Yumeworld is connected to the shared Hrmnx app update system.',true),
+ ('seiun','1.0.0','SEIUN updates','SEIUN is connected to the shared Hrmnx app update system.',true),
+ ('serashio','1.0.0','Serashio updates','Serashio is connected to the shared Hrmnx app update system.',true)
+on conflict(app_slug,version) do nothing;
