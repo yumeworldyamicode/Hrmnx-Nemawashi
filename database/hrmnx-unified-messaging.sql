@@ -4,7 +4,7 @@ create table if not exists public.hrmnx_messages (
  category text not null check (category in ('personal','business','space')),
  sender_id uuid not null references auth.users(id) on delete cascade,
  recipient_id uuid references auth.users(id) on delete cascade,
- space_id uuid references public.nemawashi_spaces(id) on delete cascade,
+ space_id bigint references public.nemawashi_spaces(id) on delete cascade,
  content text not null default '',
  source_table text, source_id uuid,
  created_at timestamptz not null default now(),
