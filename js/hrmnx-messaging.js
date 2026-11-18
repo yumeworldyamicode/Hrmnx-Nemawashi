@@ -14,7 +14,7 @@ function css(){
 }
 function footer(){if(document.querySelector(".hx-footer"))return;var f=document.createElement("footer");f.className="hx-footer";f.textContent="© 2026 Hrmnx Entertainment";(document.querySelector("main")||document.body).appendChild(f);}
 async function updates(){
- try{var r=await db().from("hrmnx_app_releases").select("version,title,summary").eq("app_slug",appSlug).eq("is_published",true).order("released_at",{ascending:false}).limit(1).maybeSingle();if(r.error||!r.data||r.data.version===appVersion)return;
+ try{var r=await db().from("hrmnx_app_releases").select("version,title,summary").eq("app_slug",appSlug).eq("is_published",true).order("released_at",{ascending:false}).limit(1).maybeSingle();if(r.error||!r.data)return;
  var key="hrmnx-update-"+appSlug,seen="";try{seen=localStorage.getItem(key)||"";}catch(e){}if(seen===r.data.version)return;
  var o=document.createElement("div");o.className="hx-update-overlay";o.innerHTML='<section class="hx-update" role="dialog" aria-modal="true"><span class="hx-update-mark">HRMNX / '+esc(appSlug.toUpperCase())+'</span><h2>'+esc(r.data.title||"What's new")+'</h2><p>'+esc(r.data.summary||"This app has been updated.")+'</p><div class="hx-update-version">VERSION '+esc(r.data.version)+'</div><button type="button">Continue</button></section>';
  o.querySelector("button").onclick=function(){try{localStorage.setItem(key,r.data.version);}catch(e){}o.remove();};document.body.appendChild(o);requestAnimationFrame(function(){o.classList.add("visible");});
