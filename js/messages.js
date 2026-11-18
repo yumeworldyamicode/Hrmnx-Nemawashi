@@ -459,64 +459,22 @@ function setAppNavigationActive(
    PAGE ROUTER
 ============================================================ */
 
-function renderPage(
-    page
-) {
-
-    switch (page) {
-
-        case "home":
-
-            renderHome();
-
-            break;
-
-
-        case "personal":
-
-            renderBasicPage(
-                "Personal Messages",
-                "Private conversations with other Nemawashi users.",
-                window.HrmnxIcons.svg("message")
-            );
-
-            break;
-
-
-        case "subsidiary":
-
-            renderBasicPage(
-                "Subsidiary Messages",
-                "Communication between Hrmnx subsidiaries and their teams.",
-                window.HrmnxIcons.svg("message")
-            );
-
-            break;
-
-
-        case "business":
-
-            renderBasicPage(
-                "Business Messages",
-                "Professional communication across Hrmnx Entertainment.",
-                window.HrmnxIcons.svg("message")
-            );
-
-            break;
-
-
-        case "app-builder":
-
-            renderBasicPage(
-                "App Builder",
-                "Create and configure Apps for the Nemawashi ecosystem.",
-                "+"
-            );
-
-            break;
-
+function renderPage(page) {
+    if (page === "personal" || page === "business") {
+        resetNemawashiTheme();
+        setTopbar("NEMAWASHI", page === "personal" ? "Personal Messages" : "Business Messages");
+        if (window.HrmnxMessaging) {
+            window.HrmnxMessaging.render(messagesContent, page);
+        } else {
+            messagesContent.innerHTML = '<div class="messages-loading">The shared Hrmnx Messages service is unavailable. Please refresh.</div>';
+        }
+        return;
     }
-
+    switch (page) {
+        case "home": renderHome(); break;
+        case "subsidiary": renderBasicPage("Subsidiary Messages", "Communication between Hrmnx subsidiaries and their teams.", window.HrmnxIcons.svg("message")); break;
+        case "app-builder": renderBasicPage("App Builder", "Create and configure Apps for the Nemawashi ecosystem.", "+"); break;
+    }
 }
 
 /* ============================================================
