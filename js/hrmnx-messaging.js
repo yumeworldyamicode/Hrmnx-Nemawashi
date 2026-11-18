@@ -34,7 +34,7 @@ function mini(m){
  document.body.appendChild(p);
 }
 function realtime(){if(channel)return;channel=db().channel("hrmnx-shared-"+user.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"hrmnx_messages"},function(p){toast(p.new);}).subscribe();}
-async function init(){css();var c=db();if(!c)return;try{var a=await c.auth.getUser();user=a.data&&a.data.user;if(!user)return;updates();realtime();}catch(e){console.warn("Hrmnx shared runtime",e);}}
+async function init(){css();var c=db();if(!c)return;try{var a=await c.auth.getUser();user=a.data&&a.data.user;if(!user)return;realtime();}catch(e){console.warn("Hrmnx shared runtime",e);}}
 async function render(target,initial){
  host=target;category=initial||"personal";target.innerHTML='<p class="hx-empty">Loading Hrmnx Messages…</p>';var c=db();if(!user){var a=await c.auth.getUser();user=a.data&&a.data.user;}if(!user){target.innerHTML='<p class="hx-empty">Sign in through Nemawashi to access Messages.</p>';return;}
  var p=await c.from("profiles").select("id,display_name,username").eq("is_staff",true).order("display_name").limit(300);if(p.error){target.innerHTML='<p class="hx-empty">'+esc(p.error.message)+'</p>';return;}profiles=(p.data||[]).filter(x=>x.id!==user.id);
