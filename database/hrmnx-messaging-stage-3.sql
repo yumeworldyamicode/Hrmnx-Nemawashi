@@ -7,7 +7,7 @@ create or replace function public.sync_nemawashi_direct_message_to_hrmnx()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog
 as $$
 begin
   if tg_op = 'DELETE' then
@@ -41,7 +41,7 @@ create or replace function public.sync_nemawashi_space_message_to_hrmnx()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog
 as $$
 begin
   if tg_op = 'DELETE' then
@@ -81,6 +81,10 @@ drop trigger if exists trg_sync_space_messages_hrmnx on public.nemawashi_message
 create trigger trg_sync_space_messages_hrmnx
 after insert or update or delete on public.nemawashi_messages
 for each row execute function public.sync_nemawashi_space_message_to_hrmnx();
+
+-- Trigger functions are internal-only: revoke direct API execution.
+revoke all on function public.sync_nemawashi_direct_message_to_hrmnx() from public, anon, authenticated, service_role;
+revoke all on function public.sync_nemawashi_space_message_to_hrmnx() from public, anon, authenticated, service_role;
 
 -- Verify triggers were installed
 select
