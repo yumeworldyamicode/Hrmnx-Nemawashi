@@ -6,7 +6,7 @@
 <link rel="icon" href="images/nemawashi-favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/yuubin.css?v=20261119-3">
+<link rel="stylesheet" href="css/yuubin.css?v=20261119-4">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/supabase.js"></script>
 </head>
 <body data-hrmnx-app="nemawashi">
@@ -47,5 +47,5 @@
 </div>
 <div class="modal-backdrop hidden" id="eventModal"><form class="event-modal" id="eventForm"><button type="button" class="modal-close" id="closeEvent">×</button><div class="eyebrow">PLANNER EVENT</div><h2>Create event</h2><label>Title<input required id="eventTitle" maxlength="120" placeholder="Meeting, task or reminder"></label><div class="two-fields"><label>Date<input type="date" required id="eventDate"></label><label>Start time<input type="time" id="eventTime"></label></div><label>Type<select id="eventType"><option value="event">Event</option><option value="meeting">Meeting</option><option value="task">Task / deadline</option></select></label><label>Description<textarea id="eventDescription" rows="3" placeholder="Add details…"></textarea></label><label class="invite-label">Invite employees <small>They will see this event in their Planner.</small><div id="inviteEmployees" class="invite-list"><span>Loading employees…</span></div></label><p class="modal-note">Invitations are sent to selected employees. Release dates are added automatically from Hrmnx schedules.</p><div class="modal-actions"><button type="button" class="cancel" id="cancelEvent">Cancel</button><button class="create-event" type="submit">Save event</button></div></form></div>
 <div class="modal-backdrop hidden" id="composeModal"><form class="compose-modal" id="composeForm"><button type="button" class="modal-close" id="closeCompose">×</button><h2>New message</h2><label>To<input placeholder="Type employee username" id="draftTo" list="staffRecipients" autocomplete="off"><datalist id="staffRecipients"></datalist><small class="recipient-hint">Choose a Hrmnx employee by username.</small></label><label>Subject<input placeholder="Subject" id="draftSubject"></label><textarea placeholder="Write your message…" id="draftBody"></textarea><div class="compose-footer"><button type="button" class="cancel" id="saveDraftBtn">Save draft</button><span id="composeStatus">Internal Hrmnx mail</span><button type="submit">Send</button></div></form></div>
-<script src="js/yuubin.js?v=20261119-8"></script>
+<script src="js/yuubin.js?v=20261119-9"></script>
 </body></html>
