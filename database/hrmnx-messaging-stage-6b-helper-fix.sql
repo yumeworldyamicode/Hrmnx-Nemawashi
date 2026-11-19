@@ -1,7 +1,16 @@
 -- Hrmnx messaging: Stage 6B - make Space membership helper non-enumerable
--- Run after Stage 6. This replaces the helper with a current-user-only function.
+-- Run after Stage 6. Corrected dependency order: drop dependent policies first.
 -- Authenticated callers can only test their own membership in a Space.
 
+-- First drop policies that currently depend on the old two-argument helper.
+drop policy if exists "Employees can read permitted Hrmnx messages" on public.hrmnx_messages;
+drop policy if exists "Employees can send Hrmnx messages" on public.hrmnx_messages;
+drop policy if exists "Employees can mark Hrmnx messages read" on public.hrmnx_message_reads;
+
+-- Now safely remove the old helper.
+drop function if exists public.hrmnx_user_is_space_member(bigint, uuid);
+
+-- Create the safe helper: the user ID is always taken from the current auth session.
 create or replace function public.hrmnx_user_is_space_member(
   target_space_id bigint
 )
@@ -23,11 +32,7 @@ revoke all on function public.hrmnx_user_is_space_member(bigint) from public;
 revoke all on function public.hrmnx_user_is_space_member(bigint) from anon;
 grant execute on function public.hrmnx_user_is_space_member(bigint) to authenticated;
 
--- Remove the older helper that accepted an arbitrary user ID.
-drop function if exists public.hrmnx_user_is_space_member(bigint, uuid);
-
--- Update policies to use the new helper signature.
-drop policy if exists "Employees can read permitted Hrmnx messages" on public.hrmnx_messages;
+-- Recreate policies using the new one-argument helper.
 create policy "Employees can read permitted Hrmnx messages"
 on public.hrmnx_messages
 for select to authenticated
@@ -46,7 +51,6 @@ using (
   )
 );
 
-drop policy if exists "Employees can send Hrmnx messages" on public.hrmnx_messages;
 create policy "Employees can send Hrmnx messages"
 on public.hrmnx_messages
 for insert to authenticated
@@ -76,7 +80,6 @@ with check (
   )
 );
 
-drop policy if exists "Employees can mark Hrmnx messages read" on public.hrmnx_message_reads;
 create policy "Employees can mark Hrmnx messages read"
 on public.hrmnx_message_reads
 for insert to authenticated
@@ -101,7 +104,7 @@ with check (
   )
 );
 
--- Verify new signature exists and old signature is gone.
+-- Verify the new helper exists and the old helper is gone.
 select
   to_regprocedure('public.hrmnx_user_is_space_member(bigint)') as safe_helper,
   to_regprocedure('public.hrmnx_user_is_space_member(bigint,uuid)') as old_helper;
