@@ -6,7 +6,7 @@ create table if not exists public.hrmnx_messages (
  recipient_id uuid references auth.users(id) on delete cascade,
  space_id bigint references public.nemawashi_spaces(id) on delete cascade,
  content text not null default '',
- source_table text, source_id uuid,
+ source_table text, source_id text,
  created_at timestamptz not null default now(),
  is_edited boolean not null default false,
  constraint hrmnx_message_category_target check (
@@ -15,6 +15,8 @@ create table if not exists public.hrmnx_messages (
   or (category='space' and recipient_id is null and space_id is not null)
  )
 );
+-- Legacy source IDs may be UUIDs or bigint IDs depending on the source table.
+alter table public.hrmnx_messages alter column source_id type text using source_id::text;
 create unique index if not exists hrmnx_messages_legacy_source_unique on public.hrmnx_messages(source_table,source_id) where source_table is not null and source_id is not null;
 create index if not exists hrmnx_messages_personal_thread on public.hrmnx_messages(sender_id,recipient_id,created_at desc) where category='personal';
 create index if not exists hrmnx_messages_category_created on public.hrmnx_messages(category,created_at desc);
