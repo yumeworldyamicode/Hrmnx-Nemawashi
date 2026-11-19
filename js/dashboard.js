@@ -518,7 +518,7 @@ function openCreatePersonDialog(){
   e.preventDefault();const form=e.currentTarget,fd=new FormData(form),status=overlay.querySelector("#create-person-status"),submit=overlay.querySelector("#create-person-submit");
   const payload=Object.fromEntries(fd.entries());submit.disabled=true;submit.textContent="Creating…";status.textContent="Creating the Auth account and employee record…";
   try{const {data,error}=await supabaseClient.functions.invoke("nemawashi-create-person",{body:payload});if(error)throw error;if(data?.error)throw new Error(data.error);
-   status.innerHTML='Account created. Initial password: <strong>'+escapeHtml(data.initial_password||("shinkiaka"+payload.employee_number))+'</strong><br>Please provide this securely and ask the employee to change it immediately.';
+   status.innerHTML='Account created. Initial password: <strong>'+escapeHtml(data.initial_password||("shinkiaka"+payload.employee_number))+'</strong><br>Please provide this securely and ask the employee to change it immediately.'+(data.email_sent?'<br><strong>Welcome email sent successfully.</strong>':'<br><strong>Welcome email was not sent.</strong> '+escapeHtml(data.email_error||"Email sending is not configured yet."));
    form.reset();submit.textContent="Created";await loadPeople();
   }catch(err){let message=err.message||"Account creation failed. Please try again.";try{if(err.context&&typeof err.context.json==="function"){const detail=await err.context.json();if(detail?.error)message=detail.error;else if(detail?.message)message=detail.message;}}catch{}status.textContent=message;submit.disabled=false;submit.textContent="Create account";}
  });
