@@ -689,7 +689,7 @@
             owner_id: employee.user.id, name: name.trim(), type, description: "", content: initialContent
         }).select().single();
         if (error) { console.error(error); notify("Could not create project. Check the indesign database setup."); return; }
-        projects.unshift(data); notify("Project created."); renderProject(data);
+        projects.unshift(data); notify("Project created."); window.location.href="project.html?id="+encodeURIComponent(data.id);
     }
     async function renameProject(id) {
         const project = activeProject?.id === id ? activeProject : projects.find(p => p.id === id);
