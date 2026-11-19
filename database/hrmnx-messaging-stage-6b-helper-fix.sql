@@ -1,19 +1,20 @@
--- Hrmnx messaging: Stage 6B - make Space membership helper non-enumerable
--- Run after Stage 6. Corrected dependency order: drop dependent policies first.
--- Authenticated callers can only test their own membership in a Space.
+-- Hrmnx messaging: Stage 6B - harden Space membership helper
+-- Run after Stage 6. This moves the helper to the non-exposed private schema.
+-- The helper only checks the membership of auth.uid(), never an arbitrary user.
 
--- First drop policies that currently depend on the old two-argument helper.
+-- Remove policies that depend on the previous helper.
 drop policy if exists "Employees can read permitted Hrmnx messages" on public.hrmnx_messages;
 drop policy if exists "Employees can send Hrmnx messages" on public.hrmnx_messages;
 drop policy if exists "Employees can mark Hrmnx messages read" on public.hrmnx_message_reads;
 
--- Now safely remove the old helper.
+-- Remove the old public helper.
 drop function if exists public.hrmnx_user_is_space_member(bigint, uuid);
+drop function if exists public.hrmnx_user_is_space_member(bigint);
 
--- Create the safe helper: the user ID is always taken from the current auth session.
-create or replace function public.hrmnx_user_is_space_member(
-  target_space_id bigint
-)
+create schema if not exists private;
+grant usage on schema private to authenticated;
+
+create or replace function private.hrmnx_user_is_space_member(target_space_id bigint)
 returns boolean
 language sql
 stable
@@ -28,11 +29,10 @@ as $$
   );
 $$;
 
-revoke all on function public.hrmnx_user_is_space_member(bigint) from public;
-revoke all on function public.hrmnx_user_is_space_member(bigint) from anon;
-grant execute on function public.hrmnx_user_is_space_member(bigint) to authenticated;
+revoke all on function private.hrmnx_user_is_space_member(bigint) from public, anon;
+grant execute on function private.hrmnx_user_is_space_member(bigint) to authenticated;
 
--- Recreate policies using the new one-argument helper.
+-- Recreate policies against the private, self-only helper.
 create policy "Employees can read permitted Hrmnx messages"
 on public.hrmnx_messages
 for select to authenticated
@@ -44,10 +44,7 @@ using (
   and (
     (category = 'personal' and (sender_id = auth.uid() or recipient_id = auth.uid()))
     or category = 'business'
-    or (
-      category = 'space'
-      and public.hrmnx_user_is_space_member(space_id)
-    )
+    or (category = 'space' and private.hrmnx_user_is_space_member(space_id))
   )
 );
 
@@ -67,15 +64,16 @@ with check (
       and recipient_id <> auth.uid()
       and space_id is null
       and exists (
-        select 1 from public.profiles p
-        where p.id = recipient_id and p.is_staff = true
+        select 1 from public.profiles rp
+        where rp.id = recipient_id and rp.is_staff = true
       )
     )
     or (category = 'business' and recipient_id is null and space_id is null)
     or (
       category = 'space'
       and recipient_id is null
-      and public.hrmnx_user_is_space_member(space_id)
+      and space_id is not null
+      and private.hrmnx_user_is_space_member(space_id)
     )
   )
 );
@@ -86,25 +84,22 @@ for insert to authenticated
 with check (
   user_id = auth.uid()
   and exists (
-    select 1
-    from public.hrmnx_messages m
-    where m.id = hrmnx_message_reads.message_id
-      and exists (
-        select 1 from public.profiles p
-        where p.id = auth.uid() and p.is_staff = true
-      )
+    select 1 from public.profiles p
+    where p.id = auth.uid() and p.is_staff = true
+  )
+  and exists (
+    select 1 from public.hrmnx_messages m
+    where m.id = message_id
       and (
         (m.category = 'personal' and (m.sender_id = auth.uid() or m.recipient_id = auth.uid()))
         or m.category = 'business'
-        or (
-          m.category = 'space'
-          and public.hrmnx_user_is_space_member(m.space_id)
-        )
+        or (m.category = 'space' and private.hrmnx_user_is_space_member(m.space_id))
       )
   )
 );
 
--- Verify the new helper exists and the old helper is gone.
+-- Verify helper and legacy signatures.
 select
-  to_regprocedure('public.hrmnx_user_is_space_member(bigint)') as safe_helper,
-  to_regprocedure('public.hrmnx_user_is_space_member(bigint,uuid)') as old_helper;
+  to_regprocedure('private.hrmnx_user_is_space_member(bigint)') as safe_helper,
+  to_regprocedure('public.hrmnx_user_is_space_member(bigint,uuid)') as old_helper,
+  to_regprocedure('public.hrmnx_user_is_space_member(bigint)') as prior_public_helper;
