@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>根回し - Yuubin</title>
+<link rel="icon" href="images/nemawashi-favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/yuubin.css?v=20261119-1">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/supabase.js"></script>
+</head>
+<body data-hrmnx-app="nemawashi">
+<div class="yuubin-shell">
+<aside class="sidebar">
+<a class="brand" href="messages.html"><img src="images/nemawashi-logo.png" alt="Nemawashi"></a>
+<div class="brand-sub">YUUBIN <span>郵便</span></div>
+<button class="compose" id="composeBtn">＋　Compose</button>
+<nav class="mail-nav" id="mailNav">
+<button class="nav active" data-view="inbox"><span>▣</span> Inbox <b>0</b></button>
+<button class="nav" data-view="starred"><span>☆</span> Starred</button>
+<button class="nav" data-view="snoozed"><span>◷</span> Snoozed</button>
+<button class="nav" data-view="sent"><span>↗</span> Sent</button>
+<button class="nav" data-view="drafts"><span>▤</span> Drafts</button>
+<button class="nav" data-view="all"><span>▱</span> All mail</button>
+<button class="nav" data-view="spam"><span>!</span> Spam</button>
+<button class="nav" data-view="trash"><span>⌫</span> Trash</button>
+<div class="nav-label">PLANNER</div>
+<button class="nav" data-view="planner"><span>▦</span> Planner</button>
+</nav>
+<div class="sidebar-bottom"><a href="messages.html">← Back to Nemawashi</a><span class="user-chip">N</span></div>
+</aside>
+<main class="main">
+<header class="topbar"><div class="search"><span>⌕</span><input id="mailSearch" placeholder="Search mail and planner" aria-label="Search mail and planner"><button id="clearSearch" aria-label="Clear search">×</button></div><div class="top-actions"><button title="Help">?</button><button title="Settings">⚙</button><span class="avatar">N</span></div></header>
+<div class="content" id="content">
+<section class="mail-view" id="mailView">
+<div class="mail-toolbar"><div><button title="Refresh">↻</button><button title="Select">□</button><button title="More">⋯</button></div><span class="count">0–0 of 0</span></div>
+<div class="mail-empty"><div class="empty-icon">✉</div><h2 id="viewTitle">Inbox</h2><p>Your mail will appear here.</p><small>Yuubin is being connected to the Hrmnx mail service.</small></div>
+</section>
+<section class="planner-view hidden" id="plannerView">
+<div class="planner-head"><div><div class="eyebrow">YUUBIN PLANNER</div><h1>Planner</h1><p>Keep your work, meetings and release dates together.</p></div><button class="create-event" id="createEvent">＋ Add event</button></div>
+<div class="planner-controls"><div class="view-switch"><button class="selected" data-planner="week">Week</button><button data-planner="month">Month</button><button data-planner="agenda">Agenda</button></div><div class="date-controls"><button id="prevPeriod">‹</button><strong id="periodLabel"></strong><button id="nextPeriod">›</button><button id="todayBtn">Today</button></div></div>
+<div class="planner-grid" id="plannerGrid"></div>
+<div class="planner-legend"><span><i class="dot manual"></i>Personal / invited events</span><span><i class="dot release"></i>Scheduled releases</span><span><i class="dot task"></i>Tasks & deadlines</span></div>
+</section>
+</div>
+</main>
+</div>
+<div class="modal-backdrop hidden" id="eventModal"><form class="event-modal" id="eventForm"><button type="button" class="modal-close" id="closeEvent">×</button><div class="eyebrow">PLANNER EVENT</div><h2>Create event</h2><label>Title<input required id="eventTitle" maxlength="120" placeholder="Meeting, task or reminder"></label><div class="two-fields"><label>Date<input type="date" required id="eventDate"></label><label>Start time<input type="time" id="eventTime"></label></div><label>Type<select id="eventType"><option value="manual">Event</option><option value="task">Task / deadline</option></select></label><label>Description<textarea id="eventDescription" rows="3" placeholder="Add details…"></textarea></label><p class="modal-note">Invitations and source-linked release events will be connected in the next build stage.</p><div class="modal-actions"><button type="button" class="cancel" id="cancelEvent">Cancel</button><button class="create-event" type="submit">Save event</button></div></form></div>
+<div class="modal-backdrop hidden" id="composeModal"><form class="compose-modal" id="composeForm"><button type="button" class="modal-close" id="closeCompose">×</button><h2>New message</h2><label>To<input placeholder="Recipient" id="draftTo"></label><label>Subject<input placeholder="Subject" id="draftSubject"></label><textarea placeholder="Write your message…" id="draftBody"></textarea><div class="compose-footer"><span>Draft preview only — mail delivery will be connected later.</span><button type="submit">Save draft</button></div></form></div>
+<script src="js/yuubin.js?v=20261119-1"></script>
+</body></html>
