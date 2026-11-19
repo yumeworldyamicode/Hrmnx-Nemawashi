@@ -520,7 +520,7 @@ function openCreatePersonDialog(){
   try{const {data,error}=await supabaseClient.functions.invoke("nemawashi-create-person",{body:payload});if(error)throw error;if(data?.error)throw new Error(data.error);
    status.innerHTML='Account created. Initial password: <strong>'+escapeHtml(data.initial_password||("shinkiaka"+payload.employee_number))+'</strong><br>Please provide this securely and ask the employee to change it immediately.';
    form.reset();submit.textContent="Created";await loadPeople();
-  }catch(err){status.textContent=err.message||"Account creation failed. Please try again.";submit.disabled=false;submit.textContent="Create account";}
+  }catch(err){let message=err.message||"Account creation failed. Please try again.";try{if(err.context&&typeof err.context.json==="function"){const detail=await err.context.json();if(detail?.error)message=detail.error;else if(detail?.message)message=detail.message;}}catch{}status.textContent=message;submit.disabled=false;submit.textContent="Create account";}
  });
 }
 
