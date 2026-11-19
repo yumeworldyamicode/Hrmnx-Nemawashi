@@ -756,14 +756,14 @@
             return;
         }
         const open=event.target.closest("[data-open-project]");
-        if(open){const project=projects.find(p=>p.id===open.dataset.openProject);if(project)renderProject(project);return;}
+        if(open){window.location.href="project.html?id="+encodeURIComponent(open.dataset.openProject);return;}
         const rename=event.target.closest("[data-rename-project]");
         if(rename){renameProject(rename.dataset.renameProject);return;}
         const del=event.target.closest("[data-delete-project]");
         if(del){deleteProject(del.dataset.deleteProject);return;}
         const exp=event.target.closest("[data-export-project]");
         if(exp){exportProject(exp.dataset.exportProject);return;}
-        if(event.target.closest("#back-to-projects")){showView("projects");return;}
+        if(event.target.closest("#back-to-projects")){if(document.body.classList.contains("indesign-project-page"))window.location.href="dashboard.html?view=projects";else showView("projects");return;}
         const addBoard = event.target.closest("[data-add-board]");
         if(addBoard){await addBoardElement(addBoard.dataset.addBoard);return;}
         const layer = event.target.closest("[data-select-board-element]");
@@ -859,7 +859,7 @@
         try {
             employee=await window.indesignAuth.getEmployeeSession();
             if(!employee)return;
-            setIdentity(); await loadProjects(); renderHome();
+            setIdentity(); await loadProjects(); const projectId=new URLSearchParams(window.location.search).get("id"); if(document.body.classList.contains("indesign-project-page")&&projectId){const project=projects.find(p=>p.id===projectId);if(project)renderProject(project);else{title.textContent="Project";content.innerHTML="<p class=muted>Project not found or you do not have access.</p><a href=dashboard.html?view=projects>Back to projects</a>";}}else{const view=new URLSearchParams(window.location.search).get("view");if(view==="projects")renderProjects();else renderHome();}
         } catch(error){console.error("Could not load indesign dashboard:",error);notify("Could not load your account or projects.");}
     });
 })();
