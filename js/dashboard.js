@@ -491,7 +491,39 @@ async function renderPeople() {
     }
 
     await loadPeople();
+    const addPersonButton=document.getElementById("add-person-button");
+    if(addPersonButton)addPersonButton.addEventListener("click",openCreatePersonDialog);
 }
+function openCreatePersonDialog(){
+ const companies=Array.isArray(window.nemawashiCompanies)?window.nemawashiCompanies:[];
+ const overlay=document.createElement("div");overlay.className="create-person-overlay";overlay.id="create-person-overlay";
+ overlay.innerHTML=`<section class="create-person-dialog" role="dialog" aria-modal="true" aria-labelledby="create-person-title">
+ <button class="create-person-close" type="button" aria-label="Close" id="create-person-close">×</button>
+ <span class="eyebrow">HRMNX ADMINISTRATION</span><h2 id="create-person-title">Create new person</h2><p>Create an employee account and profile.</p>
+ <form id="create-person-form" class="create-person-form">
+ <label>Employee number<input name="employee_number" required placeholder="e.g. 0012" autocomplete="off"></label>
+ <label>Username<input name="username" required minlength="2" maxlength="30" placeholder="username" autocomplete="off"></label>
+ <label>Display name<input name="display_name" required placeholder="Full name"></label>
+ <label>Email address<input name="email" type="email" required placeholder="name@hrmnx.site"></label>
+ <label>Job title<input name="job_title" placeholder="Job title"></label>
+ <label>Company<select name="company_id"><option value="">No company assigned</option></select></label>
+ <div class="create-person-note">Initial password follows the employee number convention. New employees should change it immediately.</div>
+ <p class="create-person-status" id="create-person-status" role="status"></p>
+ <button class="primary-button" type="submit" id="create-person-submit">Create account</button></form></section>`;
+ document.body.appendChild(overlay);
+ const select=overlay.querySelector("[name=company_id]");
+ supabaseClient.from("companies").select("id,name").eq("active",true).order("name").then(({data,error})=>{if(!error&&data)select.innerHTML='<option value="">No company assigned</option>'+data.map(c=>'<option value="'+escapeAttribute(c.id)+'">'+escapeHtml(c.name)+'</option>').join("")});
+ const close=()=>overlay.remove();overlay.querySelector("#create-person-close").addEventListener("click",close);overlay.addEventListener("click",e=>{if(e.target===overlay)close()});
+ overlay.querySelector("#create-person-form").addEventListener("submit",async e=>{
+  e.preventDefault();const form=e.currentTarget,fd=new FormData(form),status=overlay.querySelector("#create-person-status"),submit=overlay.querySelector("#create-person-submit");
+  const payload=Object.fromEntries(fd.entries());submit.disabled=true;submit.textContent="Creating…";status.textContent="Creating the Auth account and employee record…";
+  try{const {data,error}=await supabaseClient.functions.invoke("nemawashi-create-person",{body:payload});if(error)throw error;if(data?.error)throw new Error(data.error);
+   status.innerHTML='Account created. Initial password: <strong>'+escapeHtml(data.initial_password||("shinkiaka"+payload.employee_number))+'</strong><br>Please provide this securely and ask the employee to change it immediately.';
+   form.reset();submit.textContent="Created";await loadPeople();
+  }catch(err){status.textContent=err.message||"Account creation failed. Please try again.";submit.disabled=false;submit.textContent="Create account";}
+ });
+}
+
 
 
 // ------------------------------------------------------------
