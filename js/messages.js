@@ -874,6 +874,12 @@ async function renderApp(
     }
 
 
+    if (appSlug === "yuubin") {
+        window.location.href = app.website_url || "yuubin.html";
+        return;
+    }
+
+
     currentApp =
         app;
 
