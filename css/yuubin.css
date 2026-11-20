@@ -12,3 +12,6 @@
 .thread-message{border:1px solid var(--border,#e7e8ed);border-radius:12px;padding:14px;margin:12px 0;background:var(--surface,#fff)}
 .thread-message .reader-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
 .thread-message .reader-body{padding:0;border:0;background:transparent;line-height:1.75}
+
+/* Keep the Yuubin Planner entry available in the mailbox navigation. */
+.mail-nav [data-view="planner"]{display:flex!important;visibility:visible!important;opacity:1!important;}
