@@ -71,7 +71,7 @@ on conflict (slug) do nothing;
 create or replace function public.in_music_generate_home_artist_songs()
 returns trigger language plpgsql security definer set search_path=public as $$
 begin
- if new.visibility='public' and (new.scheduled_at is null or new.scheduled_at<=now()) then
+ if new.visibility='public' then
   insert into public.in_music_home_songs(home_artist_id,title,dem_slug)
   select c.home_artist_id,new.title,new.slug
   from public.in_music_home_artist_credits c
@@ -90,3 +90,15 @@ join public.indesign_dems d on d.slug=c.dem_slug
 join public.in_music_home_artists a on a.id=c.home_artist_id and a.is_active
 where c.credit_role in ('artist','vocalist') and d.visibility='public' and (d.scheduled_at is null or d.scheduled_at<=now())
 on conflict (home_artist_id,dem_slug) do nothing;
+
+-- Attach the existing SEIUN account to the verified songwriter directory, when it exists.
+do $$ declare seiun_id uuid; begin
+ select id into seiun_id from auth.users where lower(email)='seiun@yumeworldyami.net' limit 1;
+ if seiun_id is not null then
+  insert into public.in_music_verified_artists(user_id,artist_name,verified,verified_at)
+  values(seiun_id,'SEIUN',true,now()) on conflict(user_id) do update set artist_name='SEIUN',verified=true,verified_at=coalesce(public.in_music_verified_artists.verified_at,now());
+  insert into public.in_music_public_profiles(user_id,display_name,username,bio)
+  values(seiun_id,'SEIUN','seiun','Hrmnx Entertainment home artist.')
+  on conflict(user_id) do update set display_name='SEIUN',bio='Hrmnx Entertainment home artist.',updated_at=now();
+ end if;
+end $$;
