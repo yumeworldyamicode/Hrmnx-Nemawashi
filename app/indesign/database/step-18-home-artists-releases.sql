@@ -50,9 +50,9 @@ create policy "Public can view home artists" on public.in_music_home_artists for
 drop policy if exists "Public can view home releases" on public.in_music_home_releases;
 create policy "Public can view home releases" on public.in_music_home_releases for select to anon,authenticated using (true);
 drop policy if exists "Public can view home songs" on public.in_music_home_songs;
-create policy "Public can view home songs" on public.in_music_home_songs for select to anon,authenticated using (true);
+create policy "Public can view home songs" on public.in_music_home_songs for select to anon,authenticated using (dem_slug is null or exists(select 1 from public.indesign_dems d where d.slug=in_music_home_songs.dem_slug and d.visibility='public' and (d.scheduled_at is null or d.scheduled_at<=now())));
 drop policy if exists "Public can view home artist credits" on public.in_music_home_artist_credits;
-create policy "Public can view home artist credits" on public.in_music_home_artist_credits for select to anon,authenticated using (true);
+create policy "Public can view home artist credits" on public.in_music_home_artist_credits for select to anon,authenticated using (exists(select 1 from public.indesign_dems d where d.slug=in_music_home_artist_credits.dem_slug and d.visibility='public' and (d.scheduled_at is null or d.scheduled_at<=now())));
 drop policy if exists "Cinnasugar can manage home releases" on public.in_music_home_releases;
 create policy "Cinnasugar can manage home releases" on public.in_music_home_releases for all to authenticated using (lower(auth.jwt()->>'email')='mollyatkashi@gmail.com') with check (lower(auth.jwt()->>'email')='mollyatkashi@gmail.com');
 drop policy if exists "Cinnasugar can manage home songs" on public.in_music_home_songs;
@@ -100,5 +100,14 @@ do $$ declare seiun_id uuid; begin
   insert into public.in_music_public_profiles(user_id,display_name,username,bio)
   values(seiun_id,'SEIUN','seiun','Hrmnx Entertainment home artist.')
   on conflict(user_id) do update set display_name='SEIUN',bio='Hrmnx Entertainment home artist.',updated_at=now();
+ end if;
+end $$;
+
+-- Link SEIUN's existing login to the verified songwriter identity if it exists.
+do $$ declare seiun_id uuid; begin
+ select id into seiun_id from auth.users where lower(email)='seiun@yumeworldyami.net' limit 1;
+ if seiun_id is not null then
+  insert into public.in_music_verified_artists(user_id,artist_name,verified,verified_at) values(seiun_id,'SEIUN',true,now()) on conflict(user_id) do update set artist_name='SEIUN',verified=true,verified_at=coalesce(public.in_music_verified_artists.verified_at,now());
+  insert into public.in_music_public_profiles(user_id,display_name,username,bio) values(seiun_id,'SEIUN','seiun','Hrmnx Entertainment home artist.') on conflict(user_id) do update set display_name='SEIUN',bio='Hrmnx Entertainment home artist.',updated_at=now();
  end if;
 end $$;
