@@ -54,7 +54,7 @@ create policy "Public can view home songs" on public.in_music_home_songs for sel
 drop policy if exists "Public can view home artist credits" on public.in_music_home_artist_credits;
 create policy "Public can view home artist credits" on public.in_music_home_artist_credits for select to anon,authenticated using (exists(select 1 from public.indesign_dems d where d.slug=in_music_home_artist_credits.dem_slug and d.visibility='public' and (d.scheduled_at is null or d.scheduled_at<=now())));
 drop policy if exists "Cinnasugar can manage home releases" on public.in_music_home_releases;
-create policy "Cinnasugar can manage home releases" on public.in_music_home_releases for all to authenticated using (lower(auth.jwt()->>'email')='mollyatkashi@gmail.com') with check (lower(auth.jwt()->>'email')='mollyatkashi@gmail.com');
+create policy "Cinnasugar can manage home releases" on public.in_music_home_releases for all to authenticated using (lower(auth.jwt()->>'email')='mollyatkashi@gmail.com') with check (lower(auth.jwt()->>'email')='mollyatkashi@gmail.com' and created_by=auth.uid());
 drop policy if exists "Cinnasugar can manage home songs" on public.in_music_home_songs;
 create policy "Cinnasugar can manage home songs" on public.in_music_home_songs for all to authenticated using (lower(auth.jwt()->>'email')='mollyatkashi@gmail.com') with check (lower(auth.jwt()->>'email')='mollyatkashi@gmail.com');
 drop policy if exists "Cinnasugar can manage home artists" on public.in_music_home_artists;
