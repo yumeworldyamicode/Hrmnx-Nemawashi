@@ -494,6 +494,33 @@ async function renderPeople() {
     const addPersonButton=document.getElementById("add-person-button");
     if(addPersonButton)addPersonButton.addEventListener("click",openCreatePersonDialog);
 }
+function showAccountConflictResolver(overlay,payload,detail,form,status,submit){
+ const candidates=Array.isArray(detail?.candidates)?detail.candidates:[];
+ const box=document.createElement("div");box.className="account-conflict-overlay";
+ box.innerHTML=`<section class="account-conflict-dialog" role="dialog" aria-modal="true">
+  <button type="button" class="account-conflict-close" aria-label="Close">×</button>
+  <span class="eyebrow">ACCOUNT CONFLICT</span><h2>We found a matching account</h2>
+  <p>We checked the username and email against existing accounts. Choose how you want to continue.</p>
+  <div class="account-conflict-candidates">${candidates.map((c,i)=>`<article class="account-conflict-candidate"><strong>${escapeHtml(c.display_name||c.username||"Existing account")}</strong><span>${escapeHtml(c.username||"Username not set")} · ${escapeHtml(c.email||"Email unavailable")}</span><small>${c.already_employee?"Already on the employee list"+(c.employee_number?" · #"+escapeHtml(c.employee_number):""):"Not yet an employee"}</small><button type="button" class="account-conflict-attach" data-user-id="${escapeAttribute(c.id)}" ${c.already_employee?"disabled":""}>${c.already_employee?"Already an employee":"Add this account to employees"}</button></article>`).join("")}</div>
+  <div class="account-conflict-option"><strong>Make an alternative account</strong><p>Close this dialog and change the username or email address in the form, then try again.</p><button type="button" class="account-conflict-edit">Edit account details</button></div>
+  <div class="account-conflict-option unavailable"><strong>Create a new employee with the same username</strong><p>Not available yet. The login system and database must first be updated to safely support duplicate usernames.</p></div>
+ </section>`;
+ overlay.appendChild(box);
+ const close=()=>box.remove();
+ box.querySelector(".account-conflict-close").addEventListener("click",close);
+ box.addEventListener("click",e=>{if(e.target===box)close()});
+ box.querySelector(".account-conflict-edit").addEventListener("click",()=>{close();status.textContent="Edit the username or email to make a separate account, then submit again.";form.querySelector("[name=email_local]")?.focus()});
+ box.querySelectorAll(".account-conflict-attach").forEach(btn=>btn.addEventListener("click",async()=>{
+  const id=btn.dataset.userId;if(!id)return;
+  btn.disabled=true;btn.textContent="Attaching account…";
+  try{
+   const {data,error}=await supabaseClient.functions.invoke("nemawashi-create-person",{body:{...payload,resolution:"attach_existing",existing_user_id:id}});
+   if(error)throw error;if(data?.error)throw new Error(data.error);
+   box.remove();status.textContent="Existing account added to the employee list. No password or welcome email was changed.";submit.textContent="Added";await loadPeople();
+  }catch(err){btn.disabled=false;btn.textContent="Add this account to employees";status.textContent=err?.message||"Could not attach account."}
+ }));
+}
+
 function openCreatePersonDialog(){
  const companies=Array.isArray(window.nemawashiCompanies)?window.nemawashiCompanies:[];
  const overlay=document.createElement("div");overlay.className="create-person-overlay";overlay.id="create-person-overlay";
@@ -529,7 +556,7 @@ function openCreatePersonDialog(){
   try{const {data,error}=await supabaseClient.functions.invoke("nemawashi-create-person",{body:payload});if(error)throw error;if(data?.error)throw new Error(data.error);
    status.innerHTML='Account created. Initial password: <strong>'+escapeHtml(data.initial_password||("shinkiaka"+payload.employee_number))+'</strong><br>Please provide this securely and ask the employee to change it immediately.'+(data.email_sent?'<br><strong>Welcome email sent successfully.</strong>':'<br><strong>Welcome email was not sent.</strong> '+escapeHtml(data.email_error||"Email sending is not configured yet."));
    form.reset();submit.textContent="Created";await loadPeople();
-  }catch(err){let message=err.message||"Account creation failed. Please try again.";try{if(err.context&&typeof err.context.json==="function"){const detail=await err.context.json();if(detail?.error)message=detail.error;else if(detail?.message)message=detail.message;}}catch{}status.textContent=message;submit.disabled=false;submit.textContent="Create account";}
+  }catch(err){let message=err.message||"Account creation failed. Please try again.";let detail=null;try{if(err.context&&typeof err.context.json==="function"){detail=await err.context.json();if(detail?.error)message=detail.error;else if(detail?.message)message=detail.message;}}catch{}if(detail?.conflict){showAccountConflictResolver(overlay,payload,detail,form,status,submit);}else status.textContent=message;submit.disabled=false;submit.textContent="Create account";}
  });
 }
 
