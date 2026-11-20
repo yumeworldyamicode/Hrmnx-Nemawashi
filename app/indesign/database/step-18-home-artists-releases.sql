@@ -104,10 +104,14 @@ do $$ declare seiun_id uuid; begin
 end $$;
 
 -- Link SEIUN's existing login to the verified songwriter identity if it exists.
-do $$ declare seiun_id uuid; begin
+do $ declare seiun_id uuid; begin
  select id into seiun_id from auth.users where lower(email)='seiun@yumeworldyami.net' limit 1;
  if seiun_id is not null then
   insert into public.in_music_verified_artists(user_id,artist_name,verified,verified_at) values(seiun_id,'SEIUN',true,now()) on conflict(user_id) do update set artist_name='SEIUN',verified=true,verified_at=coalesce(public.in_music_verified_artists.verified_at,now());
-  insert into public.in_music_public_profiles(user_id,display_name,username,bio) values(seiun_id,'SEIUN','seiun','Hrmnx Entertainment home artist.') on conflict(user_id) do update set display_name='SEIUN',bio='Hrmnx Entertainment home artist.',updated_at=now();
+  if exists(select 1 from public.in_music_public_profiles where user_id=seiun_id) then
+   update public.in_music_public_profiles set display_name='SEIUN',bio='Hrmnx Entertainment home artist.',updated_at=now() where user_id=seiun_id;
+  elsif not exists(select 1 from public.in_music_public_profiles where username='seiun') then
+   insert into public.in_music_public_profiles(user_id,display_name,username,bio) values(seiun_id,'SEIUN','seiun','Hrmnx Entertainment home artist.');
+  end if;
  end if;
-end $$;
+end $;
