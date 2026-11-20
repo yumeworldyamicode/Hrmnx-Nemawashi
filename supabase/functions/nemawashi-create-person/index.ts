@@ -16,6 +16,7 @@ Deno.serve(async(req)=>{
  let payload:any;try{payload=await req.json()}catch{return respond({error:"Invalid JSON"},400)}
  const employee_number=String(payload.employee_number||"").trim(),username=String(payload.username||"").trim().toLowerCase(),display_name=String(payload.display_name||"").trim(),email=String(payload.email||"").trim().toLowerCase(),job_title=String(payload.job_title||"").trim(),company_id=payload.company_id||null;
  if(!employee_number||!username||!display_name||!email)return respond({error:"Employee number, username, display name and email are required."},400);
+ const emailDomain=email.split("@").pop();if(!["yumeworldyami.net","gmail.com","outlook.com"].includes(emailDomain))return respond({error:"Employee email must use yumeworldyami.net, gmail.com or outlook.com."},400);
  if(!/^[a-z0-9._-]{2,30}$/.test(username))return respond({error:"Username must be 2–30 characters (letters, numbers, dots, underscores or hyphens)."},400);
  const password="shinkiaka"+employee_number;
  const {data:existingEmp}=await admin.from("employees").select("id").eq("employee_number",employee_number).maybeSingle();

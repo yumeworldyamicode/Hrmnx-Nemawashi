@@ -504,7 +504,16 @@ function openCreatePersonDialog(){
  <label>Employee number<input name="employee_number" required placeholder="e.g. 0012" autocomplete="off"></label>
  <label>Username<input name="username" required minlength="2" maxlength="30" placeholder="username" autocomplete="off"></label>
  <label>Display name<input name="display_name" required placeholder="Full name"></label>
- <label>Email address<input name="email" type="email" required placeholder="name@hrmnx.site"></label>
+ <label>Email address
+ <div class="create-person-email-row">
+  <input name="email_local" type="text" required placeholder="employee.name" autocomplete="off" aria-label="Email username">
+  <select name="email_domain" aria-label="Email domain">
+   <option value="yumeworldyami.net" selected>@yumeworldyami.net</option>
+   <option value="gmail.com">@gmail.com</option>
+   <option value="outlook.com">@outlook.com</option>
+  </select>
+ </div>
+ </label>
  <label>Job title<input name="job_title" placeholder="Job title"></label>
  <label>Company<select name="company_id"><option value="">No company assigned</option></select></label>
  <div class="create-person-note">Initial password follows the employee number convention. New employees should change it immediately.</div>
@@ -516,7 +525,7 @@ function openCreatePersonDialog(){
  const close=()=>overlay.remove();overlay.querySelector("#create-person-close").addEventListener("click",close);overlay.addEventListener("click",e=>{if(e.target===overlay)close()});
  overlay.querySelector("#create-person-form").addEventListener("submit",async e=>{
   e.preventDefault();const form=e.currentTarget,fd=new FormData(form),status=overlay.querySelector("#create-person-status"),submit=overlay.querySelector("#create-person-submit");
-  const payload=Object.fromEntries(fd.entries());submit.disabled=true;submit.textContent="Creating…";status.textContent="Creating the Auth account and employee record…";
+  const payload=Object.fromEntries(fd.entries());payload.email=String(payload.email_local||"").trim()+"@"+String(payload.email_domain||"yumeworldyami.net");delete payload.email_local;delete payload.email_domain;submit.disabled=true;submit.textContent="Creating…";status.textContent="Creating the Auth account and employee record…";
   try{const {data,error}=await supabaseClient.functions.invoke("nemawashi-create-person",{body:payload});if(error)throw error;if(data?.error)throw new Error(data.error);
    status.innerHTML='Account created. Initial password: <strong>'+escapeHtml(data.initial_password||("shinkiaka"+payload.employee_number))+'</strong><br>Please provide this securely and ask the employee to change it immediately.'+(data.email_sent?'<br><strong>Welcome email sent successfully.</strong>':'<br><strong>Welcome email was not sent.</strong> '+escapeHtml(data.email_error||"Email sending is not configured yet."));
    form.reset();submit.textContent="Created";await loadPeople();
