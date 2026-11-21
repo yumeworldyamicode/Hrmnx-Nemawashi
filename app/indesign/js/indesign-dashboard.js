@@ -548,7 +548,7 @@
                 status.textContent="Building package…";
                 const manifest={format:"indesign-dem",version:1,createdAt:new Date().toISOString(),title:titleValue,artist,vocalMode:overlay.querySelector("#dem-vocal-mode").value,production:music.production||{},contributions:Array.isArray(music.production?.contributions)?music.production.contributions:[],lyrics:instrumental?{artist:{},sections:[],rules:[]}:{artist:music.lyrics?.artist||{},sections:music.lyrics?.sections||[],rules:rules.map((r,i)=>({...r,time:timings[i]}))},assets:{audio:music.production?.audioName||"production-audio",artwork:brainstormCoverBlob?"cover":null}};
                 const zip=new window.JSZip();zip.file("manifest.json",JSON.stringify(manifest,null,2));zip.file("audio/"+manifest.assets.audio,brainstormAudioBlob);if(brainstormCoverBlob)zip.file("artwork/cover",brainstormCoverBlob);
-                const packageBlob=await zip.generateAsync({type:"blob",compression:"DEFLATE"}),slug=crypto.randomUUID(),path=slug+".dem";
+                const packageZip=await zip.generateAsync({type:"blob",compression:"DEFLATE"}),packageBlob=new Blob([packageZip],{type:"application/zip"}),slug=crypto.randomUUID(),path=slug+".zip";
                 const {error:upErr}=await window.supabaseClient.storage.from("indesign-dems").upload(path,packageBlob,{contentType:"application/zip"});
                 if(upErr)throw upErr;
                 let coverPath=null;
