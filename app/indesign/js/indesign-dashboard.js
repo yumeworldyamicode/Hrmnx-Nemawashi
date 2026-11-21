@@ -505,7 +505,8 @@
         if(bytes[0]===0xff&&(bytes[1]&0xf6)===0xf0)return "audio/aac";
         return blob.type&&blob.type!=="application/octet-stream"?blob.type:"";
     }
-    async function detectArtworkMime(blob){\n        if(!blob)return "";\n        const bytes=new Uint8Array(await blob.slice(0,16).arrayBuffer());\n        if(bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff)return "image/jpeg";\n        if(bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47)return "image/png";\n        if(bytes[0]===0x47&&bytes[1]===0x49&&bytes[2]===0x46&&bytes[3]===0x38)return "image/gif";\n        if(bytes[0]===0x52&&bytes[1]===0x49&&bytes[2]===0x46&&bytes[3]===0x46&&bytes[8]===0x57&&bytes[9]===0x45&&bytes[10]===0x42&&bytes[11]===0x50)return "image/webp";\n        return "";\n    }\n    async function importBrainstormPackage(file,kind){
+    async function detectArtworkMime(blob){
+        if(!blob)return "";\n        const bytes=new Uint8Array(await blob.slice(0,16).arrayBuffer());\n        if(bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff)return "image/jpeg";\n        if(bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47)return "image/png";\n        if(bytes[0]===0x47&&bytes[1]===0x49&&bytes[2]===0x46&&bytes[3]===0x38)return "image/gif";\n        if(bytes[0]===0x52&&bytes[1]===0x49&&bytes[2]===0x46&&bytes[3]===0x46&&bytes[8]===0x57&&bytes[9]===0x45&&bytes[10]===0x42&&bytes[11]===0x50)return "image/webp";\n        return "";\n    }\n    async function importBrainstormPackage(file,kind){
         try{
             if(!window.JSZip)throw new Error("Package library did not load. Refresh and try again.");
             const zip=await window.JSZip.loadAsync(file),mf=zip.file("manifest.json");
