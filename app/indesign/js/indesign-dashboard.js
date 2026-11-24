@@ -727,7 +727,29 @@
     async function createProject(type) {
         const name = await ask("Name your " + (typeLabels[type] || "project").toLowerCase());
         if (!name || !name.trim()) return;
-        let initialContent;\n        if(type==="moodboard") initialContent={purpose:"",references:[],connections:[],palette:[]};\n        else if(type==="brainstorm") initialContent={mode:"music",music:{},comeback:{}};\n        else if(type==="choreography"){const setup=await showDialog({kind:"select",title:"Choreography setup",message:"Choose the performer setup.",value:"group",options:[{value:"group",label:"Group"},{value:"solo",label:"Soloist"},{value:"custom",label:"Custom performers"}]});if(!setup)return;const artist=await ask(setup==="solo"?"Soloist / artist name":"Group / artist name","");if(artist===null)return;const gender=await showDialog({kind:"select",title:"Pictogram style",message:"Choose the default sign-style character.",value:"female",options:[{value:"female",label:"Female pictograms"},{value:"male",label:"Male pictograms"}]});if(!gender)return;let members=[];if(setup!=="solo"){const raw=await showDialog({kind:"textarea",title:"Group members",message:"Enter one member per line, or leave blank and add performers in the editor.",value:"",placeholder:"Member 1\\nMember 2\\nMember 3"});if(raw===null)return;members=raw.split(/\\r?\\n/).map(v=>v.trim()).filter(Boolean);}else members=[artist.trim()||"Soloist"];const rawCount=await ask("Number of background dancers","0","Enter 0 for none");if(rawCount===null)return;const bgCount=Math.max(0,Math.min(30,parseInt(rawCount,10)||0));const characters=members.map((name,i)=>({id:"idol-"+(i+1),name,kind:"idol",gender,x:35+(i%5)*8,y:38+Math.floor(i/5)*12}));for(let i=0;i<bgCount;i++)characters.push({id:"bg-"+(i+1),name:"Background dancer "+(i+1),kind:"background",gender,x:25+(i%6)*10,y:66+Math.floor(i/6)*8});initialContent={stage:{width:1000,height:560},song:{title:"",artist:""},projectType:setup,groupName:artist.trim(),characters};}\n        else initialContent={elements:[]};
+        let initialContent;
+        if(type==="moodboard") initialContent={purpose:"",references:[],connections:[],palette:[]};
+        else if(type==="brainstorm") initialContent={mode:"music",music:{},comeback:{}};
+        else if(type==="choreography"){
+          const setup=await showDialog({kind:"select",title:"Choreography setup",message:"Choose the performer setup.",value:"group",options:[{value:"group",label:"Group"},{value:"solo",label:"Soloist"},{value:"custom",label:"Custom performers"}]});
+          if(!setup)return;
+          const artist=await ask(setup==="solo"?"Soloist / artist name":"Group / artist name","");
+          if(artist===null)return;
+          const gender=await showDialog({kind:"select",title:"Pictogram style",message:"Choose the default sign-style character.",value:"female",options:[{value:"female",label:"Female pictograms"},{value:"male",label:"Male pictograms"}]});
+          if(!gender)return;
+          let members=[];
+          if(setup!=="solo"){
+            const raw=await showDialog({kind:"textarea",title:"Group members",message:"Enter one member per line, or leave blank and add performers in the editor.",value:"",placeholder:"Member 1\nMember 2\nMember 3"});
+            if(raw===null)return;
+            members=raw.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
+          }else members=[artist.trim()||"Soloist"];
+          const rawCount=await ask("Number of background dancers","0","Enter 0 for none");
+          if(rawCount===null)return;
+          const bgCount=Math.max(0,Math.min(30,parseInt(rawCount,10)||0));
+          const characters=members.map((name,i)=>({id:"idol-"+(i+1),name,kind:"idol",gender,x:35+(i%5)*8,y:38+Math.floor(i/5)*12}));
+          for(let i=0;i<bgCount;i++)characters.push({id:"bg-"+(i+1),name:"Background dancer "+(i+1),kind:"background",gender,x:25+(i%6)*10,y:66+Math.floor(i/6)*8});
+          initialContent={stage:{width:1000,height:560},song:{title:"",artist:""},projectType:setup,groupName:artist.trim(),characters};
+        }else initialContent={elements:[]};
         const { data, error } = await window.supabaseClient.from(table).insert({
             owner_id: employee.user.id, name: name.trim(), type, description: "", content: initialContent
         }).select().single();
