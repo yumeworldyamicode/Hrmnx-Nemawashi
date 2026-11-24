@@ -764,6 +764,12 @@
             owner_id: employee.user.id, name: name.trim(), type, description: "", content: initialContent
         }).select().single();
         if (error) { console.error("[InDesign create project database error]",error); notify("Could not create project: "+(error.message||error.details||"Database error")+" (see Console for details)"); return; }
+        if(type==="choreography"&&extractedAudio&&linkedDem){
+            const originalName=demManifest?.assets?.audio||"audio";const mime=await detectAudioMime(originalName,extractedAudio);const ext=(originalName.split(".").pop()||"audio").toLowerCase().replace(/[^a-z0-9]/g,"")||"audio";const audioPath="choreography-audio/"+data.id+"."+ext;const audioBlob=new Blob([extractedAudio],{type:mime||"application/octet-stream"});
+            const {error:audioUploadError}=await window.supabaseClient.storage.from("indesign-dems").upload(audioPath,audioBlob,{contentType:mime||"application/octet-stream",upsert:false});
+            if(audioUploadError){console.error("[Choreography extracted audio upload]",audioUploadError);notify("Project created, but extracted audio upload failed: "+audioUploadError.message);}
+            else{data.content.demAudioPath=audioPath;data.content.demAudioMime=mime;const {error:audioLinkError}=await window.supabaseClient.from(table).update({content:data.content}).eq("id",data.id);if(audioLinkError){console.error("[Choreography audio path save]",audioLinkError);notify("Project created, but audio reference could not be saved.");}}
+        }
         projects.unshift(data); notify("Project created."); window.location.href="project.html?id="+encodeURIComponent(data.id);
     }
     async function renameProject(id) {
