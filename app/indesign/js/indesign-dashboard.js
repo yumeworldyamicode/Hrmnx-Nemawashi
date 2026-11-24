@@ -676,7 +676,8 @@
             renderMoodboard();
             return;
         }
-        if (project.type === "brainstorm") { brainstormData(); renderBrainstorm(); return; }\n        if (project.type === "choreography") { window.indesignChoreography?.render(project, notify); return; }
+        if (project.type === "brainstorm") { brainstormData(); renderBrainstorm(); return; }
+        if (project.type === "choreography") { window.indesignChoreography?.render(project, notify); return; }
         if (project.type !== "board") {
             content.innerHTML = '<button class="text-button" id="back-to-projects">← All projects</button>' +
               '<div class="project-detail-head"><div><p class="eyebrow">' + escapeHTML(typeLabels[project.type] || "PROJECT") + '</p><h2>' + escapeHTML(project.name) + '</h2><p class="muted">' + escapeHTML(project.description || "Your project workspace is ready.") + '</p></div><div class="project-toolbar"><button class="button button-outline" data-rename-project="' + escapeHTML(project.id) + '">Rename</button><button class="button button-dark" data-export-project="' + escapeHTML(project.id) + '">Export .in</button></div></div>' +
