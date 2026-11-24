@@ -14,6 +14,28 @@
         toast.classList.add("visible");
         window.setTimeout(() => toast.classList.remove("visible"), 2600);
     }
+    function showLoading(titleText, detailText) {
+        let overlay=document.getElementById("indesign-loading-overlay");
+        if(!overlay){
+            overlay=document.createElement("div");
+            overlay.id="indesign-loading-overlay";
+            overlay.className="indesign-loading-overlay";
+            overlay.setAttribute("role","status");
+            overlay.setAttribute("aria-live","polite");
+            overlay.setAttribute("aria-modal","true");
+            overlay.innerHTML='<div class="indesign-loading-card"><span class="indesign-loading-spinner" aria-hidden="true"></span><strong class="indesign-loading-title"></strong><p class="indesign-loading-detail"></p><span class="indesign-loading-note">Please keep this window open</span></div>';
+            document.body.appendChild(overlay);
+            overlay.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();});
+        }
+        overlay.querySelector(".indesign-loading-title").textContent=titleText||"Loading";
+        overlay.querySelector(".indesign-loading-detail").textContent=detailText||"Please wait while indesign finishes this step.";
+        document.body.classList.add("indesign-loading-active");
+        return overlay;
+    }
+    function hideLoading(){
+        document.getElementById("indesign-loading-overlay")?.remove();
+        document.body.classList.remove("indesign-loading-active");
+    }
     function escapeHTML(value) {
         return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     }
@@ -735,11 +757,13 @@
           const base=await showDialog({kind:"select",title:"Start choreography",message:"Choose whether to start from an existing DEM publication or build a stage from scratch.",value:"blank",options:[{value:"blank",label:"Start from scratch"},{value:"dem",label:"Use an existing DEM publication"}]});if(!base)return;
           let linkedDem=null,demManifest=null,extractedAudio=null;
           if(base==="dem"){
+            showLoading("Loading DEM publications","Fetching your published songs…");
             const {data:pubs,error:pubError}=await window.supabaseClient.from("indesign_dems").select("id,slug,title,artist,package_path,cover_path,created_at").eq("owner_id",employee.user.id).order("created_at",{ascending:false});
+            hideLoading();
             if(pubError){console.error("[Choreography DEM list]",pubError);notify("Could not load your DEM publications: "+pubError.message);return;}
             if(!pubs?.length){notify("You have no DEM publications yet. Publish a DEM first.");return;}
             const chosen=await showDialog({kind:"select",title:"Choose DEM publication",message:"The publication audio will be extracted into this choreography project.",value:pubs[0].id,options:pubs.map(p=>({value:p.id,label:p.title+" - "+p.artist}))});if(!chosen)return;linkedDem=pubs.find(p=>p.id===chosen);if(!linkedDem)return;
-            try{const {data:packageBlob,error:downloadError}=await window.supabaseClient.storage.from("indesign-dems").download(linkedDem.package_path);if(downloadError)throw downloadError;if(!window.JSZip)throw new Error("The ZIP library is unavailable. Refresh and try again.");const zip=await window.JSZip.loadAsync(packageBlob),mf=zip.file("manifest.json");if(!mf)throw new Error("DEM package manifest missing.");demManifest=JSON.parse(await mf.async("string"));const audioPath=demManifest.assets?.audio?"audio/"+demManifest.assets.audio:"";if(!audioPath||!zip.file(audioPath))throw new Error("This DEM package does not contain extractable audio.");extractedAudio=await zip.file(audioPath).async("blob");}catch(ex){console.error("[Choreography DEM extraction]",ex);notify("Could not extract audio from this DEM: "+(ex.message||"Package error"));return;}
+            try{showLoading("Extracting DEM audio","Downloading the publication package and preparing its audio for choreography…");const {data:packageBlob,error:downloadError}=await window.supabaseClient.storage.from("indesign-dems").download(linkedDem.package_path);if(downloadError)throw downloadError;if(!window.JSZip)throw new Error("The ZIP library is unavailable. Refresh and try again.");const zip=await window.JSZip.loadAsync(packageBlob),mf=zip.file("manifest.json");if(!mf)throw new Error("DEM package manifest missing.");demManifest=JSON.parse(await mf.async("string"));const audioPath=demManifest.assets?.audio?"audio/"+demManifest.assets.audio:"";if(!audioPath||!zip.file(audioPath))throw new Error("This DEM package does not contain extractable audio.");extractedAudio=await zip.file(audioPath).async("blob");hideLoading();}catch(ex){hideLoading();console.error("[Choreography DEM extraction]",ex);notify("Could not extract audio from this DEM: "+(ex.message||"Package error"));return;}
           }
           const setup=await showDialog({kind:"select",title:"Choreography setup",message:"Choose the performer setup.",value:"group",options:[{value:"group",label:"Group"},{value:"solo",label:"Soloist"},{value:"custom",label:"Custom performers"}]});
           if(!setup)return;
@@ -760,17 +784,19 @@
           for(let i=0;i<bgCount;i++)characters.push({id:"bg-"+(i+1),name:"Background dancer "+(i+1),kind:"background",gender,x:25+(i%6)*10,y:66+Math.floor(i/6)*8});
           initialContent={stage:{width:1000,height:560},song:{title:linkedDem?.title||demManifest?.title||"",artist:linkedDem?.artist||demManifest?.artist||""},projectType:setup,groupName:artist.trim(),characters,demPublication:linkedDem?{id:linkedDem.id,slug:linkedDem.slug,title:linkedDem.title,artist:linkedDem.artist,package_path:linkedDem.package_path,cover_path:linkedDem.cover_path||null}:null,demAudioExtracted:!!extractedAudio};
         }else initialContent={elements:[]};
+        showLoading("Creating your project","Saving project details to your workspace…");
         const { data, error } = await window.supabaseClient.from(table).insert({
             owner_id: employee.user.id, name: name.trim(), type, description: "", content: initialContent
         }).select().single();
-        if (error) { console.error("[InDesign create project database error]",error); notify("Could not create project: "+(error.message||error.details||"Database error")+" (see Console for details)"); return; }
+        if (error) { hideLoading(); console.error("[InDesign create project database error]",error); notify("Could not create project: "+(error.message||error.details||"Database error")+" (see Console for details)"); return; }
         if(type==="choreography"&&extractedAudio&&linkedDem){
+            showLoading("Saving extracted audio","Uploading the song audio to your choreography project…");
             const originalName=demManifest?.assets?.audio||"audio";const mime=await detectAudioMime(originalName,extractedAudio);const ext=(originalName.split(".").pop()||"audio").toLowerCase().replace(/[^a-z0-9]/g,"")||"audio";const audioPath="choreography-audio/"+data.id+"."+ext;const audioBlob=new Blob([extractedAudio],{type:mime||"application/octet-stream"});
             const {error:audioUploadError}=await window.supabaseClient.storage.from("indesign-dems").upload(audioPath,audioBlob,{contentType:mime||"application/octet-stream",upsert:false});
-            if(audioUploadError){console.error("[Choreography extracted audio upload]",audioUploadError);notify("Project created, but extracted audio upload failed: "+audioUploadError.message);}
-            else{data.content.demAudioPath=audioPath;data.content.demAudioMime=mime;const {error:audioLinkError}=await window.supabaseClient.from(table).update({content:data.content}).eq("id",data.id);if(audioLinkError){console.error("[Choreography audio path save]",audioLinkError);notify("Project created, but audio reference could not be saved.");}}
+            if(audioUploadError){console.error("[Choreography extracted audio upload]",audioUploadError);hideLoading();notify("Project created, but extracted audio upload failed: "+audioUploadError.message);}
+            else{showLoading("Finishing project","Linking the extracted audio and opening your stage…");data.content.demAudioPath=audioPath;data.content.demAudioMime=mime;const {error:audioLinkError}=await window.supabaseClient.from(table).update({content:data.content}).eq("id",data.id);if(audioLinkError){console.error("[Choreography audio path save]",audioLinkError);hideLoading();notify("Project created, but audio reference could not be saved.");}}
         }
-        projects.unshift(data); notify("Project created."); window.location.href="project.html?id="+encodeURIComponent(data.id);
+        projects.unshift(data); hideLoading(); notify("Project created."); window.location.href="project.html?id="+encodeURIComponent(data.id);
     }
     async function renameProject(id) {
         const project = activeProject?.id === id ? activeProject : projects.find(p => p.id === id);
