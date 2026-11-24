@@ -732,6 +732,15 @@
         if(type==="moodboard") initialContent={purpose:"",references:[],connections:[],palette:[]};
         else if(type==="brainstorm") initialContent={mode:"music",music:{},comeback:{}};
         else if(type==="choreography"){
+          const base=await showDialog({kind:"select",title:"Start choreography",message:"Choose whether to start from an existing DEM publication or build a stage from scratch.",value:"blank",options:[{value:"blank",label:"Start from scratch"},{value:"dem",label:"Use an existing DEM publication"}]});if(!base)return;
+          let linkedDem=null,demManifest=null,extractedAudio=null;
+          if(base==="dem"){
+            const {data:pubs,error:pubError}=await window.supabaseClient.from("indesign_dems").select("id,slug,title,artist,package_path,cover_path,created_at").eq("owner_id",employee.user.id).order("created_at",{ascending:false});
+            if(pubError){console.error("[Choreography DEM list]",pubError);notify("Could not load your DEM publications: "+pubError.message);return;}
+            if(!pubs?.length){notify("You have no DEM publications yet. Publish a DEM first.");return;}
+            const chosen=await showDialog({kind:"select",title:"Choose DEM publication",message:"The publication audio will be extracted into this choreography project.",value:pubs[0].id,options:pubs.map(p=>({value:p.id,label:p.title+" - "+p.artist}))});if(!chosen)return;linkedDem=pubs.find(p=>p.id===chosen);if(!linkedDem)return;
+            try{const {data:packageBlob,error:downloadError}=await window.supabaseClient.storage.from("indesign-dems").download(linkedDem.package_path);if(downloadError)throw downloadError;if(!window.JSZip)throw new Error("The ZIP library is unavailable. Refresh and try again.");const zip=await window.JSZip.loadAsync(packageBlob),mf=zip.file("manifest.json");if(!mf)throw new Error("DEM package manifest missing.");demManifest=JSON.parse(await mf.async("string"));const audioPath=demManifest.assets?.audio?"audio/"+demManifest.assets.audio:"";if(!audioPath||!zip.file(audioPath))throw new Error("This DEM package does not contain extractable audio.");extractedAudio=await zip.file(audioPath).async("blob");}catch(ex){console.error("[Choreography DEM extraction]",ex);notify("Could not extract audio from this DEM: "+(ex.message||"Package error"));return;}
+          }
           const setup=await showDialog({kind:"select",title:"Choreography setup",message:"Choose the performer setup.",value:"group",options:[{value:"group",label:"Group"},{value:"solo",label:"Soloist"},{value:"custom",label:"Custom performers"}]});
           if(!setup)return;
           const artist=await ask(setup==="solo"?"Soloist / artist name":"Group / artist name","");
@@ -749,12 +758,12 @@
           const bgCount=Math.max(0,Math.min(30,parseInt(rawCount,10)||0));
           const characters=members.map((name,i)=>({id:"idol-"+(i+1),name,kind:"idol",gender,x:35+(i%5)*8,y:38+Math.floor(i/5)*12}));
           for(let i=0;i<bgCount;i++)characters.push({id:"bg-"+(i+1),name:"Background dancer "+(i+1),kind:"background",gender,x:25+(i%6)*10,y:66+Math.floor(i/6)*8});
-          initialContent={stage:{width:1000,height:560},song:{title:"",artist:""},projectType:setup,groupName:artist.trim(),characters};
+          initialContent={stage:{width:1000,height:560},song:{title:linkedDem?.title||demManifest?.title||"",artist:linkedDem?.artist||demManifest?.artist||""},projectType:setup,groupName:artist.trim(),characters,demPublication:linkedDem?{id:linkedDem.id,slug:linkedDem.slug,title:linkedDem.title,artist:linkedDem.artist,package_path:linkedDem.package_path,cover_path:linkedDem.cover_path||null}:null,demAudioExtracted:!!extractedAudio};
         }else initialContent={elements:[]};
         const { data, error } = await window.supabaseClient.from(table).insert({
             owner_id: employee.user.id, name: name.trim(), type, description: "", content: initialContent
         }).select().single();
-        if (error) { console.error(error); notify("Could not create project. Check the indesign database setup."); return; }
+        if (error) { console.error("[InDesign create project database error]",error); notify("Could not create project: "+(error.message||error.details||"Database error")+" (see Console for details)"); return; }
         projects.unshift(data); notify("Project created."); window.location.href="project.html?id="+encodeURIComponent(data.id);
     }
     async function renameProject(id) {
